@@ -89,8 +89,9 @@ export interface VSDLineItem {
   paymentModel: string;
   estimatedMonthlyOutput: string;
   estimatedHoursPerMonth: string;
-  unitPrice: number;
+  clientUnitPrice: number;
   targetUnitMargin: number;
+  supplyUnitPay: number;
   isCombinedPay: boolean;
   // Calculated
   grossMargin: number;
@@ -117,7 +118,6 @@ export interface HiringFlowData {
   opportunityStage: OpportunityStage | "";
   clientDetails: string;
   // Deal-level financial (moved from line items)
-  clientPay: number;
   mrr: number;
   contractDuration: string;
   targetMarginPercent: number;
@@ -199,8 +199,9 @@ export function createEmptyLineItem(): VSDLineItem {
     paymentModel: "",
     estimatedMonthlyOutput: "",
     estimatedHoursPerMonth: "",
-    unitPrice: 0,
+    clientUnitPrice: 0,
     targetUnitMargin: 0,
+    supplyUnitPay: 0,
     isCombinedPay: false,
     grossMargin: 0,
     grossMarginPercent: 0,

@@ -16,7 +16,6 @@ export const advancedRequisitions: AdvancedRequisition[] = [
       talentType: "",
       opportunityStage: "SLA signed & contraction is on the platform",
       clientDetails: "Leading fintech payments company. Scale: 500+ articles/year. Expectations: High-quality fintech content with deep domain knowledge. Complexity: High regulatory sensitivity.",
-      clientPay: 176000,
       mrr: 176000,
       contractDuration: "12 months",
       targetMarginPercent: 40,
@@ -24,7 +23,7 @@ export const advancedRequisitions: AdvancedRequisition[] = [
         {
           id: "li-1", creatorType: "Writer", otherCreatorTypeSpec: "", numberOfCreators: 3, experienceLevel: "Senior (5–8 yrs)",
           paymentModel: "Per Word", estimatedMonthlyOutput: "40,000 words", estimatedHoursPerMonth: "",
-          unitPrice: 3.5, targetUnitMargin: 40, isCombinedPay: false,
+          clientUnitPrice: 3.5, targetUnitMargin: 40, supplyUnitPay: 2.1, isCombinedPay: false,
           grossMargin: 56000, grossMarginPercent: 40,
           domainExpertise: "Fintech, Payments, Banking", languageRequirement: "English",
           toolsRequired: "Google Docs, Grammarly", portfolioExpectation: "Published fintech articles",
@@ -33,7 +32,7 @@ export const advancedRequisitions: AdvancedRequisition[] = [
         {
           id: "li-2", creatorType: "Editor", otherCreatorTypeSpec: "", numberOfCreators: 1, experienceLevel: "Mid (2–5 yrs)",
           paymentModel: "Monthly Retainer", estimatedMonthlyOutput: "", estimatedHoursPerMonth: "80",
-          unitPrice: 0, targetUnitMargin: 40, isCombinedPay: false,
+          clientUnitPrice: 0, targetUnitMargin: 40, supplyUnitPay: 0, isCombinedPay: false,
           grossMargin: 15000, grossMarginPercent: 41.7,
           domainExpertise: "Fintech, SaaS", languageRequirement: "English",
           toolsRequired: "Google Docs, CMS", portfolioExpectation: "Editing portfolio",
@@ -119,7 +118,6 @@ export const advancedRequisitions: AdvancedRequisition[] = [
       talentType: "India-based talent for Global clients",
       opportunityStage: "SLA signed & contraction is on the platform",
       clientDetails: "Enterprise SaaS company. Scale: 200+ pieces/quarter. Expectations: Technical depth, SEO-optimized. Complexity: Multiple product lines.",
-      clientPay: 315000,
       mrr: 315000,
       contractDuration: "6 months",
       targetMarginPercent: 40,
@@ -127,7 +125,7 @@ export const advancedRequisitions: AdvancedRequisition[] = [
         {
           id: "li-3", creatorType: "Writer", otherCreatorTypeSpec: "", numberOfCreators: 2, experienceLevel: "Expert (8+ yrs)",
           paymentModel: "Per Word", estimatedMonthlyOutput: "30,000 words", estimatedHoursPerMonth: "",
-          unitPrice: 5.8, targetUnitMargin: 40, isCombinedPay: false,
+          clientUnitPrice: 5.8, targetUnitMargin: 40, supplyUnitPay: 3.48, isCombinedPay: false,
           grossMargin: 70000, grossMarginPercent: 40,
           domainExpertise: "SaaS, Customer Success", languageRequirement: "English (Native)",
           toolsRequired: "Google Docs, Notion", portfolioExpectation: "SaaS case studies",
@@ -136,7 +134,7 @@ export const advancedRequisitions: AdvancedRequisition[] = [
         {
           id: "li-4", creatorType: "Designer", otherCreatorTypeSpec: "", numberOfCreators: 1, experienceLevel: "Senior (5–8 yrs)",
           paymentModel: "Per Assignment", estimatedMonthlyOutput: "15 designs", estimatedHoursPerMonth: "60",
-          unitPrice: 5500, targetUnitMargin: 40, isCombinedPay: false,
+          clientUnitPrice: 5500, targetUnitMargin: 40, supplyUnitPay: 3300, isCombinedPay: false,
           grossMargin: 57500, grossMarginPercent: 41.1,
           domainExpertise: "SaaS, Enterprise", languageRequirement: "English",
           toolsRequired: "Figma, Illustrator", portfolioExpectation: "B2B SaaS design portfolio",
@@ -180,7 +178,6 @@ export const advancedRequisitions: AdvancedRequisition[] = [
       talentType: "India-based talent for Indian clients",
       opportunityStage: "SLA back-and-forth",
       clientDetails: "Leading discount brokerage. Scale: Large volume of educational content. Expectations: SEBI-compliant, investor-friendly. Complexity: Regulatory constraints.",
-      clientPay: 280000,
       mrr: 280000,
       contractDuration: "12 months",
       targetMarginPercent: 45,
@@ -188,7 +185,7 @@ export const advancedRequisitions: AdvancedRequisition[] = [
         {
           id: "li-5", creatorType: "Writer", otherCreatorTypeSpec: "", numberOfCreators: 4, experienceLevel: "Senior (5–8 yrs)",
           paymentModel: "Per Word", estimatedMonthlyOutput: "60,000 words", estimatedHoursPerMonth: "",
-          unitPrice: 4.7, targetUnitMargin: 45, isCombinedPay: false,
+          clientUnitPrice: 4.7, targetUnitMargin: 45, supplyUnitPay: 2.585, isCombinedPay: false,
           grossMargin: 112000, grossMarginPercent: 40,
           domainExpertise: "Finance, Investments", languageRequirement: "English, Hindi",
           toolsRequired: "Google Docs", portfolioExpectation: "Finance writing samples",
