@@ -16,6 +16,9 @@ const statusStyles: Record<string, string> = {
   "Preferred": "bg-primary/15 text-primary",
   "Completed": "bg-muted text-muted-foreground",
   "On Hold": "bg-warning/15 text-warning",
+  "Pending Head of Supply Review": "bg-warning/15 text-warning",
+  "Rejected": "bg-destructive/15 text-destructive",
+  "Approved – Assigning": "bg-primary/15 text-primary",
 };
 
 interface StatusBadgeProps {
