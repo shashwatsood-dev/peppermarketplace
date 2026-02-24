@@ -1,8 +1,9 @@
 import { deals } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StatCard } from "@/components/StatCard";
-import { DollarSign, TrendingUp, Briefcase, ArrowUpRight } from "lucide-react";
+import { DollarSign, TrendingUp, Briefcase, ArrowUpRight, UserCheck, ExternalLink } from "lucide-react";
 import { useState } from "react";
+import { getHandoversByDeal } from "@/lib/handover-store";
 
 const formatCurrency = (n: number) => "₹" + (n / 100000).toFixed(1) + "L";
 
@@ -61,7 +62,7 @@ const DealMargins = () => {
             </div>
 
             {expandedDeal === deal.id && (
-              <div className="mt-4 pt-4 border-t border-border overflow-x-auto animate-fade-in">
+              <div className="mt-4 pt-4 border-t border-border overflow-x-auto animate-fade-in space-y-6">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left">
@@ -86,6 +87,39 @@ const DealMargins = () => {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Handed-over Creators */}
+                {(() => {
+                  const handovers = getHandoversByDeal(deal.id);
+                  if (handovers.length === 0) return null;
+                  return (
+                    <div className="pt-4 border-t border-border">
+                      <h4 className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground mb-3">
+                        <UserCheck className="h-3.5 w-3.5" />
+                        Handed-over Creators
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {handovers.map((ho) => (
+                          <div key={ho.id} className="border border-border rounded-md p-3 bg-muted/20">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-sm text-foreground">{ho.creatorName}</span>
+                              {ho.pepperPortalLink && (
+                                <a href={ho.pepperPortalLink} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </a>
+                              )}
+                            </div>
+                            <div className="flex gap-4 text-xs text-muted-foreground">
+                              <span>ID: {ho.pepperIdNumber}</span>
+                              <span>{ho.paymentModel}</span>
+                              <span className="font-mono">₹{ho.finalizedPay.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>

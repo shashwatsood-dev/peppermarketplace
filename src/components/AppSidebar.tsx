@@ -7,6 +7,7 @@ import {
   BarChart3,
   Search,
   Settings,
+  UserCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -26,6 +27,7 @@ const mainItems = [
   { title: "Requisitions", url: "/requisitions", icon: FileText },
   { title: "TA Tracker", url: "/ta-tracker", icon: Search },
   { title: "Deal Margins", url: "/deals", icon: DollarSign },
+  { title: "Handover", url: "/handover", icon: UserCheck },
   { title: "Creator Database", url: "/creators", icon: Database },
 ];
 
