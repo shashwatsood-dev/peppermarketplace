@@ -7,14 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import { Plus, Trash2, ArrowLeft, AlertTriangle, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   OPPORTUNITY_STAGES, URGENCY_LEVELS, CREATOR_TYPES, EXPERIENCE_LEVELS,
-  PAYMENT_MODELS, DEPARTMENTS, DEAL_TYPES_SALES, RESOURCE_TYPES_SALES,
+  PAYMENT_MODELS, DEAL_TYPES_SALES, RESOURCE_TYPES_SALES,
   RESOURCE_SPECIFIC_TYPES, STUDIO_TYPES, VSD_DEAL_TYPES, REPLACEMENT_RISK,
-  createEmptyLineItem, calcLineItemMargins, getMarginRiskColor, getMarginRiskLabel,
+  FREELANCER_TALENT_TYPES,
+  createEmptyLineItem, getMarginRiskColor, getMarginRiskLabel,
   type RequisitionFlow, type VSDLineItem,
 } from "@/lib/requisition-types";
 
@@ -25,7 +27,6 @@ const NewRequisition = () => {
   // Raised-by fields
   const [raisedByName, setRaisedByName] = useState("");
   const [raisedByPhone, setRaisedByPhone] = useState("");
-  const [department, setDepartment] = useState("");
 
   // Sales flow
   const [salesClientName, setSalesClientName] = useState("");
@@ -33,69 +34,62 @@ const NewRequisition = () => {
   const [salesDealType, setSalesDealType] = useState("");
   const [salesResourceType, setSalesResourceType] = useState("");
   const [salesSpecificTypes, setSalesSpecificTypes] = useState<string[]>([]);
+  const [salesOtherSpec, setSalesOtherSpec] = useState("");
   const [salesCreatorPay, setSalesCreatorPay] = useState("");
   const [salesClientBilling, setSalesClientBilling] = useState("");
   const [salesMargin, setSalesMargin] = useState(40);
   const [salesStage, setSalesStage] = useState("");
   const [salesUrgency, setSalesUrgency] = useState("");
 
-  // VSD flow
-  const [vsdClientName, setVsdClientName] = useState("");
-  const [vsdDealId, setVsdDealId] = useState("");
-  const [vsdDealType, setVsdDealType] = useState("");
-  const [vsdStudioType, setVsdStudioType] = useState("");
-  const [vsdGeography, setVsdGeography] = useState("");
-  const [vsdStage, setVsdStage] = useState("");
-  const [vsdClientDetails, setVsdClientDetails] = useState("");
-  const [vsdLineItems, setVsdLineItems] = useState<VSDLineItem[]>([createEmptyLineItem()]);
-  const [vsdStartDate, setVsdStartDate] = useState("");
-  const [vsdDeadline, setVsdDeadline] = useState("");
-  const [vsdUrgency, setVsdUrgency] = useState("");
-  const [vsdIsReplacement, setVsdIsReplacement] = useState(false);
-  const [vsdReplacementOf, setVsdReplacementOf] = useState("");
+  // Hiring flow (studio/freelancer)
+  const [hiringClientName, setHiringClientName] = useState("");
+  const [hiringDealId, setHiringDealId] = useState("");
+  const [hiringDealType, setHiringDealType] = useState("");
+  const [hiringStudioType, setHiringStudioType] = useState("");
+  const [hiringGeography, setHiringGeography] = useState("");
+  const [hiringTalentType, setHiringTalentType] = useState("");
+  const [hiringStage, setHiringStage] = useState("");
+  const [hiringClientDetails, setHiringClientDetails] = useState("");
+  const [hiringClientPay, setHiringClientPay] = useState(0);
+  const [hiringMrr, setHiringMrr] = useState(0);
+  const [hiringContractDuration, setHiringContractDuration] = useState("");
+  const [hiringTargetMargin, setHiringTargetMargin] = useState(40);
+  const [hiringLineItems, setHiringLineItems] = useState<VSDLineItem[]>([createEmptyLineItem()]);
+  const [hiringUrgencyScale, setHiringUrgencyScale] = useState(5);
+  const [hiringIsReplacement, setHiringIsReplacement] = useState(false);
+  const [hiringReplacementOf, setHiringReplacementOf] = useState("");
 
   const updateLineItem = (id: string, updates: Partial<VSDLineItem>) => {
-    setVsdLineItems(prev => prev.map(li => {
+    setHiringLineItems(prev => prev.map(li => {
       if (li.id !== id) return li;
-      const updated = { ...li, ...updates };
-      return calcLineItemMargins(updated);
+      return { ...li, ...updates };
     }));
   };
 
-  const addLineItem = () => setVsdLineItems(prev => [...prev, createEmptyLineItem()]);
-  const removeLineItem = (id: string) => setVsdLineItems(prev => prev.filter(li => li.id !== id));
+  const addLineItem = () => setHiringLineItems(prev => [...prev, createEmptyLineItem()]);
+  const removeLineItem = (id: string) => setHiringLineItems(prev => prev.filter(li => li.id !== id));
 
   const toggleSpecificType = (type: string) => {
     setSalesSpecificTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
   };
 
-  const toggleCreatorType = (itemId: string, type: string) => {
-    const item = vsdLineItems.find(li => li.id === itemId);
-    if (!item) return;
-    const updated = item.creatorTypes.includes(type)
-      ? item.creatorTypes.filter(t => t !== type)
-      : [...item.creatorTypes, type];
-    updateLineItem(itemId, { creatorTypes: updated });
-  };
-
-  // VSD financial summary
-  const vsdTotalRevenue = vsdLineItems.reduce((s, li) => s + li.clientPay, 0);
-  const vsdTotalCost = vsdLineItems.reduce((s, li) => s + li.creatorPay, 0);
-  const vsdGrossMargin = vsdTotalRevenue - vsdTotalCost;
-  const vsdGrossMarginPercent = vsdTotalRevenue > 0 ? (vsdGrossMargin / vsdTotalRevenue) * 100 : 0;
-  const vsdAvgTargetMargin = vsdLineItems.length > 0
-    ? vsdLineItems.reduce((s, li) => s + li.targetMarginPercent, 0) / vsdLineItems.length : 40;
+  // Deal-level financial summary
+  const totalUnitValue = hiringLineItems.reduce((s, li) => s + (li.unitPrice * li.numberOfCreators), 0);
 
   const handleSubmit = () => {
-    if (!raisedByName || !raisedByPhone || !department || !flow) {
+    if (!raisedByName || !raisedByPhone || !flow) {
       toast.error("Please fill in all required fields");
       return;
     }
-    toast.success("Requisition submitted for Head of Supply review");
+    toast.success("Requisition submitted for RMG review");
     navigate("/requisitions");
   };
 
   const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
+
+  const isStudio = flow === "studio";
+  const isFreelancer = flow === "freelancer";
+  const isHiring = isStudio || isFreelancer;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl">
@@ -113,7 +107,7 @@ const NewRequisition = () => {
       <Card className="bg-card border-border">
         <CardHeader><CardTitle className="text-base">Requisition Raised By</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Name *</Label>
               <Input value={raisedByName} onChange={e => setRaisedByName(e.target.value)} placeholder="Full name" className="bg-background border-border" />
@@ -122,35 +116,31 @@ const NewRequisition = () => {
               <Label>Phone *</Label>
               <Input type="tel" value={raisedByPhone} onChange={e => setRaisedByPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" className="bg-background border-border" />
             </div>
-            <div className="space-y-2">
-              <Label>Department *</Label>
-              <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
           </div>
           <div className="space-y-2">
             <Label>Requisition Type *</Label>
             <div className="flex gap-3">
               <Button variant={flow === "sales" ? "default" : "outline"} onClick={() => setFlow("sales")} className="flex-1">
-                Sales-led Requisition
+                Sample Profile Request
               </Button>
-              <Button variant={flow === "vsd" ? "default" : "outline"} onClick={() => setFlow("vsd")} className="flex-1">
-                VSD / Account Management-led
+              <Button variant={flow === "studio" ? "default" : "outline"} onClick={() => setFlow("studio")} className="flex-1">
+                Hiring Request — Studio
+              </Button>
+              <Button variant={flow === "freelancer" ? "default" : "outline"} onClick={() => setFlow("freelancer")} className="flex-1">
+                Hiring Request — Freelancer
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* SALES FLOW */}
+      {/* SALES FLOW — Sample Profile Request */}
       {flow === "sales" && (
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-info" />
-              Sales-led Requisition — Pre-Deal
+              Sample Profile Request — Pre-Deal
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -161,7 +151,9 @@ const NewRequisition = () => {
               </div>
               <div className="space-y-2">
                 <Label>Opportunity Name *</Label>
-                <Input value={salesOpportunityName} onChange={e => setSalesOpportunityName(e.target.value)} className="bg-background border-border" />
+                <Input value={salesOpportunityName} onChange={e => setSalesOpportunityName(e.target.value)}
+                  placeholder="e.g. Video deal, Blog deal, SEO deal"
+                  className="bg-background border-border" />
               </div>
               <div className="space-y-2">
                 <Label>Type of Deal Being Pitched *</Label>
@@ -171,7 +163,7 @@ const NewRequisition = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Resource Being Pitched *</Label>
+                <Label>Type of Resource Required *</Label>
                 <Select value={salesResourceType} onValueChange={setSalesResourceType}>
                   <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>{RESOURCE_TYPES_SALES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
@@ -191,6 +183,11 @@ const NewRequisition = () => {
                   </button>
                 ))}
               </div>
+              {salesSpecificTypes.includes("Other") && (
+                <Input value={salesOtherSpec} onChange={e => setSalesOtherSpec(e.target.value)}
+                  placeholder="Please specify the resource type..."
+                  className="bg-background border-border mt-2" />
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -228,58 +225,98 @@ const NewRequisition = () => {
         </Card>
       )}
 
-      {/* VSD FLOW */}
-      {flow === "vsd" && (
+      {/* HIRING FLOW — Studio or Freelancer */}
+      {isHiring && (
         <>
           {/* SECTION A: Deal Info */}
           <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-success" />
-                VSD / Account-led — Deal Information
+                Hiring Request — {isStudio ? "Studio" : "Freelancer"} — Deal Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Client Name *</Label>
-                  <Input value={vsdClientName} onChange={e => setVsdClientName(e.target.value)} className="bg-background border-border" />
+                  <Input value={hiringClientName} onChange={e => setHiringClientName(e.target.value)} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <Label>Deal ID *</Label>
-                  <Input value={vsdDealId} onChange={e => setVsdDealId(e.target.value)} placeholder="DEAL-XXX" className="bg-background border-border" />
+                  <Input value={hiringDealId} onChange={e => setHiringDealId(e.target.value)} placeholder="DEAL-XXX" className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <Label>Deal Type *</Label>
-                  <Select value={vsdDealType} onValueChange={setVsdDealType}>
+                  <Select value={hiringDealType} onValueChange={setHiringDealType}>
                     <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>{VSD_DEAL_TYPES.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Studio Type *</Label>
-                  <Select value={vsdStudioType} onValueChange={setVsdStudioType}>
-                    <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
-                    <SelectContent>{STUDIO_TYPES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Geography *</Label>
-                  <Input value={vsdGeography} onChange={e => setVsdGeography(e.target.value)} className="bg-background border-border" />
-                </div>
+
+                {isStudio && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Studio Type *</Label>
+                      <Select value={hiringStudioType} onValueChange={setHiringStudioType}>
+                        <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>{STUDIO_TYPES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    {(hiringStudioType === "Onsite" || hiringStudioType === "Hybrid") && (
+                      <div className="space-y-2">
+                        <Label>Geography *</Label>
+                        <Input value={hiringGeography} onChange={e => setHiringGeography(e.target.value)} placeholder="e.g. Mumbai, Delhi" className="bg-background border-border" />
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {isFreelancer && (
+                  <div className="space-y-2">
+                    <Label>Talent Sourcing *</Label>
+                    <Select value={hiringTalentType} onValueChange={setHiringTalentType}>
+                      <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent>{FREELANCER_TALENT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>Opportunity Stage *</Label>
-                  <Select value={vsdStage} onValueChange={setVsdStage}>
+                  <Select value={hiringStage} onValueChange={setHiringStage}>
                     <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select stage" /></SelectTrigger>
                     <SelectContent>{OPPORTUNITY_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label>Client Details *</Label>
-                <Textarea value={vsdClientDetails} onChange={e => setVsdClientDetails(e.target.value)}
+                <Textarea value={hiringClientDetails} onChange={e => setHiringClientDetails(e.target.value)}
                   placeholder="Industry, Scale, Expectations, Complexity, Sensitivities..."
                   className="bg-background border-border min-h-[100px]" />
+              </div>
+
+              <Separator />
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Deal-Level Financials</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Client Pay (₹) *</Label>
+                  <Input type="number" value={hiringClientPay || ""} onChange={e => setHiringClientPay(Number(e.target.value))} className="bg-background border-border" />
+                </div>
+                <div className="space-y-2">
+                  <Label>MRR (₹)</Label>
+                  <Input type="number" value={hiringMrr || ""} onChange={e => setHiringMrr(Number(e.target.value))} className="bg-background border-border" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Contract Duration</Label>
+                  <Input value={hiringContractDuration} onChange={e => setHiringContractDuration(e.target.value)} placeholder="e.g. 12 months" className="bg-background border-border" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Target Margin %</Label>
+                  <Input type="number" value={hiringTargetMargin} onChange={e => setHiringTargetMargin(Number(e.target.value))} className="bg-background border-border" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -290,32 +327,32 @@ const NewRequisition = () => {
               <CardTitle className="text-base">Resource Requirements — Line Items</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {vsdLineItems.map((item, idx) => (
+              {hiringLineItems.map((item, idx) => (
                 <div key={item.id} className="border border-border rounded-lg p-4 space-y-4 bg-background/50">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-medium text-foreground">Line Item {idx + 1}</h4>
-                    {vsdLineItems.length > 1 && (
+                    {hiringLineItems.length > 1 && (
                       <Button variant="ghost" size="icon" onClick={() => removeLineItem(item.id)} className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-xs">Creator Types *</Label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {CREATOR_TYPES.map(t => (
-                        <button key={t} type="button" onClick={() => toggleCreatorType(item.id, t)}
-                          className={`px-2 py-1 rounded text-xs border transition-colors ${item.creatorTypes.includes(t)
-                            ? "bg-primary/20 border-primary text-primary"
-                            : "bg-background border-border text-muted-foreground hover:text-foreground"}`}>
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Creator Type *</Label>
+                      <Select value={item.creatorType} onValueChange={v => updateLineItem(item.id, { creatorType: v })}>
+                        <SelectTrigger className="bg-background border-border h-9"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>{CREATOR_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    {item.creatorType === "Other" && (
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Specify Type *</Label>
+                        <Input value={item.otherCreatorTypeSpec} onChange={e => updateLineItem(item.id, { otherCreatorTypeSpec: e.target.value })}
+                          placeholder="Specify..." className="bg-background border-border h-9" />
+                      </div>
+                    )}
                     <div className="space-y-1.5">
                       <Label className="text-xs"># Creators *</Label>
                       <Input type="number" min={1} value={item.numberOfCreators}
@@ -336,12 +373,6 @@ const NewRequisition = () => {
                         <SelectContent>{PAYMENT_MODELS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Target Margin %</Label>
-                      <Input type="number" value={item.targetMarginPercent}
-                        onChange={e => updateLineItem(item.id, { targetMarginPercent: Number(e.target.value) })}
-                        className="bg-background border-border h-9" />
-                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -358,15 +389,15 @@ const NewRequisition = () => {
                         className="bg-background border-border h-9" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">Client Pay (₹) *</Label>
-                      <Input type="number" value={item.clientPay || ""}
-                        onChange={e => updateLineItem(item.id, { clientPay: Number(e.target.value) })}
+                      <Label className="text-xs">Unit Price (₹) *</Label>
+                      <Input type="number" value={item.unitPrice || ""}
+                        onChange={e => updateLineItem(item.id, { unitPrice: Number(e.target.value) })}
                         className="bg-background border-border h-9" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">Creator Pay (₹) *</Label>
-                      <Input type="number" value={item.creatorPay || ""}
-                        onChange={e => updateLineItem(item.id, { creatorPay: Number(e.target.value) })}
+                      <Label className="text-xs">Target Unit Margin %</Label>
+                      <Input type="number" value={item.targetUnitMargin || ""}
+                        onChange={e => updateLineItem(item.id, { targetUnitMargin: Number(e.target.value) })}
                         className="bg-background border-border h-9" />
                     </div>
                   </div>
@@ -376,33 +407,7 @@ const NewRequisition = () => {
                     <Label className="text-xs text-muted-foreground">Combined pay for multiple roles</Label>
                   </div>
 
-                  {/* Auto-calculated margin display */}
-                  {(item.clientPay > 0 || item.creatorPay > 0) && (
-                    <div className={`flex items-center gap-4 p-3 rounded-md border ${
-                      item.grossMarginPercent < item.targetMarginPercent
-                        ? "border-destructive/50 bg-destructive/5"
-                        : "border-success/50 bg-success/5"
-                    }`}>
-                      <div className="text-xs">
-                        <span className="text-muted-foreground">Gross Margin: </span>
-                        <span className="font-mono font-medium text-foreground">{formatCurrency(item.grossMargin)}</span>
-                      </div>
-                      <div className="text-xs">
-                        <span className="text-muted-foreground">GM%: </span>
-                        <span className={`font-mono font-medium ${item.grossMarginPercent < item.targetMarginPercent ? "text-destructive" : "text-success"}`}>
-                          {item.grossMarginPercent.toFixed(1)}%
-                        </span>
-                      </div>
-                      {item.grossMarginPercent < item.targetMarginPercent && (
-                        <div className="flex items-center gap-1 text-xs text-destructive">
-                          <AlertTriangle className="h-3 w-3" />
-                          Below target ({item.targetMarginPercent}%)
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Creator Details Section (collapsible feel) */}
+                  {/* Creator Details Section */}
                   <Separator />
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Creator Details</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -447,71 +452,104 @@ const NewRequisition = () => {
             </CardContent>
           </Card>
 
-          {/* SECTION C: Deal Financial Summary */}
+          {/* Deal Financial Summary */}
           <Card className="bg-card border-border">
             <CardHeader><CardTitle className="text-base">Deal-Level Financial Summary</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                <div className="stat-card text-center">
-                  <p className="text-xs text-muted-foreground font-mono uppercase">Total Revenue</p>
-                  <p className="text-lg font-semibold text-foreground font-mono mt-1">{formatCurrency(vsdTotalRevenue)}</p>
-                </div>
-                <div className="stat-card text-center">
-                  <p className="text-xs text-muted-foreground font-mono uppercase">Total Cost</p>
-                  <p className="text-lg font-semibold text-foreground font-mono mt-1">{formatCurrency(vsdTotalCost)}</p>
-                </div>
-                <div className="stat-card text-center">
-                  <p className="text-xs text-muted-foreground font-mono uppercase">Gross Margin</p>
-                  <p className="text-lg font-semibold text-foreground font-mono mt-1">{formatCurrency(vsdGrossMargin)}</p>
-                </div>
-                <div className="stat-card text-center">
-                  <p className="text-xs text-muted-foreground font-mono uppercase">GM %</p>
-                  <p className={`text-lg font-semibold font-mono mt-1 text-${getMarginRiskColor(vsdGrossMarginPercent, vsdAvgTargetMargin)}`}>
-                    {vsdGrossMarginPercent.toFixed(1)}%
-                  </p>
-                </div>
-                <div className="stat-card text-center">
-                  <p className="text-xs text-muted-foreground font-mono uppercase">Risk</p>
-                  <div className={`mt-1 status-badge bg-${getMarginRiskColor(vsdGrossMarginPercent, vsdAvgTargetMargin)}/15 text-${getMarginRiskColor(vsdGrossMarginPercent, vsdAvgTargetMargin)} mx-auto`}>
-                    {getMarginRiskLabel(vsdGrossMarginPercent, vsdAvgTargetMargin)}
+            <CardContent className="space-y-6">
+              {/* Overall Margin View */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Overall Margin</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="stat-card text-center">
+                    <p className="text-xs text-muted-foreground font-mono uppercase">Client Pay</p>
+                    <p className="text-lg font-semibold text-foreground font-mono mt-1">{formatCurrency(hiringClientPay)}</p>
+                  </div>
+                  <div className="stat-card text-center">
+                    <p className="text-xs text-muted-foreground font-mono uppercase">MRR</p>
+                    <p className="text-lg font-semibold text-foreground font-mono mt-1">{formatCurrency(hiringMrr)}</p>
+                  </div>
+                  <div className="stat-card text-center">
+                    <p className="text-xs text-muted-foreground font-mono uppercase">Target Margin</p>
+                    <p className="text-lg font-semibold text-foreground font-mono mt-1">{hiringTargetMargin}%</p>
+                  </div>
+                  <div className="stat-card text-center">
+                    <p className="text-xs text-muted-foreground font-mono uppercase">Contract</p>
+                    <p className="text-lg font-semibold text-foreground font-mono mt-1">{hiringContractDuration || "—"}</p>
                   </div>
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* Unit Level Margin View */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Unit-Level Margins</p>
+                {hiringLineItems.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border">
+                          {["#", "Creator Type", "Count", "Unit Price", "Target Unit Margin", "Payment Model"].map(h => (
+                            <th key={h} className="pb-2 text-xs font-mono uppercase text-muted-foreground pr-3 text-left">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {hiringLineItems.map((li, idx) => (
+                          <tr key={li.id} className="data-table-row">
+                            <td className="py-2 pr-3 font-mono text-muted-foreground">{idx + 1}</td>
+                            <td className="py-2 pr-3 text-xs">{li.creatorType === "Other" ? li.otherCreatorTypeSpec || "Other" : li.creatorType || "—"}</td>
+                            <td className="py-2 pr-3 font-mono">{li.numberOfCreators}</td>
+                            <td className="py-2 pr-3 font-mono">{formatCurrency(li.unitPrice)}</td>
+                            <td className="py-2 pr-3 font-mono">{li.targetUnitMargin}%</td>
+                            <td className="py-2 pr-3 text-xs text-muted-foreground">{li.paymentModel || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Add line items to see unit margins</p>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* SECTION E: Urgency & SLA */}
+          {/* Urgency & SLA */}
           <Card className="bg-card border-border">
             <CardHeader><CardTitle className="text-base">Urgency & SLA</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>Required Start Date *</Label>
-                  <Input type="date" value={vsdStartDate} onChange={e => setVsdStartDate(e.target.value)} className="bg-background border-border" />
+              <div className="space-y-3">
+                <Label>Urgency (1–10 scale) *</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[hiringUrgencyScale]}
+                    onValueChange={v => setHiringUrgencyScale(v[0])}
+                    min={1} max={10} step={1}
+                    className="flex-1"
+                  />
+                  <span className={`font-mono text-lg font-bold ${hiringUrgencyScale >= 8 ? "text-destructive" : hiringUrgencyScale >= 5 ? "text-warning" : "text-success"}`}>
+                    {hiringUrgencyScale}
+                  </span>
                 </div>
-                <div className="space-y-2">
-                  <Label>Deadline to Close *</Label>
-                  <Input type="date" value={vsdDeadline} onChange={e => setVsdDeadline(e.target.value)} className="bg-background border-border" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Urgency *</Label>
-                  <Select value={vsdUrgency} onValueChange={setVsdUrgency}>
-                    <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
-                    <SelectContent>{URGENCY_LEVELS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Replacement Hiring?</Label>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Checkbox checked={vsdIsReplacement} onCheckedChange={v => setVsdIsReplacement(!!v)} />
-                    <span className="text-sm text-muted-foreground">Yes</span>
-                  </div>
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>Low</span>
+                  <span>Medium</span>
+                  <span>High</span>
+                  <span>Critical</span>
                 </div>
               </div>
-              {vsdIsReplacement && (
+              <div className="space-y-2">
+                <Label>Replacement Hiring?</Label>
+                <div className="flex items-center gap-2 mt-2">
+                  <Checkbox checked={hiringIsReplacement} onCheckedChange={v => setHiringIsReplacement(!!v)} />
+                  <span className="text-sm text-muted-foreground">Yes</span>
+                </div>
+              </div>
+              {hiringIsReplacement && (
                 <div className="space-y-2">
                   <Label>Replacement of whom?</Label>
-                  <Input value={vsdReplacementOf} onChange={e => setVsdReplacementOf(e.target.value)} className="bg-background border-border" />
+                  <Input value={hiringReplacementOf} onChange={e => setHiringReplacementOf(e.target.value)} className="bg-background border-border" />
                 </div>
               )}
             </CardContent>
