@@ -25,9 +25,10 @@ import {
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Requisitions", url: "/requisitions", icon: FileText },
-  { title: "TA Tracker", url: "/ta-tracker", icon: Search },
-  { title: "Talent X Client", url: "/deals", icon: DollarSign },
   { title: "Handover", url: "/handover", icon: UserCheck },
+  { title: "Talent X Client", url: "/deals", icon: DollarSign },
+  { title: "Studio Dashboard", url: "/studio", icon: BarChart3 },
+  { title: "TA Tracker", url: "/ta-tracker", icon: Search },
   { title: "Creator Database", url: "/creators", icon: Database },
 ];
 

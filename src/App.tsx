@@ -9,6 +9,7 @@ import RequisitionsAdvanced from "./pages/RequisitionsAdvanced";
 import NewRequisition from "./pages/NewRequisition";
 import TATracker from "./pages/TATracker";
 import DealMargins from "./pages/DealMargins";
+import StudioDashboard from "./pages/StudioDashboard";
 import CreatorHandover from "./pages/CreatorHandover";
 import CreatorDatabase from "./pages/CreatorDatabase";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/requisitions/new" element={<NewRequisition />} />
             <Route path="/ta-tracker" element={<TATracker />} />
             <Route path="/deals" element={<DealMargins />} />
+            <Route path="/studio" element={<StudioDashboard />} />
             <Route path="/handover" element={<CreatorHandover />} />
             <Route path="/creators" element={<CreatorDatabase />} />
           </Route>
