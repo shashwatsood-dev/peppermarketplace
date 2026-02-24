@@ -13,10 +13,10 @@ export const OPPORTUNITY_STAGES = [
 ] as const;
 
 export const URGENCY_LEVELS = [
-  { value: "low", label: "Low (15+ days)", color: "success" },
-  { value: "medium", label: "Medium (7–14 days)", color: "info" },
-  { value: "high", label: "High (3–7 days)", color: "warning" },
-  { value: "critical", label: "Critical (0–3 days)", color: "destructive" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "critical", label: "Critical" },
 ] as const;
 
 export const CREATOR_TYPES = [
@@ -30,17 +30,21 @@ export const EXPERIENCE_LEVELS = [
 ] as const;
 
 export const PAYMENT_MODELS = [
-  "Per Word", "Per Assignment", "Monthly Retainer", "Hourly", "Per Output Unit",
+  "Per Word", "Per Assignment", "Monthly Retainer", "Hourly",
 ] as const;
 
-export const DEPARTMENTS = ["Sales", "VSD", "Account Management", "Other"] as const;
-
-export const DEAL_TYPES_SALES = ["Retainer", "Project-based", "Pilot", "Enterprise Studio"] as const;
+export const DEAL_TYPES_SALES = ["Retainer", "Project-based", "Pilot", "Studio"] as const;
 export const RESOURCE_TYPES_SALES = ["Dedicated Content Studio", "Freelancer(s)"] as const;
 export const RESOURCE_SPECIFIC_TYPES = ["Writer", "Editor", "Designer", "Video Editor", "Production House", "Other"] as const;
 
-export const STUDIO_TYPES = ["Dedicated", "On-Demand", "Hybrid"] as const;
+export const STUDIO_TYPES = ["Onsite", "Hybrid", "Remote"] as const;
 export const VSD_DEAL_TYPES = ["Retainer", "Non-Retainer"] as const;
+
+export const FREELANCER_TALENT_TYPES = [
+  "India-based talent for Indian clients",
+  "India-based talent for Global clients",
+  "Global talent for Global clients",
+] as const;
 
 export const REPLACEMENT_RISK = ["High", "Medium", "Low"] as const;
 
@@ -50,19 +54,17 @@ export type CreatorType = typeof CREATOR_TYPES[number];
 export type ExperienceLevel = typeof EXPERIENCE_LEVELS[number];
 export type PaymentModel = typeof PAYMENT_MODELS[number];
 
-export type RequisitionFlow = "sales" | "vsd";
+export type RequisitionFlow = "sales" | "studio" | "freelancer";
 
 export type AdvancedRequisitionStatus =
-  | "Draft"
-  | "Submitted"
-  | "Pending Head of Supply Review"
-  | "Rejected"
-  | "Approved – Assigning"
-  | "In Progress"
-  | "Shortlisting"
-  | "Client Interview"
-  | "Closed – Filled"
-  | "Closed – Dropped";
+  | "Yet to start"
+  | "In progress"
+  | "RMG approval Pending"
+  | "Approved but not assigned"
+  | "On hold"
+  | "Scrapped"
+  | "Closed – allotment pending"
+  | "Closed – allotted";
 
 export interface SalesFlowData {
   clientName: string;
@@ -70,6 +72,7 @@ export interface SalesFlowData {
   dealType: string;
   resourceType: string;
   specificResourceTypes: string[];
+  otherResourceTypeSpec: string;
   expectedCreatorPay: string;
   expectedClientBilling: string;
   expectedMarginPercent: number;
@@ -79,16 +82,16 @@ export interface SalesFlowData {
 
 export interface VSDLineItem {
   id: string;
-  creatorTypes: string[];
+  creatorType: string;
+  otherCreatorTypeSpec: string;
   numberOfCreators: number;
   experienceLevel: string;
   paymentModel: string;
   estimatedMonthlyOutput: string;
   estimatedHoursPerMonth: string;
-  clientPay: number;
-  creatorPay: number;
+  unitPrice: number;
+  targetUnitMargin: number;
   isCombinedPay: boolean;
-  targetMarginPercent: number;
   // Calculated
   grossMargin: number;
   grossMarginPercent: number;
@@ -101,47 +104,54 @@ export interface VSDLineItem {
   replacementRisk: string;
 }
 
-export interface VSDFlowData {
+export interface HiringFlowData {
   clientName: string;
   dealId: string;
   dealType: string;
+  // Studio-specific
   studioType: string;
   geography: string;
+  // Freelancer-specific
+  talentType: string;
+  // Common
   opportunityStage: OpportunityStage | "";
   clientDetails: string;
+  // Deal-level financial (moved from line items)
+  clientPay: number;
+  mrr: number;
+  contractDuration: string;
+  targetMarginPercent: number;
   lineItems: VSDLineItem[];
   // Urgency & SLA
-  requiredStartDate: string;
-  deadlineToClose: string;
-  urgency: UrgencyValue;
+  urgencyScale: number; // 1-10
   isReplacementHiring: boolean;
   replacementOf: string;
 }
 
 export interface AdvancedRequisition {
   id: string;
-  // Raised by
   raisedByName: string;
   raisedByPhone: string;
-  department: string;
   flow: RequisitionFlow;
   // Flow-specific data
   salesData?: SalesFlowData;
-  vsdData?: VSDFlowData;
+  hiringData?: HiringFlowData;
   // Status & workflow
   status: AdvancedRequisitionStatus;
   // Approval
-  headOfSupplyNotes: string;
+  rmgNotes: string;
   rejectionReason: string;
   // Assignment
-  taManagerAssigned: string;
+  podLeadAssigned: string;
   recruiterAssigned: string;
-  linkedInRecruiterLink: string;
   targetClosureDate: string;
+  // Links (in update view)
+  linkedInRecruiterLink: string;
+  atsSheetLink: string;
   // Timestamps
   createdAt: string;
   updatedAt: string;
-  // Financial summary (VSD)
+  // Financial summary
   totalClientRevenue: number;
   totalCreatorCost: number;
   grossMargin: number;
@@ -178,20 +188,20 @@ export interface AuditEntry {
   timestamp: string;
 }
 
-// Helper
+// Helpers
 export function createEmptyLineItem(): VSDLineItem {
   return {
     id: crypto.randomUUID(),
-    creatorTypes: [],
+    creatorType: "",
+    otherCreatorTypeSpec: "",
     numberOfCreators: 1,
     experienceLevel: "",
     paymentModel: "",
     estimatedMonthlyOutput: "",
     estimatedHoursPerMonth: "",
-    clientPay: 0,
-    creatorPay: 0,
+    unitPrice: 0,
+    targetUnitMargin: 0,
     isCombinedPay: false,
-    targetMarginPercent: 40,
     grossMargin: 0,
     grossMarginPercent: 0,
     domainExpertise: "",
@@ -201,12 +211,6 @@ export function createEmptyLineItem(): VSDLineItem {
     turnaroundTime: "",
     replacementRisk: "",
   };
-}
-
-export function calcLineItemMargins(item: VSDLineItem): VSDLineItem {
-  const gm = item.clientPay - item.creatorPay;
-  const gmPercent = item.clientPay > 0 ? (gm / item.clientPay) * 100 : 0;
-  return { ...item, grossMargin: gm, grossMarginPercent: gmPercent };
 }
 
 export function getMarginRiskColor(actual: number, target: number): string {
@@ -219,4 +223,32 @@ export function getMarginRiskLabel(actual: number, target: number): string {
   if (actual >= target) return "Safe";
   if (actual >= target - 5) return "Watch";
   return "Risk";
+}
+
+// ID generation
+let salesCounter = 1;
+let freelancerCounter = 1;
+let studioCounter = 1;
+
+export function generateReqId(flow: RequisitionFlow): string {
+  switch (flow) {
+    case "sales": return `S-${String(salesCounter++).padStart(3, "0")}`;
+    case "freelancer": return `F-${String(freelancerCounter++).padStart(3, "0")}`;
+    case "studio": return `CS-${String(studioCounter++).padStart(3, "0")}`;
+  }
+}
+
+// Flag logic
+export function getReqFlag(req: AdvancedRequisition): "red" | "yellow" | null {
+  if (req.status.startsWith("Closed") || req.status === "Scrapped") return null;
+  const daysOpen = Math.round((Date.now() - new Date(req.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (req.flow === "sales" || req.flow === "freelancer") {
+    if (daysOpen >= 5) return "red";
+    if (daysOpen >= 4) return "yellow";
+  } else if (req.flow === "studio") {
+    if (daysOpen >= 30) return "red";
+    if (daysOpen >= 25) return "yellow";
+  }
+  return null;
 }
