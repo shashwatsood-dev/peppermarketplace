@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
-import Requisitions from "./pages/Requisitions";
+import RequisitionsAdvanced from "./pages/RequisitionsAdvanced";
+import NewRequisition from "./pages/NewRequisition";
 import TATracker from "./pages/TATracker";
 import DealMargins from "./pages/DealMargins";
 import CreatorDatabase from "./pages/CreatorDatabase";
@@ -22,7 +23,8 @@ const App = () => (
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/requisitions" element={<Requisitions />} />
+            <Route path="/requisitions" element={<RequisitionsAdvanced />} />
+            <Route path="/requisitions/new" element={<NewRequisition />} />
             <Route path="/ta-tracker" element={<TATracker />} />
             <Route path="/deals" element={<DealMargins />} />
             <Route path="/creators" element={<CreatorDatabase />} />
