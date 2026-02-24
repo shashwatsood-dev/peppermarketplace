@@ -26,7 +26,7 @@ const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Requisitions", url: "/requisitions", icon: FileText },
   { title: "TA Tracker", url: "/ta-tracker", icon: Search },
-  { title: "Deal Margins", url: "/deals", icon: DollarSign },
+  { title: "Talent X Client", url: "/deals", icon: DollarSign },
   { title: "Handover", url: "/handover", icon: UserCheck },
   { title: "Creator Database", url: "/creators", icon: Database },
 ];
