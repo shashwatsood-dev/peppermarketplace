@@ -8,8 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
-import { Plus, Trash2, ArrowLeft, AlertTriangle, CheckCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Plus, Trash2, ArrowLeft, AlertTriangle, CheckCircle, Link, Copy } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
   OPPORTUNITY_STAGES, URGENCY_LEVELS, CREATOR_TYPES, EXPERIENCE_LEVELS,
@@ -93,14 +93,23 @@ const NewRequisition = () => {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/requisitions")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">New Requisition</h1>
-          <p className="text-sm text-muted-foreground mt-1">Raise a new resource requisition</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/requisitions")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">New Requisition</h1>
+            <p className="text-sm text-muted-foreground mt-1">Raise a new resource requisition</p>
+          </div>
         </div>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+          navigator.clipboard.writeText(window.location.origin + "/requisitions/new");
+          toast.success("Form link copied to clipboard");
+        }}>
+          <Copy className="h-4 w-4" />
+          Copy Form Link
+        </Button>
       </div>
 
       {/* SECTION 1: RAISED BY */}
