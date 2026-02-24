@@ -50,7 +50,7 @@ const NewRequisition = () => {
   const [hiringTalentType, setHiringTalentType] = useState("");
   const [hiringStage, setHiringStage] = useState("");
   const [hiringClientDetails, setHiringClientDetails] = useState("");
-  const [hiringClientPay, setHiringClientPay] = useState(0);
+  const [hiringClientPay] = useState(0); // deprecated, kept for compat
   const [hiringMrr, setHiringMrr] = useState(0);
   const [hiringContractDuration, setHiringContractDuration] = useState("");
   const [hiringTargetMargin, setHiringTargetMargin] = useState(40);
@@ -74,7 +74,7 @@ const NewRequisition = () => {
   };
 
   // Deal-level financial summary
-  const totalUnitValue = hiringLineItems.reduce((s, li) => s + (li.unitPrice * li.numberOfCreators), 0);
+  const totalUnitValue = hiringLineItems.reduce((s, li) => s + (li.clientUnitPrice * li.numberOfCreators), 0);
 
   const handleSubmit = () => {
     if (!raisedByName || !raisedByPhone || !flow) {
@@ -309,13 +309,9 @@ const NewRequisition = () => {
 
               <Separator />
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Deal-Level Financials</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Client Pay (₹) *</Label>
-                  <Input type="number" value={hiringClientPay || ""} onChange={e => setHiringClientPay(Number(e.target.value))} className="bg-background border-border" />
-                </div>
-                <div className="space-y-2">
-                  <Label>MRR (₹)</Label>
+                  <Label>MRR (₹) *</Label>
                   <Input type="number" value={hiringMrr || ""} onChange={e => setHiringMrr(Number(e.target.value))} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
@@ -398,16 +394,29 @@ const NewRequisition = () => {
                         className="bg-background border-border h-9" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">Unit Price (₹) *</Label>
-                      <Input type="number" value={item.unitPrice || ""}
-                        onChange={e => updateLineItem(item.id, { unitPrice: Number(e.target.value) })}
+                      <Label className="text-xs">Client Unit Pricing (₹) *</Label>
+                      <Input type="number" value={item.clientUnitPrice || ""}
+                        onChange={e => {
+                          const price = Number(e.target.value);
+                          const supplyPay = price * (1 - item.targetUnitMargin / 100);
+                          updateLineItem(item.id, { clientUnitPrice: price, supplyUnitPay: Math.round(supplyPay * 100) / 100 });
+                        }}
                         className="bg-background border-border h-9" />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Target Unit Margin %</Label>
                       <Input type="number" value={item.targetUnitMargin || ""}
-                        onChange={e => updateLineItem(item.id, { targetUnitMargin: Number(e.target.value) })}
+                        onChange={e => {
+                          const margin = Number(e.target.value);
+                          const supplyPay = item.clientUnitPrice * (1 - margin / 100);
+                          updateLineItem(item.id, { targetUnitMargin: margin, supplyUnitPay: Math.round(supplyPay * 100) / 100 });
+                        }}
                         className="bg-background border-border h-9" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Supply Unit Pay (₹)</Label>
+                      <Input type="number" value={item.supplyUnitPay || ""} readOnly
+                        className="bg-muted border-border h-9 text-muted-foreground" />
                     </div>
                   </div>
 
@@ -468,11 +477,7 @@ const NewRequisition = () => {
               {/* Overall Margin View */}
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Overall Margin</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="stat-card text-center">
-                    <p className="text-xs text-muted-foreground font-mono uppercase">Client Pay</p>
-                    <p className="text-lg font-semibold text-foreground font-mono mt-1">{formatCurrency(hiringClientPay)}</p>
-                  </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div className="stat-card text-center">
                     <p className="text-xs text-muted-foreground font-mono uppercase">MRR</p>
                     <p className="text-lg font-semibold text-foreground font-mono mt-1">{formatCurrency(hiringMrr)}</p>
@@ -498,7 +503,7 @@ const NewRequisition = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border">
-                          {["#", "Creator Type", "Count", "Unit Price", "Target Unit Margin", "Payment Model"].map(h => (
+                          {["#", "Creator Type", "Count", "Client Unit Price", "Target Unit Margin", "Supply Unit Pay", "Payment Model"].map(h => (
                             <th key={h} className="pb-2 text-xs font-mono uppercase text-muted-foreground pr-3 text-left">{h}</th>
                           ))}
                         </tr>
@@ -509,8 +514,9 @@ const NewRequisition = () => {
                             <td className="py-2 pr-3 font-mono text-muted-foreground">{idx + 1}</td>
                             <td className="py-2 pr-3 text-xs">{li.creatorType === "Other" ? li.otherCreatorTypeSpec || "Other" : li.creatorType || "—"}</td>
                             <td className="py-2 pr-3 font-mono">{li.numberOfCreators}</td>
-                            <td className="py-2 pr-3 font-mono">{formatCurrency(li.unitPrice)}</td>
+                            <td className="py-2 pr-3 font-mono">{formatCurrency(li.clientUnitPrice)}</td>
                             <td className="py-2 pr-3 font-mono">{li.targetUnitMargin}%</td>
+                            <td className="py-2 pr-3 font-mono">{formatCurrency(li.supplyUnitPay)}</td>
                             <td className="py-2 pr-3 text-xs text-muted-foreground">{li.paymentModel || "—"}</td>
                           </tr>
                         ))}

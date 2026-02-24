@@ -3,7 +3,7 @@ import { advancedRequisitions } from "@/lib/requisition-mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, AlertTriangle, Flag, ExternalLink } from "lucide-react";
+import { Search, Plus, AlertTriangle, Flag, ExternalLink, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +31,14 @@ const RequisitionsAdvanced = () => {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [flagsDialogOpen, setFlagsDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  // Edit state
+  const [editStatus, setEditStatus] = useState<string>("");
+  const [editPodLead, setEditPodLead] = useState("");
+  const [editRecruiter, setEditRecruiter] = useState("");
+  const [editTargetDate, setEditTargetDate] = useState("");
+  const [editRmgNotes, setEditRmgNotes] = useState("");
 
   // Pod leads / recruiters with ability to add new
   const [podLeads, setPodLeads] = useState(INITIAL_POD_LEADS);
@@ -146,25 +154,87 @@ const RequisitionsAdvanced = () => {
     toast.success("Links updated");
   };
 
-  const handleDailyUpdate = () => {
+  const handleFunnelUpdate = () => {
     if (!selectedReq) return;
+    // Current cumulative from existing daily updates
+    const prev = getCumulativeMetrics(selectedReq);
+    // Compute delta (current input - previous cumulative)
+    const delta = {
+      profilesIdentified: Math.max(0, duProfilesIdentified - prev.identified),
+      profilesContacted: Math.max(0, duProfilesContacted - prev.contacted),
+      profilesScreened: Math.max(0, duProfilesScreened - prev.screened),
+      profilesShared: Math.max(0, duProfilesShared - prev.shared),
+      interviewsScheduled: Math.max(0, duInterviews - prev.interviews),
+      offersRolledOut: Math.max(0, duOffers - prev.offers),
+      selected: Math.max(0, duSelected - prev.selected),
+      dropOffs: Math.max(0, duDropOffs - prev.dropOffs),
+    };
     const update = {
       id: crypto.randomUUID(), date: new Date().toISOString().split("T")[0],
       recruiterName: selectedReq.recruiterAssigned || "Unknown",
-      profilesIdentified: duProfilesIdentified, profilesContacted: duProfilesContacted,
-      profilesScreened: duProfilesScreened, profilesShared: duProfilesShared,
-      interviewsScheduled: duInterviews, offersRolledOut: duOffers,
-      selected: duSelected, dropOffs: duDropOffs, blockers: duBlockers, notes: duNotes,
+      ...delta, blockers: duBlockers, notes: duNotes,
     };
     setReqs(prev => prev.map(r => r.id === selectedReq.id ? { ...r, dailyUpdates: [...r.dailyUpdates, update] } : r));
-    toast.success("Daily update logged");
-    setDuProfilesIdentified(0); setDuProfilesContacted(0); setDuProfilesScreened(0); setDuProfilesShared(0);
-    setDuInterviews(0); setDuOffers(0); setDuSelected(0); setDuDropOffs(0); setDuBlockers(""); setDuNotes("");
+    toast.success("Funnel updated — daily log auto-generated");
+    setDuBlockers(""); setDuNotes("");
+  };
+
+  const openEdit = (r: AdvancedRequisition) => {
+    setSelectedReq(r);
+    setEditStatus(r.status);
+    setEditPodLead(r.podLeadAssigned);
+    setEditRecruiter(r.recruiterAssigned);
+    setEditTargetDate(r.targetClosureDate);
+    setEditRmgNotes(r.rmgNotes);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = () => {
+    if (!selectedReq) return;
+    const changes: { field: string; old: string; new: string }[] = [];
+    if (editStatus !== selectedReq.status) changes.push({ field: "status", old: selectedReq.status, new: editStatus });
+    if (editPodLead !== selectedReq.podLeadAssigned) changes.push({ field: "podLeadAssigned", old: selectedReq.podLeadAssigned, new: editPodLead });
+    if (editRecruiter !== selectedReq.recruiterAssigned) changes.push({ field: "recruiterAssigned", old: selectedReq.recruiterAssigned, new: editRecruiter });
+    if (editTargetDate !== selectedReq.targetClosureDate) changes.push({ field: "targetClosureDate", old: selectedReq.targetClosureDate, new: editTargetDate });
+    
+    const newAuditEntries = changes.map(c => ({
+      id: crypto.randomUUID(), fieldChanged: c.field, oldValue: c.old, newValue: c.new, editedBy: "User", timestamp: new Date().toISOString(),
+    }));
+
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? {
+      ...r,
+      status: editStatus as any,
+      podLeadAssigned: editPodLead,
+      recruiterAssigned: editRecruiter,
+      targetClosureDate: editTargetDate,
+      rmgNotes: editRmgNotes,
+      updatedAt: new Date().toISOString(),
+      auditLog: [...r.auditLog, ...newAuditEntries],
+    } : r));
+    toast.success("Requisition updated");
+    setEditDialogOpen(false);
   };
 
   const openReview = (r: AdvancedRequisition) => { setSelectedReq(r); setReviewNotes(r.rmgNotes); setRejectionReason(""); setReviewDialogOpen(true); };
   const openAssign = (r: AdvancedRequisition) => { setSelectedReq(r); setAssignPodLead(r.podLeadAssigned); setAssignRecruiter(r.recruiterAssigned); setAssignTargetDate(r.targetClosureDate); setAssignDialogOpen(true); };
-  const openUpdate = (r: AdvancedRequisition) => { setSelectedReq(r); setUpdateLinkedIn(r.linkedInRecruiterLink); setUpdateAtsLink(r.atsSheetLink); setUpdateDialogOpen(true); };
+  const openUpdate = (r: AdvancedRequisition) => {
+    setSelectedReq(r);
+    setUpdateLinkedIn(r.linkedInRecruiterLink);
+    setUpdateAtsLink(r.atsSheetLink);
+    // Pre-fill current funnel with cumulative values
+    const cum = getCumulativeMetrics(r);
+    setDuProfilesIdentified(cum.identified);
+    setDuProfilesContacted(cum.contacted);
+    setDuProfilesScreened(cum.screened);
+    setDuProfilesShared(cum.shared);
+    setDuInterviews(cum.interviews);
+    setDuOffers(cum.offers);
+    setDuSelected(cum.selected);
+    setDuDropOffs(cum.dropOffs);
+    setDuBlockers("");
+    setDuNotes("");
+    setUpdateDialogOpen(true);
+  };
 
   const statuses = ["all", "Yet to start", "In progress", "RMG approval Pending", "Approved but not assigned", "On hold", "Scrapped", "Closed – allotment pending", "Closed – allotted"];
 
@@ -315,6 +385,9 @@ const RequisitionsAdvanced = () => {
                   <td className="py-3 pr-3 text-xs text-muted-foreground">{getUrgencyDisplay(req)}</td>
                   <td className="py-3">
                     <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openEdit(req)}>
+                        <Pencil className="h-3 w-3 mr-1" />Edit
+                      </Button>
                       {req.status === "RMG approval Pending" && (
                         <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openReview(req)}>Review</Button>
                       )}
@@ -419,7 +492,7 @@ const RequisitionsAdvanced = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border">
-                          {["Creator Type", "#", "Experience", "Pay Model", "Unit Price", "Unit Margin %", "Risk"].map(h => (
+                          {["Creator Type", "#", "Experience", "Pay Model", "Client Unit Price", "Target Margin %", "Supply Unit Pay", "Risk"].map(h => (
                             <th key={h} className="pb-2 text-xs font-mono uppercase text-muted-foreground pr-3 text-left">{h}</th>
                           ))}
                         </tr>
@@ -431,8 +504,9 @@ const RequisitionsAdvanced = () => {
                             <td className="py-2 pr-3 font-mono">{li.numberOfCreators}</td>
                             <td className="py-2 pr-3 text-xs text-muted-foreground">{li.experienceLevel}</td>
                             <td className="py-2 pr-3 text-xs text-muted-foreground">{li.paymentModel}</td>
-                            <td className="py-2 pr-3 font-mono">{formatCurrency(li.unitPrice)}</td>
+                            <td className="py-2 pr-3 font-mono">{formatCurrency(li.clientUnitPrice)}</td>
                             <td className="py-2 pr-3 font-mono">{li.targetUnitMargin}%</td>
+                            <td className="py-2 pr-3 font-mono">{formatCurrency(li.supplyUnitPay)}</td>
                             <td className="py-2 pr-3">
                               <span className={`status-badge bg-${getMarginRiskColor(li.grossMarginPercent, li.targetUnitMargin)}/15 text-${getMarginRiskColor(li.grossMarginPercent, li.targetUnitMargin)}`}>
                                 {getMarginRiskLabel(li.grossMarginPercent, li.targetUnitMargin)}
@@ -486,6 +560,7 @@ const RequisitionsAdvanced = () => {
                   <TabsContent value="funnel">
                     {selectedReq.dailyUpdates.length > 0 ? (
                       <>
+                        <p className="text-xs text-muted-foreground mb-3">Current pipeline state (true reflection of where things stand)</p>
                         <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 mb-4">
                           {Object.entries(getCumulativeMetrics(selectedReq)).map(([k, v]) => (
                             <div key={k} className="stat-card text-center p-3">
@@ -494,6 +569,7 @@ const RequisitionsAdvanced = () => {
                             </div>
                           ))}
                         </div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Auto-Generated Daily Logs</p>
                         <div className="space-y-3">
                           {[...selectedReq.dailyUpdates].reverse().map(du => (
                             <div key={du.id} className="p-3 rounded-md bg-muted/30 border border-border text-sm space-y-1">
@@ -657,9 +733,10 @@ const RequisitionsAdvanced = () => {
 
             <div className="border-t border-border" />
 
-            {/* Daily Update Entry */}
+            {/* Current Funnel — reversed flow */}
             <div className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Log Daily Update</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Set Current Funnel</p>
+              <p className="text-xs text-muted-foreground">Enter the current total numbers. A daily log entry will be auto-generated from the difference.</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: "Identified", value: duProfilesIdentified, setter: setDuProfilesIdentified },
@@ -685,8 +762,47 @@ const RequisitionsAdvanced = () => {
                 <Label className="text-xs">Notes</Label>
                 <Textarea value={duNotes} onChange={e => setDuNotes(e.target.value)} className="bg-background border-border" />
               </div>
-              <Button onClick={handleDailyUpdate} className="w-full">Submit Update</Button>
+              <Button onClick={handleFunnelUpdate} className="w-full">Update Funnel</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-lg">
+          <DialogHeader><DialogTitle>Edit — {selectedReq?.id}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={editStatus} onValueChange={setEditStatus}>
+                <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
+                <SelectContent>{statuses.filter(s => s !== "all").map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>POD Lead</Label>
+              <Select value={editPodLead} onValueChange={setEditPodLead}>
+                <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>{podLeads.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Recruiter</Label>
+              <Select value={editRecruiter} onValueChange={setEditRecruiter}>
+                <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>{recruiters.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Target Closure Date</Label>
+              <Input type="date" value={editTargetDate} onChange={e => setEditTargetDate(e.target.value)} className="bg-background border-border" />
+            </div>
+            <div className="space-y-2">
+              <Label>RMG Notes</Label>
+              <Textarea value={editRmgNotes} onChange={e => setEditRmgNotes(e.target.value)} className="bg-background border-border" />
+            </div>
+            <Button onClick={handleEditSave} className="w-full">Save Changes</Button>
           </div>
         </DialogContent>
       </Dialog>

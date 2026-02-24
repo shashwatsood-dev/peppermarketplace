@@ -45,8 +45,8 @@ export function AppSidebar() {
             <span className="text-primary-foreground font-mono font-bold text-sm">CM</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">ContentOps</p>
-            <p className="text-xs text-muted-foreground">Operations Hub</p>
+            <p className="text-sm font-semibold text-foreground">Marketplace</p>
+            <p className="text-xs text-muted-foreground">Talent Dashboard</p>
           </div>
         </div>
       </SidebarHeader>
