@@ -7,7 +7,7 @@ import {
 import { type RoleType, type PayModel } from "@/lib/mock-data";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { DollarSign, TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink } from "lucide-react";
+import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -322,23 +322,34 @@ function ClientCard({ client }: { client: ClientV2 }) {
   );
 }
 
+// ─── Summary Stats Helper ───────────────────────────────
+function SummaryCards({ clients }: { clients: ClientV2[] }) {
+  const allDeals = clients.flatMap(c => c.deals);
+  const allCreators = allDeals.flatMap(d => d.creators);
+  const activeDeals = allDeals.filter(d => d.status === "Active");
+  const activeCreators = allCreators.filter(c => c.dealStatus === "Active");
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <StatCard label="Total Clients" value={String(clients.length)} icon={Users} />
+      <StatCard label="Total Deals" value={String(allDeals.length)} icon={TrendingUp} />
+      <StatCard label="Total Creators" value={String(allCreators.length)} icon={Users} />
+      <StatCard label="Active Clients" value={String(clients.filter(c => c.deals.some(d => d.status === "Active")).length)} icon={Users} changeType="positive" />
+      <StatCard label="Active Deals" value={String(activeDeals.length)} icon={TrendingUp} changeType="positive" />
+      <StatCard label="Active Creators" value={String(activeCreators.length)} icon={Users} changeType="positive" />
+    </div>
+  );
+}
+
 // ─── Main Page ──────────────────────────────────────────
 const DealMargins = () => {
   const [_, setTick] = useState(0);
   const refresh = () => setTick(t => t + 1);
+  const [selectedPod, setSelectedPod] = useState<string>("All");
 
   const pods = getPods();
-
-  const allDeals = pods.flatMap(p => p.clients.flatMap(c => c.deals));
-  const totalRev = allDeals.reduce((s, d) => s + d.totalContractValue, 0);
-  const totalCost = allDeals.reduce((s, d) => s + d.totalCreatorCost, 0);
-  const totalMargin = totalRev - totalCost;
-  const avgMargin = totalRev ? (totalMargin / totalRev * 100).toFixed(1) : "0";
-
-  // Wrap mutations to trigger re-render
-  // We rely on the store being mutated and then refresh
-  // Intercept via an effect-like approach by passing refresh through context
-  // For simplicity, we use a click-based refresh after each dialog close
+  const allClients = pods.flatMap(p => p.clients);
+  const visibleClients = selectedPod === "All" ? allClients : pods.find(p => p.name === selectedPod)?.clients ?? [];
 
   return (
     <div className="space-y-6 animate-fade-in" onClick={() => refresh()}>
@@ -347,19 +358,20 @@ const DealMargins = () => {
         <p className="text-sm text-muted-foreground mt-1">Pod → Client → Deal hierarchy with creator insights</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Revenue" value={formatCurrency(totalRev)} icon={DollarSign} />
-        <StatCard label="Total Cost" value={formatCurrency(totalCost)} icon={DollarSign} />
-        <StatCard label="Gross Margin" value={formatCurrency(totalMargin)} change={`${avgMargin}% overall`} changeType="positive" icon={TrendingUp} />
-        <StatCard label="Total Clients" value={String(pods.reduce((s, p) => s + p.clients.length, 0))} icon={Users} />
-      </div>
+      <SummaryCards clients={visibleClients} />
 
-      <Tabs defaultValue={POD_NAMES[0]}>
+      <Tabs value={selectedPod} onValueChange={setSelectedPod}>
         <TabsList className="bg-muted border border-border">
+          <TabsTrigger value="All" className="text-xs font-mono">All</TabsTrigger>
           {POD_NAMES.map(name => (
             <TabsTrigger key={name} value={name} className="text-xs font-mono">{name}</TabsTrigger>
           ))}
         </TabsList>
+        <TabsContent value="All" className="space-y-4 mt-4">
+          {allClients.map(client => (
+            <ClientCard key={client.id} client={client} />
+          ))}
+        </TabsContent>
         {pods.map(pod => (
           <TabsContent key={pod.name} value={pod.name} className="space-y-4 mt-4">
             {pod.clients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
