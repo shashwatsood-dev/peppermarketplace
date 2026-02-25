@@ -5,7 +5,7 @@ export type RequisitionStatus =
   | "In Progress" | "Shortlisting" | "Client Interview" 
   | "Closed – Filled" | "Closed – Dropped";
 
-export type RoleType = "Writer" | "Editor" | "Designer" | "Video" | "Other";
+export type RoleType = "Writer" | "Editor" | "Designer" | "Video" | "Translator" | "Other";
 export type StudioType = "Dedicated" | "On-demand" | "Hybrid";
 export type PayModel = "Per Word" | "Per Assignment" | "Retainer" | "Hourly";
 export type CreatorStatus = "Active" | "Inactive" | "Blacklisted" | "Preferred";
@@ -147,6 +147,7 @@ export const creators: Creator[] = [
   { id: "CRE-006", name: "Aditya Joshi", email: "aditya@email.com", phone: "+91 98765 43215", city: "Hyderabad", platformId: "PL-1006", linkedIn: "linkedin.com/in/aditya", category: "Writer", domains: ["Auto", "Travel"], language: "English, Marathi", standardRate: 5, negotiatedRate: 4.5, payModel: "Per Word", rating: 3.8, feedbackScore: 72, onTimePercent: 80, lastActive: "2026-01-30", revenueGenerated: 89000, marginContribution: 26700, status: "Inactive" },
   { id: "CRE-007", name: "Divya Krishnan", email: "divya@email.com", phone: "+91 98765 43216", city: "Kochi", platformId: "PL-1007", linkedIn: "linkedin.com/in/divya", category: "Writer", domains: ["SaaS", "Edtech"], language: "English, Malayalam", standardRate: 7, negotiatedRate: 6.5, payModel: "Per Word", rating: 4.6, feedbackScore: 91, onTimePercent: 95, lastActive: "2026-02-20", revenueGenerated: 198000, marginContribution: 79200, status: "Active" },
   { id: "CRE-008", name: "Varun Reddy", email: "varun@email.com", phone: "+91 98765 43217", city: "Bangalore", platformId: "PL-1008", linkedIn: "linkedin.com/in/varun", category: "Designer", domains: ["Fintech", "Healthcare"], language: "English", standardRate: 6000, negotiatedRate: 5500, payModel: "Per Assignment", rating: 4.4, feedbackScore: 85, onTimePercent: 92, lastActive: "2026-02-18", revenueGenerated: 267000, marginContribution: 93450, status: "Active" },
+  { id: "CRE-009", name: "Priya Translator", email: "priya.t@email.com", phone: "+91 98765 43218", city: "Delhi", platformId: "PL-1009", linkedIn: "linkedin.com/in/priyat", category: "Translator", domains: ["Fintech", "Legal"], language: "English, Hindi, Gujarati", standardRate: 3, negotiatedRate: 2.5, payModel: "Per Word", rating: 4.2, feedbackScore: 87, onTimePercent: 93, lastActive: "2026-02-19", revenueGenerated: 95000, marginContribution: 38000, status: "Active" },
 ];
 
 export const deals: Deal[] = [

@@ -5,9 +5,9 @@ import {
   DollarSign,
   Database,
   BarChart3,
-  Search,
   Settings,
   UserCheck,
+  User,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -26,14 +26,12 @@ const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Requisitions", url: "/requisitions", icon: FileText },
   { title: "Handover", url: "/handover", icon: UserCheck },
-  { title: "Talent X Client", url: "/deals", icon: DollarSign },
+  { title: "Talent X Client View", url: "/deals", icon: User },
   { title: "Studio Dashboard", url: "/studio", icon: BarChart3 },
-  { title: "TA Tracker", url: "/ta-tracker", icon: Search },
   { title: "Creator Database", url: "/creators", icon: Database },
 ];
 
 const analyticsItems = [
-  { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
@@ -43,11 +41,11 @@ export function AppSidebar() {
       <SidebarHeader className="p-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-mono font-bold text-sm">CM</span>
+            <span className="text-primary-foreground font-mono font-bold text-sm">MP</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Marketplace</p>
-            <p className="text-xs text-muted-foreground">Talent Dashboard</p>
+            <p className="text-sm font-semibold text-foreground">Procurement Suite</p>
+            <p className="text-xs text-muted-foreground">Marketplace Ops</p>
           </div>
         </div>
       </SidebarHeader>

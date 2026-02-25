@@ -20,7 +20,7 @@ export const URGENCY_LEVELS = [
 ] as const;
 
 export const CREATOR_TYPES = [
-  "Writer", "Editor", "Reviewer", "AI Generator", "AI Generator + Reviewer",
+  "Writer", "Editor", "Reviewer", "Translator", "AI Generator", "AI Generator + Reviewer",
   "Quality Lead", "Copywriter", "Designer", "Video Editor", "Animator",
   "Production House", "Agency", "Other",
 ] as const;
@@ -35,7 +35,7 @@ export const PAYMENT_MODELS = [
 
 export const DEAL_TYPES_SALES = ["Retainer", "Project-based", "Pilot", "Studio"] as const;
 export const RESOURCE_TYPES_SALES = ["Dedicated Content Studio", "Freelancer(s)"] as const;
-export const RESOURCE_SPECIFIC_TYPES = ["Writer", "Editor", "Designer", "Video Editor", "Production House", "Other"] as const;
+export const RESOURCE_SPECIFIC_TYPES = ["Writer", "Editor", "Translator", "Designer", "Video Editor", "Production House", "Other"] as const;
 
 export const STUDIO_TYPES = ["Onsite", "Hybrid", "Remote"] as const;
 export const VSD_DEAL_TYPES = ["Retainer", "Non-Retainer"] as const;
@@ -46,7 +46,17 @@ export const FREELANCER_TALENT_TYPES = [
   "Global talent for Global clients",
 ] as const;
 
-export const REPLACEMENT_RISK = ["High", "Medium", "Low"] as const;
+export const SIGNING_ENTITIES = [
+  "Pepper Content Inc",
+  "Pepper Content Global Private Limited",
+] as const;
+
+export const CURRENCIES = [
+  { code: "INR", symbol: "₹", flag: "🇮🇳", label: "Indian Rupee" },
+  { code: "USD", symbol: "$", flag: "🇺🇸", label: "US Dollar" },
+] as const;
+
+export type CurrencyCode = typeof CURRENCIES[number]["code"];
 
 export type OpportunityStage = typeof OPPORTUNITY_STAGES[number];
 export type UrgencyValue = typeof URGENCY_LEVELS[number]["value"];
@@ -56,15 +66,27 @@ export type PaymentModel = typeof PAYMENT_MODELS[number];
 
 export type RequisitionFlow = "sales" | "studio" | "freelancer";
 
-export type AdvancedRequisitionStatus =
-  | "Yet to start"
-  | "In progress"
-  | "RMG approval Pending"
-  | "Approved but not assigned"
-  | "On hold"
-  | "Scrapped"
-  | "Closed – allotment pending"
-  | "Closed – allotted";
+// Default statuses + admin-added custom ones
+let customStatuses: string[] = [];
+export function getCustomStatuses(): string[] { return [...customStatuses]; }
+export function addCustomStatus(s: string) { if (s && !customStatuses.includes(s)) customStatuses.push(s); }
+
+export const DEFAULT_STATUSES = [
+  "Yet to start",
+  "In progress",
+  "RMG approval Pending",
+  "Approved but not assigned",
+  "On hold",
+  "Scrapped",
+  "Closed – allotment pending",
+  "Closed – allotted",
+] as const;
+
+export function getAllStatuses(): string[] {
+  return [...DEFAULT_STATUSES, ...customStatuses];
+}
+
+export type AdvancedRequisitionStatus = string;
 
 export interface SalesFlowData {
   clientName: string;
@@ -78,6 +100,7 @@ export interface SalesFlowData {
   expectedMarginPercent: number;
   opportunityStage: OpportunityStage | "";
   urgency: UrgencyValue;
+  currency: CurrencyCode;
 }
 
 export interface VSDLineItem {
@@ -93,6 +116,8 @@ export interface VSDLineItem {
   targetUnitMargin: number;
   supplyUnitPay: number;
   isCombinedPay: boolean;
+  // Which field drives calculation
+  pricingMode: "client-to-supply" | "supply-to-client";
   // Calculated
   grossMargin: number;
   grossMarginPercent: number;
@@ -101,8 +126,6 @@ export interface VSDLineItem {
   languageRequirement: string;
   toolsRequired: string;
   portfolioExpectation: string;
-  turnaroundTime: string;
-  replacementRisk: string;
 }
 
 export interface HiringFlowData {
@@ -112,20 +135,24 @@ export interface HiringFlowData {
   // Studio-specific
   studioType: string;
   geography: string;
+  signingEntity: string;
   // Freelancer-specific
   talentType: string;
   // Common
   opportunityStage: OpportunityStage | "";
   clientDetails: string;
-  // Deal-level financial (moved from line items)
+  currency: CurrencyCode;
+  // Deal-level financial
   mrr: number;
   contractDuration: string;
   targetMarginPercent: number;
   lineItems: VSDLineItem[];
   // Urgency & SLA
-  urgencyScale: number; // 1-10
+  urgencyScale: number;
   isReplacementHiring: boolean;
   replacementOf: string;
+  // POD assignment
+  pod: string;
 }
 
 export interface AdvancedRequisition {
@@ -133,34 +160,28 @@ export interface AdvancedRequisition {
   raisedByName: string;
   raisedByPhone: string;
   flow: RequisitionFlow;
-  // Flow-specific data
   salesData?: SalesFlowData;
   hiringData?: HiringFlowData;
-  // Status & workflow
   status: AdvancedRequisitionStatus;
-  // Approval
   rmgNotes: string;
   rejectionReason: string;
-  // Assignment
   podLeadAssigned: string;
   recruiterAssigned: string;
   targetClosureDate: string;
-  // Links (in update view)
   linkedInRecruiterLink: string;
   atsSheetLink: string;
-  // Timestamps
   createdAt: string;
   updatedAt: string;
-  // Financial summary
   totalClientRevenue: number;
   totalCreatorCost: number;
   grossMargin: number;
   grossMarginPercent: number;
   targetMarginPercent: number;
-  // Daily updates
+  currency: CurrencyCode;
   dailyUpdates: DailyUpdate[];
-  // Audit log
   auditLog: AuditEntry[];
+  // TA-edited flag
+  taEditedPendingApproval: boolean;
 }
 
 export interface DailyUpdate {
@@ -203,15 +224,24 @@ export function createEmptyLineItem(): VSDLineItem {
     targetUnitMargin: 0,
     supplyUnitPay: 0,
     isCombinedPay: false,
+    pricingMode: "client-to-supply",
     grossMargin: 0,
     grossMarginPercent: 0,
     domainExpertise: "",
     languageRequirement: "",
     toolsRequired: "",
     portfolioExpectation: "",
-    turnaroundTime: "",
-    replacementRisk: "",
   };
+}
+
+export function getCurrencySymbol(code: CurrencyCode): string {
+  return CURRENCIES.find(c => c.code === code)?.symbol || "₹";
+}
+
+export function formatCurrencyValue(n: number, code: CurrencyCode = "INR"): string {
+  const sym = getCurrencySymbol(code);
+  if (code === "INR") return sym + n.toLocaleString("en-IN");
+  return sym + n.toLocaleString("en-US");
 }
 
 export function getMarginRiskColor(actual: number, target: number): string {
@@ -239,17 +269,23 @@ export function generateReqId(flow: RequisitionFlow): string {
   }
 }
 
-// Flag logic
+// Flag logic — new TAT-based criteria
 export function getReqFlag(req: AdvancedRequisition): "red" | "yellow" | null {
   if (req.status.startsWith("Closed") || req.status === "Scrapped") return null;
-  const daysOpen = Math.round((Date.now() - new Date(req.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+  if (!req.targetClosureDate) return null;
   
-  if (req.flow === "sales" || req.flow === "freelancer") {
-    if (daysOpen >= 5) return "red";
-    if (daysOpen >= 4) return "yellow";
+  const targetDate = new Date(req.targetClosureDate);
+  const now = new Date();
+  const daysUntilTarget = Math.round((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Red = deadline breached
+  if (daysUntilTarget < 0) return "red";
+  
+  // Yellow = within threshold of target
+  if (req.flow === "freelancer" || req.flow === "sales") {
+    if (daysUntilTarget <= 2) return "yellow";
   } else if (req.flow === "studio") {
-    if (daysOpen >= 30) return "red";
-    if (daysOpen >= 25) return "yellow";
+    if (daysUntilTarget <= 5) return "yellow";
   }
   return null;
 }

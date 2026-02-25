@@ -7,11 +7,11 @@ import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import RequisitionsAdvanced from "./pages/RequisitionsAdvanced";
 import NewRequisition from "./pages/NewRequisition";
-import TATracker from "./pages/TATracker";
 import DealMargins from "./pages/DealMargins";
 import StudioDashboard from "./pages/StudioDashboard";
 import CreatorHandover from "./pages/CreatorHandover";
 import CreatorDatabase from "./pages/CreatorDatabase";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,11 +27,11 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/requisitions" element={<RequisitionsAdvanced />} />
             <Route path="/requisitions/new" element={<NewRequisition />} />
-            <Route path="/ta-tracker" element={<TATracker />} />
             <Route path="/deals" element={<DealMargins />} />
             <Route path="/studio" element={<StudioDashboard />} />
             <Route path="/handover" element={<CreatorHandover />} />
             <Route path="/creators" element={<CreatorDatabase />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

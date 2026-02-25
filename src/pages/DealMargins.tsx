@@ -7,7 +7,7 @@ import {
 import { type RoleType, type PayModel } from "@/lib/mock-data";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink } from "lucide-react";
+import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -194,7 +194,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
               </thead>
               <tbody>
                 {visibleCreators.map(c => (
-                  <tr key={c.id} className="data-table-row">
+                  <tr key={c.id} className={`data-table-row ${c.dealStatus === "Inactive" ? "bg-warning/5" : c.dealStatus === "Removed" ? "bg-destructive/5" : ""}`}>
                     <td className="py-2 font-medium text-foreground pr-3">{c.creatorName}</td>
                     <td className="py-2 pr-3"><span className={`text-xs px-1.5 py-0.5 rounded ${c.source === "In-house" ? "bg-info/15 text-info" : "bg-primary/15 text-primary"}`}>{c.source}</span></td>
                     <td className="py-2 text-muted-foreground pr-3">{c.role}</td>
@@ -226,7 +226,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
                       {ho.pepperPortalLink && <a href={ho.pepperPortalLink} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary"><ExternalLink className="h-3.5 w-3.5" /></a>}
                     </div>
                     <div className="flex gap-4 text-xs text-muted-foreground">
-                      <span>ID: {ho.pepperIdNumber}</span>
+                      <span>Email: {ho.creatorEmail}</span>
                       <span>{ho.paymentModel}</span>
                       <span className="font-mono">₹{ho.finalizedPay.toLocaleString()}</span>
                     </div>
@@ -331,12 +331,12 @@ function SummaryCards({ clients }: { clients: ClientV2[] }) {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-      <StatCard label="Total Clients" value={String(clients.length)} icon={Users} />
+      <StatCard label="Total Clients" value={String(clients.length)} icon={User} />
       <StatCard label="Total Deals" value={String(allDeals.length)} icon={TrendingUp} />
-      <StatCard label="Total Creators" value={String(allCreators.length)} icon={Users} />
-      <StatCard label="Active Clients" value={String(clients.filter(c => c.deals.some(d => d.status === "Active")).length)} icon={Users} changeType="positive" />
+      <StatCard label="Total Creators" value={String(allCreators.length)} icon={User} />
+      <StatCard label="Active Clients" value={String(clients.filter(c => c.deals.some(d => d.status === "Active")).length)} icon={User} changeType="positive" />
       <StatCard label="Active Deals" value={String(activeDeals.length)} icon={TrendingUp} changeType="positive" />
-      <StatCard label="Active Creators" value={String(activeCreators.length)} icon={Users} changeType="positive" />
+      <StatCard label="Active Creators" value={String(activeCreators.length)} icon={User} changeType="positive" />
     </div>
   );
 }
