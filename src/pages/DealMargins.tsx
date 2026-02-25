@@ -7,10 +7,11 @@ import {
 import { type RoleType, type PayModel } from "@/lib/mock-data";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User } from "lucide-react";
+import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -31,6 +32,46 @@ const creatorStatusStyles: Record<CreatorDealStatus, string> = {
   Removed: "bg-destructive/15 text-destructive",
   Flagged: "bg-warning/15 text-warning",
 };
+
+// ─── Rating Reason Dialog ───────────────────────────────
+function RatingReasonDialog({ open, onClose, onSave, rating }: { open: boolean; onClose: () => void; onSave: (reason: string) => void; rating: string }) {
+  const [reason, setReason] = useState("");
+  const [sendEmail, setSendEmail] = useState(false);
+  const [emailTo, setEmailTo] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+
+  const save = () => {
+    if (!reason.trim()) { toast.error("Reason is required"); return; }
+    onSave(reason);
+    if (sendEmail && emailTo.trim()) {
+      toast.success(`Feedback email prepared to ${emailTo}`);
+    }
+    setReason(""); setSendEmail(false); setEmailTo(""); setEmailBody("");
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Reason for {rating} rating</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div><Label className="text-xs">Reason *</Label><Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Why is this rating being given?" rows={2} /></div>
+          <label className="flex items-center gap-2 text-xs cursor-pointer text-muted-foreground">
+            <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} className="rounded border-border" />
+            Send feedback email to creator
+          </label>
+          {sendEmail && (
+            <>
+              <div><Label className="text-xs">Email To</Label><Input value={emailTo} onChange={e => setEmailTo(e.target.value)} placeholder="creator@email.com" /></div>
+              <div><Label className="text-xs">Feedback Message</Label><Textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} placeholder="Performance feedback..." rows={3} /></div>
+            </>
+          )}
+        </div>
+        <DialogFooter><Button onClick={save}>Save Rating</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // ─── Edit Client Dialog ─────────────────────────────────
 function EditClientDialog({ client, open, onClose }: { client: ClientV2; open: boolean; onClose: () => void }) {
@@ -66,9 +107,7 @@ function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; 
           <div><Label className="text-xs">Status</Label>
             <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v as DealStatus }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {(["Active", "Completed", "On Hold"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
+              <SelectContent>{(["Active", "Completed", "On Hold"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
           </div>
         </div>
@@ -100,7 +139,7 @@ function AddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boo
           <div><Label className="text-xs">Role</Label>
             <Select value={form.role} onValueChange={v => setForm(p => ({ ...p, role: v as RoleType }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{(["Writer", "Editor", "Designer", "Video", "Other"] as RoleType[]).map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+              <SelectContent>{(["Writer", "Editor", "Designer", "Video", "Translator", "Other"] as RoleType[]).map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
             </Select></div>
           <div><Label className="text-xs">Source</Label>
             <Select value={form.source} onValueChange={v => setForm(p => ({ ...p, source: v as ResourceSource }))}>
@@ -112,8 +151,6 @@ function AddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boo
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{(["Per Word", "Per Assignment", "Retainer", "Hourly"] as PayModel[]).map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
             </Select></div>
-          <div><Label className="text-xs">Pay Rate</Label><Input type="number" value={form.payRate || ""} onChange={e => setForm(p => ({ ...p, payRate: +e.target.value }))} /></div>
-          <div><Label className="text-xs">Volume</Label><Input type="number" value={form.expectedVolume || ""} onChange={e => setForm(p => ({ ...p, expectedVolume: +e.target.value }))} /></div>
           <div><Label className="text-xs">Total Cost</Label><Input type="number" value={form.totalCost || ""} onChange={e => setForm(p => ({ ...p, totalCost: +e.target.value }))} /></div>
           <div><Label className="text-xs">Client Billing</Label><Input type="number" value={form.clientBilling || ""} onChange={e => setForm(p => ({ ...p, clientBilling: +e.target.value }))} /></div>
         </div>
@@ -136,16 +173,42 @@ function CreatorStatusSelect({ dealId, creator }: { dealId: string; creator: Dep
 }
 
 function RatingSelect({ dealId, creatorId, field, value }: { dealId: string; creatorId: string; field: "capabilityLeadRating" | "bopmRating"; value: HealthColor | "" }) {
+  const [reasonDialog, setReasonDialog] = useState(false);
+  const [pendingRating, setPendingRating] = useState<HealthColor | "">("");
+
+  const handleChange = (v: string) => {
+    const newVal = v === "none" ? "" : v as HealthColor;
+    if (newVal === "yellow" || newVal === "red") {
+      setPendingRating(newVal);
+      setReasonDialog(true);
+    } else {
+      updateCreatorInDeal(dealId, creatorId, { [field]: newVal });
+    }
+  };
+
+  const reasonField = field === "capabilityLeadRating" ? "capabilityRatingReason" : "bopmRatingReason";
+
   return (
-    <Select value={value || "none"} onValueChange={v => { updateCreatorInDeal(dealId, creatorId, { [field]: v === "none" ? "" : v }); }}>
-      <SelectTrigger className="h-7 w-20 text-xs"><SelectValue>{value ? healthDot(value) : "—"}</SelectValue></SelectTrigger>
-      <SelectContent>
-        <SelectItem value="green"><span className="flex items-center gap-1">{healthDot("green")} Green</span></SelectItem>
-        <SelectItem value="yellow"><span className="flex items-center gap-1">{healthDot("yellow")} Yellow</span></SelectItem>
-        <SelectItem value="red"><span className="flex items-center gap-1">{healthDot("red")} Red</span></SelectItem>
-        <SelectItem value="none">None</SelectItem>
-      </SelectContent>
-    </Select>
+    <>
+      <Select value={value || "none"} onValueChange={handleChange}>
+        <SelectTrigger className="h-7 w-20 text-xs"><SelectValue>{value ? healthDot(value) : "—"}</SelectValue></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="green"><span className="flex items-center gap-1">{healthDot("green")} Green</span></SelectItem>
+          <SelectItem value="yellow"><span className="flex items-center gap-1">{healthDot("yellow")} Yellow</span></SelectItem>
+          <SelectItem value="red"><span className="flex items-center gap-1">{healthDot("red")} Red</span></SelectItem>
+          <SelectItem value="none">None</SelectItem>
+        </SelectContent>
+      </Select>
+      <RatingReasonDialog
+        open={reasonDialog}
+        onClose={() => setReasonDialog(false)}
+        rating={pendingRating}
+        onSave={(reason) => {
+          updateCreatorInDeal(dealId, creatorId, { [field]: pendingRating, [reasonField]: reason });
+          toast.success("Rating updated with reason");
+        }}
+      />
+    </>
   );
 }
 
@@ -212,7 +275,6 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
             </table>
           </div>
 
-          {/* Handed-over Creators */}
           {handovers.length > 0 && (
             <div className="pt-3 border-t border-border">
               <h4 className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2">
@@ -262,24 +324,13 @@ function ClientCard({ client }: { client: ClientV2 }) {
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
           <div>
             <p className="font-semibold text-foreground">{client.clientName}</p>
-            <p className="text-xs text-muted-foreground">
-              VSD: {client.vsdName || "—"} · BOPM: {client.principalBOPM || "—"}
-            </p>
+            <p className="text-xs text-muted-foreground">VSD: {client.vsdName || "—"} · BOPM: {client.principalBOPM || "—"}</p>
           </div>
         </div>
         <div className="flex items-center gap-5">
-          <div className="text-right">
-            <p className="text-xs font-mono uppercase text-muted-foreground">Revenue</p>
-            <p className="font-mono text-foreground">{formatCurrency(totalRev)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs font-mono uppercase text-muted-foreground">Cost</p>
-            <p className="font-mono text-muted-foreground">{formatCurrency(totalCost)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs font-mono uppercase text-muted-foreground">Margin</p>
-            <p className="font-mono text-success">{totalRev ? ((totalRev - totalCost) / totalRev * 100).toFixed(1) : 0}%</p>
-          </div>
+          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Revenue</p><p className="font-mono text-foreground">{formatCurrency(totalRev)}</p></div>
+          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Cost</p><p className="font-mono text-muted-foreground">{formatCurrency(totalCost)}</p></div>
+          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Margin</p><p className="font-mono text-success">{totalRev ? ((totalRev - totalCost) / totalRev * 100).toFixed(1) : 0}%</p></div>
           <span className="text-xs text-muted-foreground">{client.deals.length} deal{client.deals.length !== 1 ? "s" : ""}</span>
           <button onClick={e => { e.stopPropagation(); setEditClient(true); }} className="p-1 rounded hover:bg-muted"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
         </div>
@@ -287,15 +338,12 @@ function ClientCard({ client }: { client: ClientV2 }) {
 
       {expanded && (
         <div className="mt-4 pt-4 border-t border-border space-y-4 animate-fade-in">
-          {/* BOPM info bar */}
           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span><strong>VSD:</strong> {client.vsdName || "—"}</span>
             <span><strong>Principal BOPM:</strong> {client.principalBOPM || "—"}</span>
             <span><strong>Senior BOPM:</strong> {client.seniorBOPM || "—"}</span>
             <span><strong>Junior BOPM:</strong> {client.juniorBOPM || "—"}</span>
           </div>
-
-          {/* Toggles */}
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
               <input type="checkbox" checked={showInactiveDeals} onChange={e => setShowInactiveDeals(e.target.checked)} className="rounded border-border" />
@@ -303,26 +351,21 @@ function ClientCard({ client }: { client: ClientV2 }) {
             </label>
             <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
               <input type="checkbox" checked={showInactiveCreators} onChange={e => setShowInactiveCreators(e.target.checked)} className="rounded border-border" />
-              Show all creators (incl. inactive/removed)
+              Show all creators
             </label>
           </div>
-
-          {/* Deals */}
           <div className="space-y-3">
-            {visibleDeals.map(deal => (
-              <DealRow key={deal.id} deal={deal} showInactive={showInactiveCreators} />
-            ))}
+            {visibleDeals.map(deal => <DealRow key={deal.id} deal={deal} showInactive={showInactiveCreators} />)}
             {visibleDeals.length === 0 && <p className="text-xs text-muted-foreground py-2">No active deals</p>}
           </div>
         </div>
       )}
-
       <EditClientDialog client={client} open={editClient} onClose={() => setEditClient(false)} />
     </div>
   );
 }
 
-// ─── Summary Stats Helper ───────────────────────────────
+// ─── Summary Stats ──────────────────────────────────────
 function SummaryCards({ clients }: { clients: ClientV2[] }) {
   const allDeals = clients.flatMap(c => c.deals);
   const allCreators = allDeals.flatMap(d => d.creators);
@@ -368,16 +411,12 @@ const DealMargins = () => {
           ))}
         </TabsList>
         <TabsContent value="All" className="space-y-4 mt-4">
-          {allClients.map(client => (
-            <ClientCard key={client.id} client={client} />
-          ))}
+          {allClients.map(client => <ClientCard key={client.id} client={client} />)}
         </TabsContent>
         {pods.map(pod => (
           <TabsContent key={pod.name} value={pod.name} className="space-y-4 mt-4">
             {pod.clients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
-            {pod.clients.map(client => (
-              <ClientCard key={client.id} client={client} />
-            ))}
+            {pod.clients.map(client => <ClientCard key={client.id} client={client} />)}
           </TabsContent>
         ))}
       </Tabs>

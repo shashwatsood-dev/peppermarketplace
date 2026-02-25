@@ -52,6 +52,7 @@ const CreatorDatabase = () => {
             <SelectItem value="Editor">Editor</SelectItem>
             <SelectItem value="Designer">Designer</SelectItem>
             <SelectItem value="Video">Video</SelectItem>
+            <SelectItem value="Translator">Translator</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>

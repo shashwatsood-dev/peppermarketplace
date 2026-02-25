@@ -1,36 +1,30 @@
 import { useState, useMemo } from "react";
-import { getPods, type DealV2, type ClientV2, type DeployedCreatorV2 } from "@/lib/talent-client-store";
+import { getPods, type DealV2, type ClientV2, type DeployedCreatorV2, addHRBPConnect, updateCreatorInDeal, POD_NAMES } from "@/lib/talent-client-store";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { DollarSign, TrendingUp, Users, Upload, FileText, ChevronDown, ChevronRight } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Upload, FileText, ChevronDown, ChevronRight, Plus, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const formatCurrency = (n: number) => "₹" + (n / 100000).toFixed(1) + "L";
 
-// In-memory agreement store
-interface Agreement {
-  id: string;
-  creatorId: string;
-  dealId: string;
-  fileName: string;
-  uploadedAt: string;
-}
-
+// Agreement store
+interface Agreement { id: string; creatorId: string; dealId: string; fileName: string; uploadedAt: string; }
 let agreements: Agreement[] = [];
-
 function addAgreement(creatorId: string, dealId: string, fileName: string) {
   agreements = [...agreements, { id: `AGR-${Date.now()}`, creatorId, dealId, fileName, uploadedAt: new Date().toISOString() }];
 }
-
 function getAgreements(dealId: string, creatorId: string) {
   return agreements.filter(a => a.dealId === dealId && a.creatorId === creatorId);
 }
 
-// Gather all studio deals (deals tagged as "Retainer" or "Dedicated" type, or all for now)
 function getAllStudioData() {
   const pods = getPods();
   const results: { podName: string; clientName: string; client: ClientV2; deal: DealV2 }[] = [];
@@ -44,11 +38,51 @@ function getAllStudioData() {
   return results;
 }
 
+// ─── HRBP Connect Dialog ────────────────────────────────
+function HRBPConnectDialog({ dealId, creatorId, creatorName, connects, open, onClose }: {
+  dealId: string; creatorId: string; creatorName: string; connects: DeployedCreatorV2["hrbpConnects"]; open: boolean; onClose: () => void;
+}) {
+  const [summary, setSummary] = useState("");
+  const [outcome, setOutcome] = useState("");
+  const [hrbpName, setHrbpName] = useState("");
+  const add = () => {
+    if (!summary.trim()) { toast.error("Summary required"); return; }
+    addHRBPConnect(dealId, creatorId, { date: new Date().toISOString().split("T")[0], summary: summary.trim(), outcome: outcome.trim(), hrbpName: hrbpName.trim() });
+    toast.success("Connect logged");
+    setSummary(""); setOutcome(""); setHrbpName("");
+    onClose();
+  };
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>HRBP Connects — {creatorName}</DialogTitle></DialogHeader>
+        {connects.length > 0 && (
+          <div className="space-y-2 mb-4">
+            {connects.map(c => (
+              <div key={c.id} className="p-2 rounded bg-muted/30 border border-border text-xs space-y-1">
+                <div className="flex justify-between"><span className="font-mono text-muted-foreground">{c.date}</span><span className="text-muted-foreground">{c.hrbpName}</span></div>
+                <p className="text-foreground">{c.summary}</p>
+                {c.outcome && <p className="text-success">→ {c.outcome}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="space-y-3">
+          <div><Label className="text-xs">HRBP Name</Label><Input value={hrbpName} onChange={e => setHrbpName(e.target.value)} placeholder="e.g. Priya Sharma" /></div>
+          <div><Label className="text-xs">Connect Summary *</Label><Textarea value={summary} onChange={e => setSummary(e.target.value)} placeholder="Key discussion points..." rows={2} /></div>
+          <div><Label className="text-xs">Outcome / Action Items</Label><Input value={outcome} onChange={e => setOutcome(e.target.value)} placeholder="What resulted from this connect?" /></div>
+        </div>
+        <DialogFooter><Button onClick={add}>Log Connect</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Upload Agreement Dialog ────────────────────────────
 function UploadAgreementDialog({ creatorId, dealId, open, onClose }: { creatorId: string; dealId: string; open: boolean; onClose: () => void }) {
   const [fileName, setFileName] = useState("");
   const save = () => {
-    if (!fileName.trim()) { toast.error("Please enter a file name"); return; }
+    if (!fileName.trim()) { toast.error("File name required"); return; }
     addAgreement(creatorId, dealId, fileName.trim());
     toast.success("Agreement uploaded (mock)");
     setFileName("");
@@ -59,13 +93,9 @@ function UploadAgreementDialog({ creatorId, dealId, open, onClose }: { creatorId
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>Upload Agreement</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div>
-            <Label className="text-xs">Agreement File Name</Label>
-            <Input placeholder="e.g. Ananya_Razorpay_Agreement.pdf" value={fileName} onChange={e => setFileName(e.target.value)} />
-          </div>
-          <p className="text-xs text-muted-foreground">File upload requires backend storage. Enter a file name to mock the upload.</p>
+          <div><Label className="text-xs">Agreement File Name</Label><Input placeholder="e.g. Agreement.pdf" value={fileName} onChange={e => setFileName(e.target.value)} /></div>
         </div>
-        <DialogFooter><Button onClick={save}>Save Agreement</Button></DialogFooter>
+        <DialogFooter><Button onClick={save}>Save</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -75,12 +105,23 @@ function UploadAgreementDialog({ creatorId, dealId, open, onClose }: { creatorId
 function StudioDealCard({ podName, clientName, deal }: { podName: string; clientName: string; deal: DealV2 }) {
   const [expanded, setExpanded] = useState(false);
   const [uploadFor, setUploadFor] = useState<{ creatorId: string; dealId: string } | null>(null);
+  const [hrbpFor, setHrbpFor] = useState<{ dealId: string; creatorId: string; creatorName: string; connects: DeployedCreatorV2["hrbpConnects"] } | null>(null);
   const [_, setTick] = useState(0);
 
   const activeCreators = deal.creators.filter(c => c.dealStatus === "Active");
-  const totalCost = deal.totalCreatorCost;
-  const totalRev = deal.totalContractValue;
-  const margin = deal.grossMarginPercent;
+
+  // Monthly payment tracking
+  const getMonthsSinceStart = (startDate: string) => {
+    const start = new Date(startDate);
+    const now = new Date();
+    const months: string[] = [];
+    const d = new Date(start);
+    while (d <= now) {
+      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      d.setMonth(d.getMonth() + 1);
+    }
+    return months;
+  };
 
   return (
     <div className="stat-card">
@@ -93,18 +134,9 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
           </div>
         </div>
         <div className="flex items-center gap-5">
-          <div className="text-right">
-            <p className="text-xs font-mono uppercase text-muted-foreground">Revenue</p>
-            <p className="font-mono text-foreground">{formatCurrency(totalRev)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs font-mono uppercase text-muted-foreground">Cost</p>
-            <p className="font-mono text-muted-foreground">{formatCurrency(totalCost)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs font-mono uppercase text-muted-foreground">Margin</p>
-            <p className="font-mono text-success">{margin}%</p>
-          </div>
+          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Revenue</p><p className="font-mono text-foreground">{formatCurrency(deal.totalContractValue)}</p></div>
+          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Cost</p><p className="font-mono text-muted-foreground">{formatCurrency(deal.totalCreatorCost)}</p></div>
+          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Margin</p><p className="font-mono text-success">{deal.grossMarginPercent}%</p></div>
           <StatusBadge status={deal.status} />
         </div>
       </div>
@@ -114,22 +146,18 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
           <p className="text-xs text-muted-foreground">{activeCreators.length} active / {deal.creators.length} total creators</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  {["Creator", "Source", "Role", "Pay Model", "Cost", "Billing", "Margin%", "Status", "Agreement"].map(h => (
-                    <th key={h} className="pb-2 text-xs font-mono uppercase tracking-wider text-muted-foreground pr-3">{h}</th>
-                  ))}
-                </tr>
-              </thead>
+              <thead><tr className="border-b border-border text-left">
+                {["Creator", "Role", "Pay Model", "Cost", "Billing", "Margin%", "Status", "HRBP", "Monthly Pay", "Agreement"].map(h => (
+                  <th key={h} className="pb-2 text-xs font-mono uppercase tracking-wider text-muted-foreground pr-3">{h}</th>
+                ))}
+              </tr></thead>
               <tbody>
                 {deal.creators.map(c => {
                   const creatorAgreements = getAgreements(deal.id, c.id);
+                  const months = getMonthsSinceStart(c.startDate);
                   return (
                     <tr key={c.id} className="data-table-row">
                       <td className="py-2 font-medium text-foreground pr-3">{c.creatorName}</td>
-                      <td className="py-2 pr-3">
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${c.source === "In-house" ? "bg-info/15 text-info" : "bg-primary/15 text-primary"}`}>{c.source}</span>
-                      </td>
                       <td className="py-2 text-muted-foreground pr-3">{c.role}</td>
                       <td className="py-2 text-muted-foreground pr-3">{c.payModel}</td>
                       <td className="py-2 font-mono text-muted-foreground pr-3">{formatCurrency(c.totalCost)}</td>
@@ -143,20 +171,18 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
                           "bg-muted text-muted-foreground"
                         }`}>{c.dealStatus}</span>
                       </td>
+                      <td className="py-2 pr-3">
+                        <button onClick={() => setHrbpFor({ dealId: deal.id, creatorId: c.id, creatorName: c.creatorName, connects: c.hrbpConnects })} className="flex items-center gap-1 text-xs text-primary hover:underline">
+                          <MessageSquare className="h-3 w-3" /> {c.hrbpConnects.length || "Log"}
+                        </button>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <span className="text-xs font-mono text-muted-foreground">{months.length} months logged</span>
+                      </td>
                       <td className="py-2">
                         <div className="flex items-center gap-2">
-                          {creatorAgreements.length > 0 && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <FileText className="h-3 w-3" /> {creatorAgreements.length}
-                            </span>
-                          )}
-                          <button
-                            onClick={() => { setUploadFor({ creatorId: c.id, dealId: deal.id }); }}
-                            className="p-1 rounded hover:bg-muted"
-                            title="Upload agreement"
-                          >
-                            <Upload className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
+                          {creatorAgreements.length > 0 && <span className="text-xs text-muted-foreground flex items-center gap-1"><FileText className="h-3 w-3" /> {creatorAgreements.length}</span>}
+                          <button onClick={() => setUploadFor({ creatorId: c.id, dealId: deal.id })} className="p-1 rounded hover:bg-muted" title="Upload agreement"><Upload className="h-3.5 w-3.5 text-muted-foreground" /></button>
                         </div>
                       </td>
                     </tr>
@@ -168,14 +194,8 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
         </div>
       )}
 
-      {uploadFor && (
-        <UploadAgreementDialog
-          creatorId={uploadFor.creatorId}
-          dealId={uploadFor.dealId}
-          open
-          onClose={() => { setUploadFor(null); setTick(t => t + 1); }}
-        />
-      )}
+      {uploadFor && <UploadAgreementDialog creatorId={uploadFor.creatorId} dealId={uploadFor.dealId} open onClose={() => { setUploadFor(null); setTick(t => t + 1); }} />}
+      {hrbpFor && <HRBPConnectDialog dealId={hrbpFor.dealId} creatorId={hrbpFor.creatorId} creatorName={hrbpFor.creatorName} connects={hrbpFor.connects} open onClose={() => { setHrbpFor(null); setTick(t => t + 1); }} />}
     </div>
   );
 }
@@ -184,42 +204,139 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
 const StudioDashboard = () => {
   const [_, setTick] = useState(0);
   const refresh = () => setTick(t => t + 1);
+  const [showActive, setShowActive] = useState(true);
+  const [selectedPod, setSelectedPod] = useState("All");
+  const [viewMode, setViewMode] = useState<"deals" | "geography">("deals");
 
   const studioData = useMemo(() => getAllStudioData(), [_]);
 
-  const totalRev = studioData.reduce((s, d) => s + d.deal.totalContractValue, 0);
-  const totalCost = studioData.reduce((s, d) => s + d.deal.totalCreatorCost, 0);
-  const totalMargin = totalRev - totalCost;
-  const avgMargin = totalRev ? (totalMargin / totalRev * 100).toFixed(1) : "0";
-  const allCreators = studioData.flatMap(d => d.deal.creators);
+  const podFiltered = selectedPod === "All" ? studioData : studioData.filter(d => d.podName === selectedPod);
+  const displayData = showActive ? podFiltered.filter(d => d.deal.status === "Active") : podFiltered;
+
+  const totalRev = displayData.reduce((s, d) => s + d.deal.totalContractValue, 0);
+  const totalCost = displayData.reduce((s, d) => s + d.deal.totalCreatorCost, 0);
+  const allCreators = displayData.flatMap(d => d.deal.creators);
   const activeCreators = allCreators.filter(c => c.dealStatus === "Active");
-  const freelancers = allCreators.filter(c => c.source === "Freelancer");
-  const inHouse = allCreators.filter(c => c.source === "In-house");
+  const activeClients = [...new Set(displayData.filter(d => d.deal.status === "Active").map(d => d.clientName))].length;
+  const avgMargin = totalRev ? ((totalRev - totalCost) / totalRev * 100).toFixed(1) : "0";
+
+  // Geography view data
+  const geoData = useMemo(() => {
+    const geoMap: Record<string, { geo: string; creators: Record<string, number>; rev: number; cost: number }> = {};
+    for (const d of displayData) {
+      const geo = d.deal.geography || "Unspecified";
+      if (!geoMap[geo]) geoMap[geo] = { geo, creators: {}, rev: 0, cost: 0 };
+      geoMap[geo].rev += d.deal.totalContractValue;
+      geoMap[geo].cost += d.deal.totalCreatorCost;
+      for (const c of d.deal.creators) {
+        geoMap[geo].creators[c.role] = (geoMap[geo].creators[c.role] || 0) + 1;
+      }
+    }
+    return Object.values(geoMap);
+  }, [displayData]);
+
+  // MoM mock data
+  const momData = [
+    { month: "Sep", revenue: totalRev * 0.85, cost: totalCost * 0.82, clients: activeClients - 1, creators: activeCreators.length - 3 },
+    { month: "Oct", revenue: totalRev * 0.88, cost: totalCost * 0.86, clients: activeClients - 1, creators: activeCreators.length - 2 },
+    { month: "Nov", revenue: totalRev * 0.92, cost: totalCost * 0.90, clients: activeClients, creators: activeCreators.length - 1 },
+    { month: "Dec", revenue: totalRev * 0.95, cost: totalCost * 0.93, clients: activeClients, creators: activeCreators.length },
+    { month: "Jan", revenue: totalRev * 0.98, cost: totalCost * 0.96, clients: activeClients, creators: activeCreators.length },
+    { month: "Feb", revenue: totalRev, cost: totalCost, clients: activeClients, creators: activeCreators.length },
+  ];
+
+  const [showMoM, setShowMoM] = useState(false);
 
   return (
     <div className="space-y-6 animate-fade-in" onClick={() => refresh()}>
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Studio Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Content Studio P&L and resource overview</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Studio Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Content Studio P&L and resource overview</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+            <input type="checkbox" checked={showActive} onChange={e => setShowActive(e.target.checked)} className="rounded border-border" />
+            Active only
+          </label>
+          <Button variant={showMoM ? "default" : "outline"} size="sm" onClick={() => setShowMoM(!showMoM)} className="text-xs">MoM Trends</Button>
+        </div>
       </div>
 
-      {/* P&L Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <StatCard label="Active Clients" value={String(activeClients)} icon={Users} />
+        <StatCard label="Active Creators" value={String(activeCreators.length)} icon={Users} />
         <StatCard label="Total Revenue" value={formatCurrency(totalRev)} icon={DollarSign} />
         <StatCard label="Total Cost" value={formatCurrency(totalCost)} icon={DollarSign} />
-        <StatCard label="Gross Margin" value={formatCurrency(totalMargin)} change={`${avgMargin}%`} changeType="positive" icon={TrendingUp} />
-        <StatCard label="Total Creators" value={String(allCreators.length)} change={`${activeCreators.length} active`} changeType="neutral" icon={Users} />
-        <StatCard label="Freelancers" value={String(freelancers.length)} icon={Users} />
-        <StatCard label="In-house" value={String(inHouse.length)} icon={Users} />
+        <StatCard label="Gross Margin" value={`${avgMargin}%`} change={formatCurrency(totalRev - totalCost)} changeType="positive" icon={TrendingUp} />
       </div>
 
-      {/* All Studio Deals */}
-      <div className="space-y-4">
-        <h2 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">All Deals ({studioData.length})</h2>
-        {studioData.map(({ podName, clientName, deal }) => (
-          <StudioDealCard key={deal.id} podName={podName} clientName={clientName} deal={deal} />
-        ))}
-      </div>
+      {/* MoM Chart */}
+      {showMoM && (
+        <div className="stat-card">
+          <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground mb-4">Month-on-Month Trend</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={momData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
+              <XAxis dataKey="month" tick={{ fill: "hsl(215 12% 50%)", fontSize: 12 }} axisLine={false} />
+              <YAxis tick={{ fill: "hsl(215 12% 50%)", fontSize: 12 }} axisLine={false} tickFormatter={(v) => `${(v / 100000).toFixed(0)}L`} />
+              <Tooltip contentStyle={{ background: "hsl(220 18% 9%)", border: "1px solid hsl(220 14% 14%)", borderRadius: 8, color: "hsl(210 20% 92%)" }} />
+              <Bar dataKey="revenue" fill="hsl(160 60% 45%)" radius={[4, 4, 0, 0]} name="Revenue" />
+              <Bar dataKey="cost" fill="hsl(210 80% 55%)" radius={[4, 4, 0, 0]} name="Cost" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* POD tabs */}
+      <Tabs value={selectedPod} onValueChange={setSelectedPod}>
+        <div className="flex items-center justify-between">
+          <TabsList className="bg-muted border border-border">
+            <TabsTrigger value="All" className="text-xs font-mono">All</TabsTrigger>
+            {POD_NAMES.map(name => <TabsTrigger key={name} value={name} className="text-xs font-mono">{name}</TabsTrigger>)}
+          </TabsList>
+          <div className="flex gap-2">
+            <Button variant={viewMode === "deals" ? "default" : "outline"} size="sm" onClick={() => setViewMode("deals")} className="text-xs">Deals</Button>
+            <Button variant={viewMode === "geography" ? "default" : "outline"} size="sm" onClick={() => setViewMode("geography")} className="text-xs">Geography</Button>
+          </div>
+        </div>
+      </Tabs>
+
+      {/* Geography View */}
+      {viewMode === "geography" && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">Geography × Creator Type</h2>
+          {geoData.map(g => (
+            <div key={g.geo} className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-foreground">{g.geo}</h3>
+                <div className="flex gap-4 text-xs font-mono">
+                  <span className="text-foreground">Rev: {formatCurrency(g.rev)}</span>
+                  <span className="text-muted-foreground">Cost: {formatCurrency(g.cost)}</span>
+                  <span className="text-success">Margin: {g.rev ? ((g.rev - g.cost) / g.rev * 100).toFixed(1) : 0}%</span>
+                </div>
+              </div>
+              <div className="flex gap-3 flex-wrap">
+                {Object.entries(g.creators).map(([role, count]) => (
+                  <span key={role} className="status-badge bg-muted text-muted-foreground">{role}: {count}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Deals View */}
+      {viewMode === "deals" && (
+        <div className="space-y-4">
+          <h2 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">All Deals ({displayData.length})</h2>
+          {displayData.map(({ podName, clientName, deal }) => (
+            <StudioDealCard key={deal.id} podName={podName} clientName={clientName} deal={deal} />
+          ))}
+          {displayData.length === 0 && <p className="text-sm text-muted-foreground">No deals found</p>}
+        </div>
+      )}
     </div>
   );
 };
