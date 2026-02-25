@@ -293,10 +293,6 @@ const NewRequisition = () => {
 
               <Separator />
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Deal-Level Financials</p>
-              <div className="space-y-2">
-                <Label>Currency</Label>
-                <CurrencySelect value={hiringCurrency} onChange={setHiringCurrency} />
-              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="space-y-2"><Label>MRR *</Label>
                   <CurrencyInput currency={hiringCurrency} onCurrencyChange={setHiringCurrency}
@@ -462,14 +458,14 @@ const NewRequisition = () => {
           <Card className="bg-card border-border">
             <CardHeader><CardTitle className="text-base">Urgency & SLA</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <Label>Urgency (1–10 scale) *</Label>
-                <div className="flex items-center gap-4">
-                  <Slider value={[hiringUrgencyScale]} onValueChange={v => setHiringUrgencyScale(v[0])} min={1} max={10} step={1} className="flex-1" />
-                  <span className={`font-mono text-lg font-bold ${hiringUrgencyScale >= 8 ? "text-destructive" : hiringUrgencyScale >= 5 ? "text-warning" : "text-success"}`}>
-                    {hiringUrgencyScale}
-                  </span>
-                </div>
+              <div className="space-y-2">
+                <Label>Urgency *</Label>
+                <Select value={String(hiringUrgencyScale)} onValueChange={v => setHiringUrgencyScale(Number(v))}>
+                  <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select urgency" /></SelectTrigger>
+                  <SelectContent>
+                    {URGENCY_LEVELS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Replacement Hiring?</Label>
