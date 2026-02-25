@@ -123,6 +123,7 @@ function AddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boo
     creatorName: "", role: "Writer" as RoleType, source: "Freelancer" as ResourceSource,
     payModel: "Per Word" as PayModel, payRate: 0, expectedVolume: 0, totalCost: 0, clientBilling: 0,
     dealStatus: "Active" as CreatorDealStatus, capabilityLeadRating: "" as HealthColor | "", bopmRating: "" as HealthColor | "",
+    city: "",
   });
   const save = () => {
     if (!form.creatorName) { toast.error("Name required"); return; }
@@ -151,6 +152,7 @@ function AddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boo
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{(["Per Word", "Per Assignment", "Retainer", "Hourly"] as PayModel[]).map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
             </Select></div>
+          <div><Label className="text-xs">City</Label><Input value={form.city} onChange={e => setForm(p => ({ ...p, city: e.target.value }))} placeholder="e.g. Mumbai" /></div>
           <div><Label className="text-xs">Total Cost</Label><Input type="number" value={form.totalCost || ""} onChange={e => setForm(p => ({ ...p, totalCost: +e.target.value }))} /></div>
           <div><Label className="text-xs">Client Billing</Label><Input type="number" value={form.clientBilling || ""} onChange={e => setForm(p => ({ ...p, clientBilling: +e.target.value }))} /></div>
         </div>

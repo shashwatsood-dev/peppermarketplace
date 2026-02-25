@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useAuth } from "@/lib/auth-context";
 
 const formatCurrency = (n: number) => "₹" + (n / 100000).toFixed(1) + "L";
 
@@ -207,6 +208,8 @@ const StudioDashboard = () => {
   const [showActive, setShowActive] = useState(true);
   const [selectedPod, setSelectedPod] = useState("All");
   const [viewMode, setViewMode] = useState<"deals" | "geography">("deals");
+  const { currentRole } = useAuth();
+  const hideFinancials = currentRole === "pod_lead_recruiter";
 
   const studioData = useMemo(() => getAllStudioData(), [_]);
 
@@ -220,19 +223,19 @@ const StudioDashboard = () => {
   const activeClients = [...new Set(displayData.filter(d => d.deal.status === "Active").map(d => d.clientName))].length;
   const avgMargin = totalRev ? ((totalRev - totalCost) / totalRev * 100).toFixed(1) : "0";
 
-  // Geography view data
+  // City-level geography view data
   const geoData = useMemo(() => {
-    const geoMap: Record<string, { geo: string; creators: Record<string, number>; rev: number; cost: number }> = {};
+    const cityMap: Record<string, { city: string; creators: Record<string, number>; rev: number; cost: number }> = {};
     for (const d of displayData) {
-      const geo = d.deal.geography || "Unspecified";
-      if (!geoMap[geo]) geoMap[geo] = { geo, creators: {}, rev: 0, cost: 0 };
-      geoMap[geo].rev += d.deal.totalContractValue;
-      geoMap[geo].cost += d.deal.totalCreatorCost;
       for (const c of d.deal.creators) {
-        geoMap[geo].creators[c.role] = (geoMap[geo].creators[c.role] || 0) + 1;
+        const city = c.city || "Unspecified";
+        if (!cityMap[city]) cityMap[city] = { city, creators: {}, rev: 0, cost: 0 };
+        cityMap[city].rev += c.clientBilling;
+        cityMap[city].cost += c.totalCost;
+        cityMap[city].creators[c.role] = (cityMap[city].creators[c.role] || 0) + 1;
       }
     }
-    return Object.values(geoMap);
+    return Object.values(cityMap).sort((a, b) => Object.values(b.creators).reduce((s, n) => s + n, 0) - Object.values(a.creators).reduce((s, n) => s + n, 0));
   }, [displayData]);
 
   // MoM mock data
@@ -263,13 +266,13 @@ const StudioDashboard = () => {
         </div>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+      {/* Summary — hide financials for pod lead */}
+      <div className={`grid grid-cols-2 ${hideFinancials ? "sm:grid-cols-2" : "sm:grid-cols-5"} gap-4`}>
         <StatCard label="Active Clients" value={String(activeClients)} icon={Users} />
         <StatCard label="Active Creators" value={String(activeCreators.length)} icon={Users} />
-        <StatCard label="Total Revenue" value={formatCurrency(totalRev)} icon={DollarSign} />
-        <StatCard label="Total Cost" value={formatCurrency(totalCost)} icon={DollarSign} />
-        <StatCard label="Gross Margin" value={`${avgMargin}%`} change={formatCurrency(totalRev - totalCost)} changeType="positive" icon={TrendingUp} />
+        {!hideFinancials && <StatCard label="Total Revenue" value={formatCurrency(totalRev)} icon={DollarSign} />}
+        {!hideFinancials && <StatCard label="Total Cost" value={formatCurrency(totalCost)} icon={DollarSign} />}
+        {!hideFinancials && <StatCard label="Gross Margin" value={`${avgMargin}%`} change={formatCurrency(totalRev - totalCost)} changeType="positive" icon={TrendingUp} />}
       </div>
 
       {/* MoM Chart */}
@@ -306,11 +309,11 @@ const StudioDashboard = () => {
       {/* Geography View */}
       {viewMode === "geography" && (
         <div className="space-y-3">
-          <h2 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">Geography × Creator Type</h2>
+          <h2 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">City × Creator Type</h2>
           {geoData.map(g => (
-            <div key={g.geo} className="stat-card">
+            <div key={g.city} className="stat-card">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-foreground">{g.geo}</h3>
+                <h3 className="font-semibold text-foreground">{g.city}</h3>
                 <div className="flex gap-4 text-xs font-mono">
                   <span className="text-foreground">Rev: {formatCurrency(g.rev)}</span>
                   <span className="text-muted-foreground">Cost: {formatCurrency(g.cost)}</span>

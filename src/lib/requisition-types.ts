@@ -54,6 +54,11 @@ export const SIGNING_ENTITIES = [
 export const CURRENCIES = [
   { code: "INR", symbol: "₹", flag: "🇮🇳", label: "Indian Rupee" },
   { code: "USD", symbol: "$", flag: "🇺🇸", label: "US Dollar" },
+  { code: "GBP", symbol: "£", flag: "🇬🇧", label: "British Pound" },
+  { code: "EUR", symbol: "€", flag: "🇪🇺", label: "Euro" },
+  { code: "AED", symbol: "د.إ", flag: "🇦🇪", label: "UAE Dirham" },
+  { code: "SGD", symbol: "S$", flag: "🇸🇬", label: "Singapore Dollar" },
+  { code: "AUD", symbol: "A$", flag: "🇦🇺", label: "Australian Dollar" },
 ] as const;
 
 export type CurrencyCode = typeof CURRENCIES[number]["code"];

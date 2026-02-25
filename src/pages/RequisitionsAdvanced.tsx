@@ -3,7 +3,7 @@ import { advancedRequisitions } from "@/lib/requisition-mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, AlertTriangle, Flag, ExternalLink, Pencil } from "lucide-react";
+import { Search, Plus, AlertTriangle, Flag, ExternalLink, Pencil, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { POD_NAMES } from "@/lib/talent-client-store";
+import { useAuth } from "@/lib/auth-context";
 
 const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
 
@@ -23,10 +24,13 @@ const INITIAL_RECRUITERS = ["Neha Gupta", "Ravi Kumar", "Pooja Shah", "Sanjay Ve
 
 const RequisitionsAdvanced = () => {
   const navigate = useNavigate();
+  const { currentRole } = useAuth();
+  const isAdmin = currentRole === "admin";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [flowFilter, setFlowFilter] = useState("all");
   const [podFilter, setPodFilter] = useState("All");
+  const [showApprovalQueue, setShowApprovalQueue] = useState(false);
   const [reqs, setReqs] = useState(advancedRequisitions);
   const [selectedReq, setSelectedReq] = useState<AdvancedRequisition | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -363,6 +367,9 @@ const RequisitionsAdvanced = () => {
 
   const ungroupedReqs = filtered.filter(r => getPod(r) === "—");
 
+  // Pending approvals (for admin)
+  const pendingApprovals = reqs.filter(r => r.status === "RMG approval Pending" || r.taEditedPendingApproval);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -370,10 +377,58 @@ const RequisitionsAdvanced = () => {
           <h1 className="text-2xl font-semibold text-foreground">Requisitions</h1>
           <p className="text-sm text-muted-foreground mt-1">Advanced requisition management with margin intelligence</p>
         </div>
-        <Button className="gap-2" onClick={() => navigate("/requisitions/new")}>
-          <Plus className="h-4 w-4" /> New Requisition
-        </Button>
+        <div className="flex gap-2">
+          {isAdmin && pendingApprovals.length > 0 && (
+            <Button variant={showApprovalQueue ? "default" : "outline"} onClick={() => setShowApprovalQueue(!showApprovalQueue)} className="gap-2">
+              <CheckCircle className="h-4 w-4" /> Approvals ({pendingApprovals.length})
+            </Button>
+          )}
+          <Button className="gap-2" onClick={() => navigate("/requisitions/new")}>
+            <Plus className="h-4 w-4" /> New Requisition
+          </Button>
+        </div>
       </div>
+
+      {/* Approval Queue */}
+      {showApprovalQueue && isAdmin && (
+        <Card className="border-warning/30 bg-warning/5">
+          <CardHeader><CardTitle className="text-base text-warning">Pending Approvals</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {pendingApprovals.map(r => (
+                <div key={r.id} className="flex items-center justify-between p-3 rounded-md border border-border bg-card">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono font-medium text-foreground">{r.id}</span>
+                    <span className="text-muted-foreground">{getClientName(r)}</span>
+                    {r.taEditedPendingApproval && <span className="status-badge bg-warning/15 text-warning text-[10px]">TA Edited</span>}
+                    <span className="text-xs text-muted-foreground font-mono">₹{r.totalClientRevenue.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="h-7 text-xs gap-1" onClick={() => {
+                      setReqs(prev => prev.map(req => req.id === r.id ? {
+                        ...req, status: "Approved but not assigned", taEditedPendingApproval: false,
+                        auditLog: [...req.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: req.status, newValue: "Approved but not assigned", editedBy: "Admin", timestamp: new Date().toISOString() }]
+                      } : req));
+                      toast.success(`${r.id} approved`);
+                    }}>
+                      <CheckCircle className="h-3 w-3" /> Approve
+                    </Button>
+                    <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => {
+                      setReqs(prev => prev.map(req => req.id === r.id ? {
+                        ...req, status: "Scrapped", taEditedPendingApproval: false,
+                        auditLog: [...req.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: req.status, newValue: "Scrapped", editedBy: "Admin", timestamp: new Date().toISOString() }]
+                      } : req));
+                      toast.success(`${r.id} rejected`);
+                    }}>
+                      <XCircle className="h-3 w-3" /> Reject
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Flag Summary */}
       {flaggedReqs.length > 0 && (
@@ -417,6 +472,21 @@ const RequisitionsAdvanced = () => {
             {POD_NAMES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Status chips for quick multi-filter */}
+      <div className="flex flex-wrap gap-1.5">
+        {allStatuses.map(s => {
+          const count = reqs.filter(r => r.status === s).length;
+          if (count === 0) return null;
+          const isActive = statusFilter === s;
+          return (
+            <button key={s} onClick={() => setStatusFilter(isActive ? "all" : s)}
+              className={`status-badge cursor-pointer transition-colors ${isActive ? "bg-primary/20 text-primary border border-primary/30" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+              {s} ({count})
+            </button>
+          );
+        })}
       </div>
 
       {/* Summary Cards — clickable */}

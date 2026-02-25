@@ -44,6 +44,7 @@ export interface DeployedCreatorV2 {
   hrbpConnects: HRBPConnect[];
   monthlyPayments: MonthlyPayment[];
   startDate: string;
+  city: string;
 }
 
 export interface DealV2 {
@@ -76,11 +77,14 @@ export interface PodV2 {
   clients: ClientV2[];
 }
 
+const CITIES = ["Mumbai", "Bangalore", "Delhi", "Chennai", "Pune", "Hyderabad", "Kochi", "New York", "San Francisco"];
+
 function makeCreator(
   id: string, name: string, role: RoleType, source: ResourceSource,
   payModel: PayModel, payRate: number, volume: number, cost: number,
   billing: number, status: CreatorDealStatus = "Active",
-  capRating: HealthColor = "green", bopmRating: HealthColor = "green"
+  capRating: HealthColor = "green", bopmRating: HealthColor = "green",
+  city: string = ""
 ): DeployedCreatorV2 {
   return {
     id, creatorName: name, role, source, payModel, payRate,
@@ -91,6 +95,7 @@ function makeCreator(
     capabilityRatingReason: "", bopmRatingReason: "",
     hrbpName: "", hrbpConnects: [], monthlyPayments: [],
     startDate: "2026-01-01",
+    city: city || CITIES[Math.floor(Math.random() * CITIES.length)],
   };
 }
 
@@ -213,7 +218,7 @@ export function updateCreatorInDeal(dealId: string, creatorId: string, updates: 
   }));
 }
 
-export function addCreatorToDeal(dealId: string, creator: Omit<DeployedCreatorV2, "id" | "grossMargin" | "grossMarginPercent" | "capabilityRatingReason" | "bopmRatingReason" | "hrbpName" | "hrbpConnects" | "monthlyPayments" | "startDate">) {
+export function addCreatorToDeal(dealId: string, creator: Omit<DeployedCreatorV2, "id" | "grossMargin" | "grossMarginPercent" | "capabilityRatingReason" | "bopmRatingReason" | "hrbpName" | "hrbpConnects" | "monthlyPayments" | "startDate" | "city"> & { city?: string }) {
   const newCreator: DeployedCreatorV2 = {
     ...creator,
     id: `DC-${Date.now()}`,
@@ -222,6 +227,7 @@ export function addCreatorToDeal(dealId: string, creator: Omit<DeployedCreatorV2
     capabilityRatingReason: "", bopmRatingReason: "",
     hrbpName: "", hrbpConnects: [], monthlyPayments: [],
     startDate: new Date().toISOString().split("T")[0],
+    city: creator.city || "",
   };
   pods = pods.map(p => ({
     ...p, clients: p.clients.map(c => ({
