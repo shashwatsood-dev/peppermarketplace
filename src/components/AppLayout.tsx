@@ -12,10 +12,10 @@ export function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <main className="flex-1 overflow-auto">
-          <header className="sticky top-0 z-10 flex h-12 items-center border-b border-border bg-background/80 backdrop-blur-sm px-4">
+          <header className="sticky top-0 z-10 flex h-[54px] items-center border-b border-border bg-card px-5">
             <SidebarTrigger />
           </header>
           <div className="p-6">

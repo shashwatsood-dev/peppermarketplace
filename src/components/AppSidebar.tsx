@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FileText, Users, Database, BarChart3, Settings,
-  UserCheck, User, LogOut, ChevronDown,
+  UserCheck, User, LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -32,22 +32,22 @@ export function AppSidebar() {
   const visibleSystem = systemItems.filter(item => item.roles.includes(currentRole));
 
   return (
-    <Sidebar className="border-r border-border">
+    <Sidebar className="border-r border-border bg-card w-[228px]">
       <SidebarHeader className="p-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-mono font-bold text-sm">MP</span>
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-mono font-semibold text-[11px]">MP</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Procurement Suite</p>
-            <p className="text-xs text-muted-foreground">Marketplace Ops</p>
+            <p className="text-[13px] font-semibold text-foreground leading-tight">Procurement Suite</p>
+            <p className="text-[10px] text-muted-foreground">Marketplace Ops</p>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className="px-2 py-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-mono uppercase tracking-wider text-muted-foreground px-3 mb-1">
+          <SidebarGroupLabel className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground px-3 mb-0.5">
             Operations
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -56,8 +56,8 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end={item.url === "/"}
-                      className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      activeClassName="bg-muted text-foreground font-medium">
+                      className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+                      activeClassName="bg-accent text-accent-foreground font-medium border-l-2 border-primary">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </NavLink>
@@ -69,8 +69,8 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {visibleSystem.length > 0 && (
-          <SidebarGroup className="mt-6">
-            <SidebarGroupLabel className="text-xs font-mono uppercase tracking-wider text-muted-foreground px-3 mb-1">
+          <SidebarGroup className="mt-4">
+            <SidebarGroupLabel className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground px-3 mb-0.5">
               System
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -79,8 +79,8 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink to={item.url}
-                        className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                        activeClassName="bg-muted text-foreground font-medium">
+                        className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+                        activeClassName="bg-accent text-accent-foreground font-medium border-l-2 border-primary">
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </NavLink>
@@ -92,12 +92,12 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        <div className="mt-auto px-3 py-4 border-t border-border space-y-3">
+        <div className="mt-auto px-3 py-3 border-t border-border space-y-2.5">
           {isAdmin && (
             <div className="space-y-1">
-              <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">View as Role</p>
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">View as Role</p>
               <Select value={currentRole} onValueChange={v => switchRole(v as UserRole)}>
-                <SelectTrigger className="h-8 text-xs bg-muted/50 border-border">
+                <SelectTrigger className="h-7 text-xs bg-muted border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -109,17 +109,17 @@ export function AppSidebar() {
             </div>
           )}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <Users className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-7 rounded-full bg-accent flex items-center justify-center">
+                <Users className="h-3.5 w-3.5 text-accent-foreground" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">{currentUser?.name || "User"}</p>
-                <p className="text-xs text-muted-foreground">{getRoleLabel(currentRole)}</p>
+                <p className="text-[13px] font-medium text-foreground leading-tight">{currentUser?.name || "User"}</p>
+                <p className="text-[10px] text-muted-foreground">{getRoleLabel(currentRole)}</p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={logout} className="h-8 w-8 text-muted-foreground hover:text-foreground">
-              <LogOut className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={logout} className="h-7 w-7 text-muted-foreground hover:text-foreground">
+              <LogOut className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
