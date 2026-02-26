@@ -6,17 +6,18 @@ interface StatCardProps {
   change?: string;
   changeType?: "positive" | "negative" | "neutral";
   icon: LucideIcon;
+  onClick?: () => void;
 }
 
-export function StatCard({ label, value, change, changeType = "neutral", icon: Icon }: StatCardProps) {
+export function StatCard({ label, value, change, changeType = "neutral", icon: Icon, onClick }: StatCardProps) {
   return (
-    <div className="stat-card animate-fade-in">
+    <div className={`stat-card animate-fade-in ${onClick ? "cursor-pointer" : ""}`} onClick={onClick}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{label}</p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
+          <p className="mt-1.5 text-xl font-semibold font-mono text-foreground">{value}</p>
           {change && (
-            <p className={`mt-1 text-xs font-medium ${
+            <p className={`mt-0.5 text-[11px] font-medium ${
               changeType === "positive" ? "text-success" : 
               changeType === "negative" ? "text-destructive" : "text-muted-foreground"
             }`}>
@@ -24,8 +25,8 @@ export function StatCard({ label, value, change, changeType = "neutral", icon: I
             </p>
           )}
         </div>
-        <div className="rounded-lg bg-muted p-2">
-          <Icon className="h-4 w-4 text-muted-foreground" />
+        <div className="rounded-md bg-muted p-1.5">
+          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
       </div>
     </div>

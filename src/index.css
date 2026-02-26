@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,61 +6,64 @@
 
 @layer base {
   :root {
-    --background: 220 20% 4%;
-    --foreground: 210 20% 92%;
+    --background: 240 7% 98%;
+    --foreground: 240 10% 16%;
 
-    --card: 220 18% 7%;
-    --card-foreground: 210 20% 92%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 16%;
 
-    --popover: 220 18% 9%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 16%;
 
-    --primary: 160 60% 45%;
-    --primary-foreground: 220 20% 4%;
+    --primary: 238 40% 57%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 12%;
-    --secondary-foreground: 210 15% 75%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 40%;
 
-    --muted: 220 14% 10%;
-    --muted-foreground: 215 12% 50%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 46%;
 
-    --accent: 160 50% 40%;
-    --accent-foreground: 220 20% 4%;
+    --accent: 238 40% 96%;
+    --accent-foreground: 238 40% 57%;
 
-    --destructive: 0 70% 50%;
-    --destructive-foreground: 210 20% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 14%;
-    --input: 220 14% 14%;
-    --ring: 160 60% 45%;
+    --border: 240 6% 94%;
+    --input: 240 6% 94%;
+    --ring: 238 40% 57%;
 
-    --radius: 0.5rem;
+    --radius: 0.875rem;
 
-    --sidebar-background: 220 20% 5%;
-    --sidebar-foreground: 210 15% 70%;
-    --sidebar-primary: 160 60% 45%;
-    --sidebar-primary-foreground: 220 20% 4%;
-    --sidebar-accent: 220 16% 10%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 220 14% 12%;
-    --sidebar-ring: 160 60% 45%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 5% 46%;
+    --sidebar-primary: 238 40% 57%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 238 40% 96%;
+    --sidebar-accent-foreground: 238 40% 40%;
+    --sidebar-border: 240 6% 94%;
+    --sidebar-ring: 238 40% 57%;
 
-    /* Custom tokens */
-    --success: 160 60% 45%;
-    --success-foreground: 220 20% 4%;
+    /* Status tokens */
+    --success: 142 60% 40%;
+    --success-foreground: 0 0% 100%;
+    --success-bg: 142 60% 96%;
     --warning: 38 92% 50%;
-    --warning-foreground: 220 20% 4%;
+    --warning-foreground: 38 92% 20%;
+    --warning-bg: 38 92% 96%;
     --info: 210 80% 55%;
-    --info-foreground: 220 20% 4%;
+    --info-foreground: 0 0% 100%;
+    --danger-bg: 0 72% 96%;
 
-    --chart-1: 160 60% 45%;
-    --chart-2: 210 80% 55%;
+    --chart-1: 238 40% 57%;
+    --chart-2: 142 60% 40%;
     --chart-3: 38 92% 50%;
-    --chart-4: 280 60% 55%;
-    --chart-5: 0 70% 50%;
+    --chart-4: 280 50% 55%;
+    --chart-5: 0 72% 51%;
 
-    --surface-raised: 220 16% 9%;
-    --surface-overlay: 220 16% 12%;
+    --surface-raised: 0 0% 100%;
+    --surface-overlay: 240 5% 96%;
   }
 }
 
@@ -71,7 +74,9 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
   }
 
   .font-mono {
@@ -80,23 +85,12 @@
 }
 
 @layer utilities {
-  .glow-primary {
-    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.3);
-  }
-
-  .glass {
-    background: hsl(var(--card) / 0.6);
-    backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border) / 0.5);
-  }
-
   .stat-card {
-    @apply rounded-lg border border-border bg-card p-5 transition-all duration-200;
+    @apply rounded-[14px] border border-border bg-card p-4 transition-colors duration-150;
   }
 
   .stat-card:hover {
-    border-color: hsl(var(--primary) / 0.3);
-    box-shadow: 0 0 24px -8px hsl(var(--primary) / 0.15);
+    border-color: hsl(var(--primary) / 0.2);
   }
 
   .data-table-row {
@@ -104,7 +98,7 @@
   }
 
   .data-table-row:hover {
-    background: hsl(var(--muted) / 0.5);
+    background: hsl(var(--muted));
   }
 
   .status-badge {
