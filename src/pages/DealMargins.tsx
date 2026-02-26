@@ -261,7 +261,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
                 {visibleCreators.map(c => (
                   <tr key={c.id} className={`data-table-row ${c.dealStatus === "Inactive" ? "bg-warning/5" : c.dealStatus === "Removed" ? "bg-destructive/5" : ""}`}>
                     <td className="py-2 font-medium text-foreground pr-3">{c.creatorName}</td>
-                    <td className="py-2 pr-3"><span className={`text-xs px-1.5 py-0.5 rounded ${c.source === "In-house" ? "bg-info/15 text-info" : "bg-primary/15 text-primary"}`}>{c.source}</span></td>
+                    <td className="py-2 pr-3"><span className={`text-xs px-1.5 py-0.5 rounded ${c.source === "In-house" ? "bg-primary/10 text-primary" : "bg-primary/15 text-primary font-medium"}`}>{c.source}</span></td>
                     <td className="py-2 text-muted-foreground pr-3">{c.role}</td>
                     <td className="py-2 text-muted-foreground pr-3">{c.payModel}</td>
                     <td className="py-2 font-mono text-foreground pr-3">₹{c.payRate.toLocaleString()}</td>
@@ -400,6 +400,7 @@ const DealMargins = () => {
     <div className="space-y-6 animate-fade-in" onClick={() => refresh()}>
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Talent X Client View</h1>
+        <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
         <p className="text-sm text-muted-foreground mt-1">Pod → Client → Deal hierarchy with creator insights</p>
       </div>
 

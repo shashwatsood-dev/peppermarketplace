@@ -54,6 +54,7 @@ const Settings = () => {
     <div className="space-y-6 animate-fade-in max-w-3xl">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+        <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
         <p className="text-sm text-muted-foreground mt-1">Admin configuration for the Marketplace Procurement Suite</p>
       </div>
 

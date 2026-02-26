@@ -255,6 +255,7 @@ const StudioDashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Studio Dashboard</h1>
+          <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
           <p className="text-sm text-muted-foreground mt-1">Content Studio P&L and resource overview</p>
         </div>
         <div className="flex items-center gap-2">
@@ -278,15 +279,15 @@ const StudioDashboard = () => {
       {/* MoM Chart */}
       {showMoM && (
         <div className="stat-card">
-          <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground mb-4">Month-on-Month Trend</h3>
+          <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Month-on-Month Trend</h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={momData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-              <XAxis dataKey="month" tick={{ fill: "hsl(215 12% 50%)", fontSize: 12 }} axisLine={false} />
-              <YAxis tick={{ fill: "hsl(215 12% 50%)", fontSize: 12 }} axisLine={false} tickFormatter={(v) => `${(v / 100000).toFixed(0)}L`} />
-              <Tooltip contentStyle={{ background: "hsl(220 18% 9%)", border: "1px solid hsl(220 14% 14%)", borderRadius: 8, color: "hsl(210 20% 92%)" }} />
-              <Bar dataKey="revenue" fill="hsl(160 60% 45%)" radius={[4, 4, 0, 0]} name="Revenue" />
-              <Bar dataKey="cost" fill="hsl(210 80% 55%)" radius={[4, 4, 0, 0]} name="Cost" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 6% 90%)" />
+              <XAxis dataKey="month" tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} />
+              <YAxis tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} tickFormatter={(v) => `${(v / 100000).toFixed(0)}L`} />
+              <Tooltip contentStyle={{ background: "hsl(0 0% 100%)", border: "1px solid hsl(240 6% 90%)", borderRadius: 8, color: "hsl(240 10% 16%)" }} />
+              <Bar dataKey="revenue" fill="hsl(238 40% 57%)" radius={[4, 4, 0, 0]} name="Revenue" />
+              <Bar dataKey="cost" fill="hsl(238 40% 57% / 0.4)" radius={[4, 4, 0, 0]} name="Cost" />
             </BarChart>
           </ResponsiveContainer>
         </div>
