@@ -375,6 +375,7 @@ const RequisitionsAdvanced = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Requisitions</h1>
+          <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
           <p className="text-sm text-muted-foreground mt-1">Advanced requisition management with margin intelligence</p>
         </div>
         <div className="flex gap-2">

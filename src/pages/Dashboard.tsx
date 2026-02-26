@@ -65,6 +65,7 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+          <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
           <p className="text-sm text-muted-foreground mt-1">TA operations, performance & creator intelligence</p>
         </div>
         <Select value={timeRange} onValueChange={v => setTimeRange(v as TimeRange)}>
@@ -124,7 +125,7 @@ const Dashboard = () => {
 
           {/* Recruiter Comparison Table */}
           <div className="stat-card">
-            <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground mb-4">Recruiter Comparison</h3>
+            <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Recruiter Comparison</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border text-left">
@@ -154,23 +155,23 @@ const Dashboard = () => {
 
           {/* Pipeline chart */}
           <div className="stat-card">
-            <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground mb-4">Pipeline Comparison</h3>
+            <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Pipeline Comparison</h3>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={(selectedRecruiter === "all" ? taMetrics.recruiterPerformance : taMetrics.recruiterPerformance.filter(r => r.name === selectedRecruiter)).map(r => ({ name: r.name, Identified: r.profiles.identified, Contacted: r.profiles.contacted, Selected: r.profiles.selected }))} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                <XAxis type="number" tick={{ fill: "hsl(215 12% 50%)", fontSize: 12 }} axisLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fill: "hsl(215 12% 50%)", fontSize: 12 }} axisLine={false} width={100} />
-                <Tooltip contentStyle={{ background: "hsl(220 18% 9%)", border: "1px solid hsl(220 14% 14%)", borderRadius: 8, color: "hsl(210 20% 92%)" }} />
-                <Bar dataKey="Identified" fill="hsl(220 14% 25%)" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="Contacted" fill="hsl(210 80% 55%)" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="Selected" fill="hsl(160 60% 45%)" radius={[0, 4, 4, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 6% 90%)" />
+                <XAxis type="number" tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} width={100} />
+                <Tooltip contentStyle={{ background: "hsl(0 0% 100%)", border: "1px solid hsl(240 6% 90%)", borderRadius: 8, color: "hsl(240 10% 16%)" }} />
+                <Bar dataKey="Identified" fill="hsl(238 40% 57% / 0.3)" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="Contacted" fill="hsl(238 40% 57% / 0.7)" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="Selected" fill="hsl(238 40% 57%)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* MoM Table */}
           <div className="stat-card">
-            <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground mb-4">Month-on-Month Performance</h3>
+            <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Month-on-Month Performance</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border text-left">
@@ -205,7 +206,7 @@ const Dashboard = () => {
             <StatCard label="Without HRBP" value={String(allCreators.filter(c => !c.hrbpName).length)} icon={AlertTriangle} changeType="negative" />
           </div>
           <div className="stat-card">
-            <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground mb-4">Recent HRBP Connects</h3>
+            <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Recent HRBP Connects</h3>
             <div className="space-y-2">
               {allCreators
                 .flatMap(c => c.hrbpConnects.map(conn => ({ ...conn, creatorName: c.creatorName })))
@@ -244,19 +245,19 @@ const Dashboard = () => {
                   ))}
                 </div>
                 <div className="stat-card">
-                  <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground mb-4">Creator Distribution</h3>
+                  <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Creator Distribution</h3>
                   <ResponsiveContainer width="100%" height={240}>
                     <BarChart data={Object.entries(groups).map(([role, count]) => ({ role, count }))}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                      <XAxis dataKey="role" tick={{ fill: "hsl(215 12% 50%)", fontSize: 12 }} axisLine={false} />
-                      <YAxis tick={{ fill: "hsl(215 12% 50%)", fontSize: 12 }} axisLine={false} />
-                      <Tooltip contentStyle={{ background: "hsl(220 18% 9%)", border: "1px solid hsl(220 14% 14%)", borderRadius: 8, color: "hsl(210 20% 92%)" }} />
-                      <Bar dataKey="count" fill="hsl(160 60% 45%)" radius={[4, 4, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 6% 90%)" />
+                <XAxis dataKey="role" tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} />
+                <YAxis tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} />
+                <Tooltip contentStyle={{ background: "hsl(0 0% 100%)", border: "1px solid hsl(240 6% 90%)", borderRadius: 8, color: "hsl(240 10% 16%)" }} />
+                      <Bar dataKey="count" fill="hsl(238 40% 57%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="stat-card">
-                  <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground mb-4">All Creators by Status</h3>
+                  <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">All Creators by Status</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {(["Active", "Inactive", "Removed", "Flagged"] as const).map(status => (
                       <div key={status} className="stat-card text-center">

@@ -90,7 +90,8 @@
   }
 
   .stat-card:hover {
-    border-color: hsl(var(--primary) / 0.2);
+    border-color: hsl(var(--primary) / 0.3);
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.08);
   }
 
   .data-table-row {

@@ -25,8 +25,8 @@ export function StatCard({ label, value, change, changeType = "neutral", icon: I
             </p>
           )}
         </div>
-        <div className="rounded-md bg-muted p-1.5">
-          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <div className="rounded-md bg-primary/10 p-1.5">
+          <Icon className="h-3.5 w-3.5 text-primary" />
         </div>
       </div>
     </div>
