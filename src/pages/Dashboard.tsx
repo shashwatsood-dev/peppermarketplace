@@ -3,11 +3,12 @@ import { StatCard } from "@/components/StatCard";
 import { advancedRequisitions } from "@/lib/requisition-mock-data";
 import { getPods } from "@/lib/talent-client-store";
 import { taMetrics } from "@/lib/mock-data";
+import { getPipelineAnalytics, getAllPipelineCandidates, getCandidates } from "@/lib/ats-store";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Clock, Users, BarChart2, UserCheck, TrendingUp, Target, CheckCircle, AlertTriangle } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Clock, Users, BarChart2, UserCheck, TrendingUp, Target, CheckCircle, AlertTriangle, Kanban, PieChart } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart as RPieChart, Pie } from "recharts";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { AdvancedRequisition } from "@/lib/requisition-types";
 
@@ -84,6 +85,7 @@ const Dashboard = () => {
       <Tabs value={activeView} onValueChange={setActiveView}>
         <TabsList className="bg-muted border border-border">
           <TabsTrigger value="team" className="text-xs font-mono gap-1"><BarChart2 className="h-3.5 w-3.5" /> Team Metrics</TabsTrigger>
+          <TabsTrigger value="ats" className="text-xs font-mono gap-1"><Kanban className="h-3.5 w-3.5" /> ATS Pipeline</TabsTrigger>
           <TabsTrigger value="hrbp" className="text-xs font-mono gap-1"><Users className="h-3.5 w-3.5" /> HRBP</TabsTrigger>
           <TabsTrigger value="creators" className="text-xs font-mono gap-1"><Target className="h-3.5 w-3.5" /> Creator Summary</TabsTrigger>
         </TabsList>
@@ -196,6 +198,113 @@ const Dashboard = () => {
               </table>
             </div>
           </div>
+        </TabsContent>
+
+        {/* ─── ATS Pipeline Tab ────────────────────────── */}
+        <TabsContent value="ats" className="space-y-6 mt-4">
+          {(() => {
+            const analytics = getPipelineAnalytics();
+            const allPipeline = getAllPipelineCandidates();
+            const allCands = getCandidates();
+            const COLORS = ["hsl(238 40% 57%)", "hsl(238 40% 57% / 0.7)", "hsl(238 40% 57% / 0.4)", "hsl(142 60% 45%)", "hsl(0 65% 55%)"];
+            const funnelData = [
+              { name: "Sourced", value: analytics.sourced },
+              { name: "Screened", value: analytics.screened },
+              { name: "Offers", value: analytics.offers },
+              { name: "Hired", value: analytics.hired },
+              { name: "Rejected", value: analytics.rejected },
+            ];
+            const sourceDistribution = allCands.reduce((acc, c) => { acc[c.source] = (acc[c.source] || 0) + 1; return acc; }, {} as Record<string, number>);
+            const sourceData = Object.entries(sourceDistribution).map(([name, value]) => ({ name, value }));
+
+            const reqBreakdown = advancedRequisitions.map(r => {
+              const pcs = allPipeline.filter(pc => pc.requisitionId === r.id);
+              const client = r.flow === "sales" ? r.salesData?.clientName : r.hiringData?.clientName;
+              return { reqId: r.id, client: client || "Unknown", total: pcs.length, hired: pcs.filter(pc => pc.currentStage === "Hired").length, rejected: pcs.filter(pc => pc.currentStage === "Rejected").length, inProcess: pcs.filter(pc => !["Sourced", "Hired", "Rejected"].includes(pc.currentStage)).length };
+            }).filter(r => r.total > 0);
+
+            return (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <StatCard label="Total Candidates" value={String(analytics.totalCandidates)} icon={Users} />
+                  <StatCard label="Active Pipelines" value={String(analytics.activePipelines)} icon={Kanban} />
+                  <StatCard label="Screening Rate" value={`${analytics.screeningRate}%`} icon={TrendingUp} />
+                  <StatCard label="Hire Rate" value={`${analytics.hireRate}%`} icon={Target} />
+                  <StatCard label="Avg Pipeline Age" value={`${analytics.avgAging}d`} icon={Clock} />
+                  <StatCard label="Offer Accept" value={`${analytics.offerAcceptRate}%`} icon={CheckCircle} />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="stat-card">
+                    <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Recruitment Funnel</h3>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <BarChart data={funnelData} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 5% 90%)" horizontal={false} />
+                        <XAxis type="number" tick={{ fontSize: 11 }} />
+                        <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={80} />
+                        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                        <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                          {funnelData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <div className="grid grid-cols-3 gap-3 mt-3">
+                      <div className="bg-muted/50 rounded-lg p-2 text-center">
+                        <p className="text-[10px] uppercase text-muted-foreground">Source → Screen</p>
+                        <p className="text-lg font-mono font-semibold">{analytics.screeningRate}%</p>
+                      </div>
+                      <div className="bg-muted/50 rounded-lg p-2 text-center">
+                        <p className="text-[10px] uppercase text-muted-foreground">Screen → Hire</p>
+                        <p className="text-lg font-mono font-semibold">{analytics.screened ? Math.round(analytics.hired / analytics.screened * 100) : 0}%</p>
+                      </div>
+                      <div className="bg-muted/50 rounded-lg p-2 text-center">
+                        <p className="text-[10px] uppercase text-muted-foreground">Overall</p>
+                        <p className="text-lg font-mono font-semibold">{analytics.hireRate}%</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="stat-card">
+                    <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Source Distribution</h3>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <RPieChart>
+                        <Pie data={sourceData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                          {sourceData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                      </RPieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {reqBreakdown.length > 0 && (
+                  <div className="stat-card">
+                    <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Pipeline by Requisition</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead><tr className="border-b border-border text-left">
+                          {["Req ID", "Client", "Total", "In Process", "Hired", "Rejected"].map(h => (
+                            <th key={h} className="pb-2 text-xs font-mono uppercase text-muted-foreground pr-4">{h}</th>
+                          ))}
+                        </tr></thead>
+                        <tbody>
+                          {reqBreakdown.map(r => (
+                            <tr key={r.reqId} className="data-table-row">
+                              <td className="py-2 font-mono text-primary pr-4">{r.reqId}</td>
+                              <td className="py-2 pr-4">{r.client}</td>
+                              <td className="py-2 font-mono pr-4">{r.total}</td>
+                              <td className="py-2 font-mono text-primary pr-4">{r.inProcess}</td>
+                              <td className="py-2 font-mono text-success pr-4">{r.hired}</td>
+                              <td className="py-2 font-mono text-destructive pr-4">{r.rejected}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </TabsContent>
 
         {/* ─── HRBP View ────────────────────────────────── */}

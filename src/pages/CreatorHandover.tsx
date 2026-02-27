@@ -259,6 +259,22 @@ const CreatorHandover = () => {
             <Textarea placeholder="Any context for the AM team..." value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
           </div>
 
+          {/* Briefing Call Scheduling */}
+          <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/20">
+            <Label className="text-sm font-medium flex items-center gap-2">📞 Briefing Call (Optional)</Label>
+            <p className="text-xs text-muted-foreground">Schedule a briefing call with the employee for onboarding</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Briefing Date & Time</Label>
+                <Input type="datetime-local" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Meeting Link</Label>
+                <Input placeholder="https://meet.google.com/..." />
+              </div>
+            </div>
+          </div>
+
           <Button className="gap-2" onClick={handleSubmit}>
             <Send className="h-4 w-4" /> Hand Over & Copy Share Message
           </Button>

@@ -117,6 +117,7 @@ export interface InterviewRound {
   feedback: string;
   rating: number | null; // 1-5
   status: "scheduled" | "completed" | "cancelled" | "no-show";
+  meetingLink: string;
 }
 
 // ── Notifications ──────────────────────────────────────────────────

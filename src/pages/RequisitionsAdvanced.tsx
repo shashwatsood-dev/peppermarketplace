@@ -3,7 +3,7 @@ import { advancedRequisitions } from "@/lib/requisition-mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, AlertTriangle, Flag, ExternalLink, Pencil, CheckCircle, XCircle } from "lucide-react";
+import { Search, Plus, AlertTriangle, Flag, ExternalLink, Pencil, CheckCircle, XCircle, Kanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -847,13 +847,14 @@ const RequisitionsAdvanced = () => {
 
 // ─── Req Table Component ────────────────────────────────
 function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorTypes, getUrgencyDisplay, getStage, daysOpen, openEdit, openReview, openAssign, openUpdate, handleInlineStatusChange, handleInlineStageChange, allStatuses, setSelectedReq, setUpdateDialogOpen, setReviewDialogOpen, setAssignDialogOpen }: any) {
+  const navigate = useNavigate();
   const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
   return (
     <div className="stat-card overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border text-left">
-            {["ID", "Client", "Deal ID", "Type", "Stage", "Creator Types", "Revenue", "Cost", "GM%", "Recruiter", "Status", "Days", "Urgency", "Actions"].map(h => (
+            {["ID", "Client", "Deal ID", "Type", "Stage", "Creator Types", "Revenue", "Cost", "GM%", "Recruiter", "Status", "Days", "Urgency", "Pipeline", "Actions"].map(h => (
               <th key={h} className="pb-3 text-xs font-mono uppercase tracking-wider text-muted-foreground whitespace-nowrap pr-3">{h}</th>
             ))}
           </tr>
@@ -896,6 +897,11 @@ function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorType
                 </td>
                 <td className="py-3 font-mono text-muted-foreground pr-3">{daysOpen(req.createdAt)}</td>
                 <td className="py-3 pr-3 text-xs text-muted-foreground">{getUrgencyDisplay(req)}</td>
+                <td className="py-3 pr-3">
+                  <Button variant="ghost" size="sm" className="text-xs h-7 gap-1 text-primary" onClick={(e) => { e.stopPropagation(); navigate(`/ats/${req.id}`); }}>
+                    <Kanban className="h-3 w-3" /> Open
+                  </Button>
+                </td>
                 <td className="py-3">
                   <div className="flex gap-1">
                     <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openEdit(req)}><Pencil className="h-3 w-3 mr-1" />Edit</Button>

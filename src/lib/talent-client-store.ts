@@ -266,3 +266,82 @@ export function recalcDealFinancials(dealId: string) {
     })),
   }));
 }
+
+// ── CSV Import for Talent x Client view ────────────────────────────
+
+export function getClientCSVTemplate(): string {
+  return "clientName,vsdName,principalBOPM,dealName,dealType,currency,creatorName,role,payModel,payRate,volume,cost,billing,city\nAcme Corp,John VSD,Jane BOPM,Content Retainer,Retainer,INR,Writer One,Writer,Per Word,5,100000,50000,85000,Mumbai";
+}
+
+export function parseClientCSV(csvText: string, podName: PodName): { added: number } {
+  const lines = csvText.split("\n").filter(l => l.trim());
+  if (lines.length < 2) return { added: 0 };
+  const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+
+  let added = 0;
+  const clientMap = new Map<string, { client: Partial<ClientV2>; deals: Map<string, { deal: Partial<DealV2>; creators: DeployedCreatorV2[] }> }>();
+
+  for (let i = 1; i < lines.length; i++) {
+    const vals: string[] = [];
+    let current = ""; let inQ = false;
+    for (const ch of lines[i]) {
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { vals.push(current.trim()); current = ""; continue; }
+      current += ch;
+    }
+    vals.push(current.trim());
+
+    const get = (k: string) => vals[headers.indexOf(k)] || "";
+    const clientName = get("clientname");
+    const dealName = get("dealname");
+    if (!clientName || !dealName) continue;
+
+    if (!clientMap.has(clientName)) {
+      clientMap.set(clientName, {
+        client: { clientName, vsdName: get("vsdname"), principalBOPM: get("principalbopm"), seniorBOPM: "", juniorBOPM: "" },
+        deals: new Map(),
+      });
+    }
+    const ce = clientMap.get(clientName)!;
+    if (!ce.deals.has(dealName)) {
+      ce.deals.set(dealName, {
+        deal: { dealName, dealType: get("dealtype") || "Retainer" },
+        creators: [],
+      });
+    }
+    const de = ce.deals.get(dealName)!;
+    const cost = Number(get("cost")) || 0;
+    const billing = Number(get("billing")) || 0;
+    de.creators.push(makeCreator(
+      `DC-CSV-${Date.now()}-${i}`, get("creatorname") || "Unknown",
+      (get("role") || "Writer") as RoleType, "Freelancer",
+      (get("paymodel") || "Per Word") as PayModel,
+      Number(get("payrate")) || 0, Number(get("volume")) || 0,
+      cost, billing, "Active", "green", "green", get("city")
+    ));
+    added++;
+  }
+
+  // Add to pods
+  for (const [, ce] of clientMap) {
+    const deals: DealV2[] = [];
+    for (const [, de] of ce.deals) {
+      deals.push(makeDeal(`D-CSV-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, de.deal.dealName || "", de.deal.dealType || "Retainer", "Active", de.creators));
+    }
+    const newClient: ClientV2 = {
+      id: `CL-CSV-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      clientName: ce.client.clientName || "",
+      vsdName: ce.client.vsdName || "",
+      principalBOPM: ce.client.principalBOPM || "",
+      seniorBOPM: ce.client.seniorBOPM || "",
+      juniorBOPM: ce.client.juniorBOPM || "",
+      deals,
+    };
+    const podIdx = pods.findIndex(p => p.name === podName);
+    if (podIdx >= 0) {
+      pods = pods.map((p, i) => i === podIdx ? { ...p, clients: [...p.clients, newClient] } : p);
+    }
+  }
+
+  return { added };
+}
