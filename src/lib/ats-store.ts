@@ -325,3 +325,68 @@ export function getPipelineAnalytics() {
     avgAging,
   };
 }
+
+// ── Bulk Operations ────────────────────────────────────────────────
+
+export function bulkAddCandidates(candidatesData: Omit<Candidate, "id" | "createdAt" | "updatedAt">[]): Candidate[] {
+  return candidatesData.map(c => addCandidate(c));
+}
+
+export function getCSVTemplate(): string {
+  return "name,email,phone,currentRole,experience,city,skills,domainExpertise,languageSkills,toolsProficiency,expectedRate,rateModel,availability,source,linkedIn,portfolioUrl\nJohn Doe,john@email.com,+91 99999 00000,Writer,3 years,Mumbai,\"Fintech,SEO\",Fintech,English,\"Google Docs,Grammarly\",₹3/word,Per Word,Immediate,LinkedIn,https://linkedin.com/in/john,https://john.portfolio.com";
+}
+
+export function parseCandidateCSV(csvText: string): Omit<Candidate, "id" | "createdAt" | "updatedAt">[] {
+  const lines = csvText.split("\n").filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+  
+  return lines.slice(1).map(line => {
+    // Simple CSV parsing (handles quoted fields)
+    const values: string[] = [];
+    let current = "";
+    let inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; continue; }
+      if (ch === ',' && !inQuotes) { values.push(current.trim()); current = ""; continue; }
+      current += ch;
+    }
+    values.push(current.trim());
+    
+    const get = (key: string) => values[headers.indexOf(key)] || "";
+    const skills = get("skills").split(",").map(s => s.trim()).filter(Boolean);
+    
+    return {
+      name: get("name"), email: get("email"), phone: get("phone"), altPhone: "",
+      linkedIn: get("linkedin"), portfolioUrl: get("portfoliourl"), resumeUrl: "",
+      currentRole: get("currentrole"), experience: get("experience"),
+      skills, tags: skills.map(s => s.toLowerCase()),
+      domainExpertise: get("domainexpertise"), languageSkills: get("languageskills"),
+      toolsProficiency: get("toolsproficiency"),
+      expectedRate: get("expectedrate"), rateModel: get("ratemodel") || "Per Word",
+      availability: (get("availability") || "Immediate") as Candidate["availability"],
+      noticePeriod: "", city: get("city"),
+      overallScore: 0, technicalScore: 0, communicationScore: 0, cultureFitScore: 0,
+      workSamples: [], interactions: [], notes: [],
+      source: get("source") || "Other", pastAssignments: [],
+    };
+  });
+}
+
+// Get pipeline funnel metrics for a requisition (auto-populated from ATS)
+export function getPipelineFunnelForReq(reqId: string) {
+  const pcs = pipelineCandidates.filter(pc => pc.requisitionId === reqId);
+  const stageReached = (pc: PipelineCandidate, stage: string) =>
+    pc.stageHistory.some(s => s.to === stage) || pc.currentStage === stage;
+  
+  return {
+    identified: pcs.length,
+    contacted: pcs.filter(pc => pc.stageHistory.length > 1).length,
+    screened: pcs.filter(pc => stageReached(pc, "Screened") || stageReached(pc, "Assignment") || stageReached(pc, "Portfolio Evaluation") || stageReached(pc, "In-house Interview") || stageReached(pc, "Client Interview") || stageReached(pc, "Capability Review") || stageReached(pc, "Hired")).length,
+    shared: pcs.filter(pc => stageReached(pc, "Shared with Client") || stageReached(pc, "Client Interview") || stageReached(pc, "Capability Portfolio View")).length,
+    interviews: pcs.reduce((sum, pc) => sum + pc.interviewRounds.length, 0),
+    offers: pcs.filter(pc => pc.offerStatus !== null).length,
+    selected: pcs.filter(pc => pc.currentStage === "Hired").length,
+    dropOffs: pcs.filter(pc => pc.currentStage === "Rejected").length,
+  };
+}

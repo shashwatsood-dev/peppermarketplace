@@ -1,6 +1,10 @@
-import { useState } from "react";
-import { getCandidates, addCandidate, updateCandidate, getAllPipelineCandidates } from "@/lib/ats-store";
+import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { getCandidates, addCandidate, updateCandidate, getAllPipelineCandidates, bulkAddCandidates, getCSVTemplate, parseCandidateCSV } from "@/lib/ats-store";
+import { advancedRequisitions } from "@/lib/requisition-mock-data";
+import { getPipelineCandidates } from "@/lib/ats-store";
 import type { Candidate } from "@/lib/ats-types";
+import { RESOURCE_SPECIFIC_TYPES } from "@/lib/requisition-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import {
   Search, Plus, Star, Filter, User, ExternalLink, FileText,
-  MapPin, Briefcase, Clock,
+  MapPin, Briefcase, Clock, Download, Upload, Link2, Kanban,
 } from "lucide-react";
 
 const SOURCES = ["LinkedIn", "Referral", "Job Board", "Internal DB", "Other"];
@@ -22,6 +26,8 @@ const AVAILABILITY_OPTIONS = ["Immediate", "1 week", "2 weeks", "1 month", "Not 
 const RATE_MODELS = ["Per Word", "Hourly", "Monthly", "Per Assignment"];
 
 const CandidateDatabase = () => {
+  const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [candidates, setCandidates] = useState(getCandidates());
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -29,12 +35,14 @@ const CandidateDatabase = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [reqDialogOpen, setReqDialogOpen] = useState(false);
 
   // Add form state
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formPhone, setFormPhone] = useState("");
   const [formRole, setFormRole] = useState("");
+  const [formOtherRole, setFormOtherRole] = useState("");
   const [formExperience, setFormExperience] = useState("");
   const [formCity, setFormCity] = useState("");
   const [formDomain, setFormDomain] = useState("");
@@ -61,7 +69,6 @@ const CandidateDatabase = () => {
     return matchSearch && matchSource && matchTag;
   });
 
-  // Get all unique tags
   const allTags = [...new Set(candidates.flatMap(c => c.tags))];
 
   const getPipelineCount = (candidateId: string) =>
@@ -72,10 +79,11 @@ const CandidateDatabase = () => {
 
   const handleAdd = () => {
     if (!formName || !formEmail) { toast.error("Name and email are required"); return; }
+    const role = formRole === "Other" ? formOtherRole : formRole;
     addCandidate({
       name: formName, email: formEmail, phone: formPhone, altPhone: "",
       linkedIn: formLinkedIn, portfolioUrl: formPortfolio, resumeUrl: "",
-      currentRole: formRole, experience: formExperience,
+      currentRole: role, experience: formExperience,
       skills: formSkills.split(",").map(s => s.trim()).filter(Boolean),
       tags: formSkills.split(",").map(s => s.trim().toLowerCase()).filter(Boolean),
       domainExpertise: formDomain, languageSkills: formLanguages,
@@ -92,11 +100,49 @@ const CandidateDatabase = () => {
   };
 
   const resetForm = () => {
-    setFormName(""); setFormEmail(""); setFormPhone(""); setFormRole("");
+    setFormName(""); setFormEmail(""); setFormPhone(""); setFormRole(""); setFormOtherRole("");
     setFormExperience(""); setFormCity(""); setFormDomain(""); setFormLanguages("");
     setFormTools(""); setFormRate(""); setFormRateModel(""); setFormSource("LinkedIn");
     setFormSkills(""); setFormLinkedIn(""); setFormPortfolio("");
     setFormAvailability("Immediate");
+  };
+
+  const handleDownloadTemplate = () => {
+    const csv = getCSVTemplate();
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "candidate-upload-template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Template downloaded");
+  };
+
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const parsed = parseCandidateCSV(text);
+      if (parsed.length === 0) { toast.error("No valid candidates found in CSV"); return; }
+      bulkAddCandidates(parsed);
+      setCandidates(getCandidates());
+      toast.success(`${parsed.length} candidates imported successfully`);
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // Get open requisitions and handovers for a candidate
+  const getOpenRequisitions = (candidateId: string) => {
+    const pipelines = allPipeline.filter(pc => pc.candidateId === candidateId);
+    return pipelines.map(pc => {
+      const req = advancedRequisitions.find(r => r.id === pc.requisitionId);
+      const clientName = req?.flow === "sales" ? req.salesData?.clientName : req?.hiringData?.clientName;
+      return { ...pc, clientName: clientName || "Unknown", reqId: pc.requisitionId };
+    });
   };
 
   return (
@@ -107,9 +153,18 @@ const CandidateDatabase = () => {
           <div className="h-0.5 w-8 bg-primary rounded-full mt-1" />
           <p className="text-xs text-muted-foreground mt-0.5">{candidates.length} candidates · Full CRM view</p>
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => setAddDialogOpen(true)}>
-          <Plus className="h-3.5 w-3.5" /> Add Candidate
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={handleDownloadTemplate}>
+            <Download className="h-3.5 w-3.5" /> Sample CSV
+          </Button>
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="h-3.5 w-3.5" /> Bulk Upload
+          </Button>
+          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
+          <Button size="sm" className="gap-1.5" onClick={() => setAddDialogOpen(true)}>
+            <Plus className="h-3.5 w-3.5" /> Add Candidate
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -141,6 +196,7 @@ const CandidateDatabase = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Candidate</TableHead>
+                <TableHead>LinkedIn</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Score</TableHead>
@@ -159,6 +215,15 @@ const CandidateDatabase = () => {
                       <p className="text-[13px] font-medium text-foreground">{c.name}</p>
                       <p className="text-[10px] text-muted-foreground">{c.email}</p>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    {c.linkedIn ? (
+                      <a href={c.linkedIn.startsWith("http") ? c.linkedIn : `https://${c.linkedIn}`} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()} className="text-primary hover:underline flex items-center gap-1">
+                        <Link2 className="h-3 w-3" />
+                        <span className="text-[10px]">Profile</span>
+                      </a>
+                    ) : <span className="text-[10px] text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell className="text-[13px]">{c.currentRole}</TableCell>
                   <TableCell className="text-[13px]">{c.city}</TableCell>
@@ -190,7 +255,7 @@ const CandidateDatabase = () => {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">No candidates found</TableCell>
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">No candidates found</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -198,7 +263,7 @@ const CandidateDatabase = () => {
         </CardContent>
       </Card>
 
-      {/* Add Dialog */}
+      {/* Add Dialog - with role dropdown & rate model first */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Add New Candidate</DialogTitle></DialogHeader>
@@ -206,13 +271,24 @@ const CandidateDatabase = () => {
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Name *</Label><Input value={formName} onChange={e => setFormName(e.target.value)} /></div>
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Email *</Label><Input value={formEmail} onChange={e => setFormEmail(e.target.value)} type="email" /></div>
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Phone</Label><Input value={formPhone} onChange={e => setFormPhone(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Current Role</Label><Input value={formRole} onChange={e => setFormRole(e.target.value)} /></div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-wider">Role</Label>
+              <Select value={formRole} onValueChange={setFormRole}>
+                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectContent>
+                  {RESOURCE_SPECIFIC_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formRole === "Other" && (
+              <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Specify Role</Label><Input value={formOtherRole} onChange={e => setFormOtherRole(e.target.value)} /></div>
+            )}
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Experience</Label><Input value={formExperience} onChange={e => setFormExperience(e.target.value)} placeholder="e.g. 5 years" /></div>
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">City</Label><Input value={formCity} onChange={e => setFormCity(e.target.value)} /></div>
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Domain Expertise</Label><Input value={formDomain} onChange={e => setFormDomain(e.target.value)} /></div>
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Languages</Label><Input value={formLanguages} onChange={e => setFormLanguages(e.target.value)} /></div>
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Tools</Label><Input value={formTools} onChange={e => setFormTools(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Expected Rate</Label><Input value={formRate} onChange={e => setFormRate(e.target.value)} placeholder="e.g. ₹3.5/word" /></div>
             <div className="space-y-1.5">
               <Label className="text-[10px] uppercase tracking-wider">Rate Model</Label>
               <Select value={formRateModel} onValueChange={setFormRateModel}>
@@ -220,6 +296,7 @@ const CandidateDatabase = () => {
                 <SelectContent>{RATE_MODELS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-wider">Expected Rate</Label><Input value={formRate} onChange={e => setFormRate(e.target.value)} placeholder="e.g. ₹3.5/word" /></div>
             <div className="space-y-1.5">
               <Label className="text-[10px] uppercase tracking-wider">Availability</Label>
               <Select value={formAvailability} onValueChange={v => setFormAvailability(v as Candidate["availability"])}>
@@ -242,7 +319,7 @@ const CandidateDatabase = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Detail Dialog */}
+      {/* Detail Dialog - with open reqs & handover view */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           {selectedCandidate && (
@@ -258,7 +335,7 @@ const CandidateDatabase = () => {
                   <TabsTrigger value="profile" className="flex-1 text-xs">Profile</TabsTrigger>
                   <TabsTrigger value="work" className="flex-1 text-xs">Work Samples</TabsTrigger>
                   <TabsTrigger value="interactions" className="flex-1 text-xs">Interactions</TabsTrigger>
-                  <TabsTrigger value="pipelines" className="flex-1 text-xs">Pipelines</TabsTrigger>
+                  <TabsTrigger value="pipelines" className="flex-1 text-xs">Requisitions</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="profile" className="space-y-4">
@@ -272,7 +349,8 @@ const CandidateDatabase = () => {
                     <div className="col-span-2"><span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Domain Expertise</span>{selectedCandidate.domainExpertise}</div>
                     <div className="col-span-2"><span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Languages</span>{selectedCandidate.languageSkills}</div>
                     <div className="col-span-2"><span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Tools</span>{selectedCandidate.toolsProficiency}</div>
-                    <div><span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Rate</span>{selectedCandidate.expectedRate} ({selectedCandidate.rateModel})</div>
+                    <div><span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Rate Model</span>{selectedCandidate.rateModel}</div>
+                    <div><span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Rate</span>{selectedCandidate.expectedRate}</div>
                     <div><span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Availability</span>{selectedCandidate.availability}</div>
                   </div>
                   <div>
@@ -293,8 +371,8 @@ const CandidateDatabase = () => {
                   </div>
                   <div className="flex gap-2">
                     {selectedCandidate.linkedIn && (
-                      <a href={selectedCandidate.linkedIn} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm" className="gap-1 text-xs"><ExternalLink className="h-3 w-3" /> LinkedIn</Button>
+                      <a href={selectedCandidate.linkedIn.startsWith("http") ? selectedCandidate.linkedIn : `https://${selectedCandidate.linkedIn}`} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="gap-1 text-xs"><Link2 className="h-3 w-3" /> LinkedIn</Button>
                       </a>
                     )}
                     {selectedCandidate.portfolioUrl && (
@@ -357,17 +435,21 @@ const CandidateDatabase = () => {
 
                 <TabsContent value="pipelines" className="space-y-2">
                   {(() => {
-                    const pipelines = allPipeline.filter(pc => pc.candidateId === selectedCandidate.id);
+                    const pipelines = getOpenRequisitions(selectedCandidate.id);
                     if (pipelines.length === 0) return <p className="text-sm text-muted-foreground py-4 text-center">Not in any pipeline.</p>;
                     return pipelines.map(pc => (
-                      <div key={pc.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                      <div key={pc.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer"
+                        onClick={() => navigate(`/ats/${pc.reqId}`)}>
                         <div>
-                          <p className="text-[13px] font-medium font-mono">{pc.requisitionId}</p>
-                          <p className="text-[10px] text-muted-foreground">Added {new Date(pc.addedAt).toLocaleDateString()}</p>
+                          <p className="text-[13px] font-medium font-mono">{pc.reqId}</p>
+                          <p className="text-[10px] text-muted-foreground">{pc.clientName} · Added {new Date(pc.addedAt).toLocaleDateString()}</p>
                         </div>
-                        <Badge variant={pc.currentStage === "Hired" ? "default" : pc.currentStage === "Rejected" ? "destructive" : "secondary"} className="text-[10px]">
-                          {pc.currentStage}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={pc.currentStage === "Hired" ? "default" : pc.currentStage === "Rejected" ? "destructive" : "secondary"} className="text-[10px]">
+                            {pc.currentStage}
+                          </Badge>
+                          <Kanban className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
                       </div>
                     ));
                   })()}

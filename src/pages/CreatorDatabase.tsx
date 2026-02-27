@@ -89,7 +89,7 @@ const CreatorDatabase = () => {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left">
-              {["Creator", "Category", "Domains", "City", "Rate", "Rating", "On-time", "Revenue", "Margin", "Status"].map(h => (
+              {["Creator", "LinkedIn", "Category", "Domains", "City", "Rate", "Rating", "On-time", "Revenue", "Margin", "Status"].map(h => (
                 <th key={h} className="pb-3 text-xs font-mono uppercase tracking-wider text-muted-foreground whitespace-nowrap pr-4">{h}</th>
               ))}
             </tr>
@@ -100,6 +100,14 @@ const CreatorDatabase = () => {
                 <td className="py-3 pr-4">
                   <p className="font-medium text-foreground">{c.name}</p>
                   <p className="text-xs text-muted-foreground">{c.email}</p>
+                </td>
+                <td className="py-3 pr-4">
+                  {c.linkedIn ? (
+                    <a href={c.linkedIn.startsWith("http") ? c.linkedIn : `https://${c.linkedIn}`} target="_blank" rel="noopener noreferrer"
+                      className="text-primary hover:underline text-xs flex items-center gap-1">
+                      <span className="inline-block w-3 h-3">🔗</span> View
+                    </a>
+                  ) : <span className="text-xs text-muted-foreground">—</span>}
                 </td>
                 <td className="py-3 pr-4">
                   <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{c.category}</span>
