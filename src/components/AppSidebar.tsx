@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FileText, Users, Database, BarChart3, Settings,
-  UserCheck, User, LogOut,
+  UserCheck, User, LogOut, Kanban, UserSearch, PieChart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 const allNavItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["admin", "pod_lead_recruiter"] },
   { title: "Requisitions", url: "/requisitions", icon: FileText, roles: ["admin", "pod_lead_recruiter", "capability_lead_am"] },
+  { title: "ATS Pipeline", url: "/ats", icon: Kanban, roles: ["admin", "pod_lead_recruiter"] },
+  { title: "Candidates", url: "/candidates", icon: UserSearch, roles: ["admin", "pod_lead_recruiter"] },
+  { title: "ATS Reporting", url: "/ats-reporting", icon: PieChart, roles: ["admin", "pod_lead_recruiter"] },
   { title: "Handover", url: "/handover", icon: UserCheck, roles: ["admin", "pod_lead_recruiter"] },
   { title: "Talent X Client View", url: "/deals", icon: User, roles: ["admin", "pod_lead_recruiter", "capability_lead_am"] },
   { title: "Studio Dashboard", url: "/studio", icon: BarChart3, roles: ["admin", "pod_lead_recruiter"] },

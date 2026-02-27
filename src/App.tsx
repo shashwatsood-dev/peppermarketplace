@@ -15,6 +15,10 @@ import CreatorDatabase from "./pages/CreatorDatabase";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import ATSPipeline from "./pages/ATSPipeline";
+import CandidateDatabaseATS from "./pages/CandidateDatabaseATS";
+import ATSReporting from "./pages/ATSReporting";
+import ATSOverview from "./pages/ATSOverview";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +40,10 @@ const App = () => (
               <Route path="/handover" element={<CreatorHandover />} />
               <Route path="/creators" element={<CreatorDatabase />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/ats" element={<ATSOverview />} />
+              <Route path="/ats/:reqId" element={<ATSPipeline />} />
+              <Route path="/candidates" element={<CandidateDatabaseATS />} />
+              <Route path="/ats-reporting" element={<ATSReporting />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
