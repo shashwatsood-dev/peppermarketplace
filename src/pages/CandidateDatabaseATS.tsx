@@ -25,7 +25,7 @@ const CandidateDatabase = () => {
   const [candidates, setCandidates] = useState(getCandidates());
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
-  const [tagFilter, setTagFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("all");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -57,7 +57,7 @@ const CandidateDatabase = () => {
       c.city.toLowerCase().includes(search.toLowerCase()) ||
       c.skills.some(s => s.toLowerCase().includes(search.toLowerCase()));
     const matchSource = sourceFilter === "all" || c.source === sourceFilter;
-    const matchTag = !tagFilter || c.tags.some(t => t.toLowerCase().includes(tagFilter.toLowerCase()));
+    const matchTag = tagFilter === "all" || c.tags.some(t => t.toLowerCase().includes(tagFilter.toLowerCase()));
     return matchSearch && matchSource && matchTag;
   });
 
@@ -128,7 +128,7 @@ const CandidateDatabase = () => {
         <Select value={tagFilter} onValueChange={setTagFilter}>
           <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Tag filter" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Tags</SelectItem>
+            <SelectItem value="all">All Tags</SelectItem>
             {allTags.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
           </SelectContent>
         </Select>
