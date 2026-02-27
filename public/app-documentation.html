@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketplace Procurement Suite — Full Application Documentation</title>
+<style>
+  :root { --brand: #5B5FC7; --bg: #fafafe; --card: #fff; --border: #ebebf0; --text: #282833; --muted: #71717a; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.65; padding: 40px; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+  h2 { font-size: 20px; font-weight: 700; margin-top: 40px; margin-bottom: 12px; border-bottom: 2px solid var(--brand); padding-bottom: 6px; }
+  h3 { font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; color: var(--brand); }
+  h4 { font-size: 14px; font-weight: 600; margin-top: 16px; margin-bottom: 4px; }
+  p, li { margin-bottom: 6px; }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+  .badge { display: inline-block; background: rgba(91,95,199,0.1); color: var(--brand); font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 6px; margin-right: 6px; margin-bottom: 4px; }
+  .accent { color: var(--brand); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: #f5f5fa; }
+  code { background: #f0f0f5; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .tag { display: inline-block; background: #f0f0f5; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin: 2px; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } body { padding: 20px; } }
+  .prompt-box { background: #f8f8fc; border: 1px solid var(--brand); border-radius: 10px; padding: 20px; margin: 20px 0; white-space: pre-wrap; font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>Marketplace Procurement Suite</h1>
+<p class="subtitle">Internal operations & finance intelligence tool for managing freelance creators, work requisitions, and profit margins at a content marketing company.</p>
+
+<div class="card">
+  <strong>Tech Stack:</strong>
+  <span class="badge">React 18</span><span class="badge">TypeScript</span><span class="badge">Vite</span><span class="badge">Tailwind CSS</span><span class="badge">shadcn/ui</span><span class="badge">Recharts</span><span class="badge">React Router v6</span><span class="badge">Tanstack Query</span>
+  <br><br>
+  <strong>Design:</strong> Clean B2B SaaS dashboard — off-white background (#fafafe), white cards, 1px borders (#ebebf0), primary brand #5B5FC7, DM Sans + JetBrains Mono, 13px body, compact density, no gradients, no playful styling.
+</div>
+
+<h2>1. Authentication & Role-Based Access</h2>
+
+<div class="card">
+  <h3>Login Page <code>/login</code></h3>
+  <p>Email + password authentication. In-memory user store (no backend). Auth guard redirects unauthenticated users to <code>/login</code>. Authenticated state stored in React context (<code>AuthProvider</code>).</p>
+
+  <h4>Demo Accounts</h4>
+  <table>
+    <tr><th>Role</th><th>Email</th><th>Password</th></tr>
+    <tr><td>Admin</td><td>admin@pepper.com</td><td>admin123</td></tr>
+    <tr><td>Pod Lead / Recruiter</td><td>recruiter@pepper.com</td><td>recruiter123</td></tr>
+    <tr><td>Capability Lead / AM</td><td>amlead@pepper.com</td><td>amlead123</td></tr>
+  </table>
+
+  <h4>Three Roles</h4>
+  <table>
+    <tr><th>Role</th><th>Sidebar Access</th><th>Restrictions</th></tr>
+    <tr><td><span class="accent">Admin</span></td><td>All pages</td><td>Full access; can switch role view for testing</td></tr>
+    <tr><td><span class="accent">Pod Lead / Recruiter</span></td><td>Dashboard, Requisitions, Handover, Talent X Client, Studio Dashboard</td><td>Studio Dashboard hides overall financial summary (revenue/cost/margin cards)</td></tr>
+    <tr><td><span class="accent">Capability Lead / AM</span></td><td>Requisitions, Talent X Client</td><td>No Dashboard, no Creator Database, no Studio Dashboard. Requisitions limited to raise + own</td></tr>
+  </table>
+
+  <h4>Admin Role Switcher</h4>
+  <p>Dropdown in sidebar footer (Admin only) toggles between all three role views for testing. Stored in context.</p>
+
+  <h4>User Management (Settings Page)</h4>
+  <p>Admin can add new users (email, name, role). New users get a "Set Password" flow on first login.</p>
+</div>
+
+<h2>2. Navigation & Layout</h2>
+
+<div class="card">
+  <h3>Sidebar (228px fixed, white, 1px right border)</h3>
+  <ul>
+    <li><strong>Operations:</strong> Dashboard, Requisitions, Handover, Talent X Client View, Studio Dashboard, Creator Database</li>
+    <li><strong>System:</strong> Settings (Admin only)</li>
+    <li>Active nav item = light brand background + left 2px primary border</li>
+    <li>Footer: role switcher (Admin), user avatar, name, role label, logout button</li>
+  </ul>
+
+  <h3>Topbar (54px, white, bottom border)</h3>
+  <p>Contains sidebar toggle trigger only.</p>
+
+  <h3>Main Content Area</h3>
+  <p>24px padding, flex-1 overflow-auto. All pages use <code>animate-fade-in</code> entrance.</p>
+</div>
+
+<h2>3. Dashboard <code>/</code></h2>
+
+<div class="card">
+  <h3>Time Range Selector</h3>
+  <p>Top-right dropdown: Last 30, 60, 90, 180, 365 days, or Overall. Filters all requisition-based metrics.</p>
+
+  <h3>Three Tabs</h3>
+
+  <h4>Tab 1: Team Metrics</h4>
+  <ul>
+    <li><strong>6 Clickable Stat Cards:</strong> Total Requisitions, Closed, In Progress, Pending RMG, TAT Breached, Avg Days to Close</li>
+    <li>Clicking any card opens a drill-down dialog listing matching requisitions with ID, client, status, recruiter, target date, revenue</li>
+    <li><strong>Recruiter Selector:</strong> "All Recruiters" or individual. Filters tables + charts below</li>
+    <li><strong>Recruiter Comparison Table:</strong> Columns — Recruiter, Open Reqs, Closed, Avg Days, Identified, Contacted, Screened, Shared, Interviewed, Selected</li>
+    <li><strong>Pipeline Comparison Chart:</strong> Horizontal bar chart (Recharts) — Identified, Contacted, Selected per recruiter</li>
+    <li><strong>Month-on-Month Performance Table:</strong> Month, Reqs Assigned, Closed, Avg Days, Profiles Shared</li>
+  </ul>
+
+  <h4>Tab 2: HRBP</h4>
+  <ul>
+    <li>3 stat cards: Creators with HRBP, Total Connects, Without HRBP</li>
+    <li>Recent HRBP Connects list — creator name, date, summary, outcome</li>
+  </ul>
+
+  <h4>Tab 3: Creator Summary</h4>
+  <ul>
+    <li>6 stat cards by role: Writer, Editor, Designer, Video, Translator, Other</li>
+    <li>Creator Distribution bar chart</li>
+    <li>Creators by Status grid: Active, Inactive, Removed, Flagged</li>
+  </ul>
+</div>
+
+<h2>4. Requisitions <code>/requisitions</code></h2>
+
+<div class="card">
+  <h3>Summary Cards Row</h3>
+  <p>Total, In Progress, Pending RMG, Closed, Flagged — each clickable to filter the table or open flags dialog.</p>
+
+  <h3>Pending Approvals Queue (Admin only)</h3>
+  <p>Toggle button reveals queue of requisitions with status "RMG approval Pending" or <code>taEditedPendingApproval = true</code>. Each row has quick Approve/Reject buttons.</p>
+
+  <h3>Filters</h3>
+  <ul>
+    <li>Search (by client name or req ID)</li>
+    <li>Status multi-select dropdown</li>
+    <li>Flow filter (All, Sales, Studio, Freelancer)</li>
+    <li>POD filter</li>
+  </ul>
+
+  <h3>Requisition Table</h3>
+  <p>Grouped by POD. Columns: ID, Flow, Client, Deal ID, Stage (inline editable), Urgency, Revenue, Cost, Margin%, Status (inline editable), Days Open, Flag indicator, Actions (Review, Assign, Update, Edit).</p>
+
+  <h3>Dialogs</h3>
+  <ul>
+    <li><strong>Review:</strong> RMG notes, approve/reject with rejection reason</li>
+    <li><strong>Assign:</strong> POD Lead, Recruiter (with add-new option), Target Date</li>
+    <li><strong>Daily Update:</strong> Cumulative funnel metrics (Identified → Selected), blockers, notes. Saves daily log entry</li>
+    <li><strong>Edit:</strong> Status, Stage, POD Lead, Recruiter, Target Date, Revenue, Cost, Deal ID, RMG Notes. TA-edited financial changes auto-flag for approval</li>
+    <li><strong>Flags Dialog:</strong> Shows red/yellow flagged requisitions based on TAT breach</li>
+  </ul>
+</div>
+
+<h2>5. New Requisition <code>/requisitions/new</code></h2>
+
+<div class="card">
+  <h3>Flow Selection</h3>
+  <p>Three buttons: <span class="badge">Sample Profile Request</span> <span class="badge">Hiring Request — Studio</span> <span class="badge">Hiring Request — Freelancer</span></p>
+
+  <h3>Common Fields</h3>
+  <p>Raised By (Name, Phone), Copy Form Link button.</p>
+
+  <h3>Sales Flow (Sample Profile Request)</h3>
+  <ul>
+    <li>Client Name, Opportunity Name, Deal Type, Resource Type</li>
+    <li>Specific Resource Types (multi-select chips: Writer, Editor, Translator, Designer, Video Editor, Production House, Other)</li>
+    <li>Currency selector + Expected Creator Pay, Client Billing, Margin %</li>
+    <li>Opportunity Stage (9 stages from Pre-Proposal to SLA signed & escalated)</li>
+    <li>Urgency: Low, Medium, High, Critical</li>
+  </ul>
+
+  <h3>Hiring Flow (Studio / Freelancer)</h3>
+  <ul>
+    <li>Client Name, Deal ID, Deal Type (Retainer/Non-Retainer)</li>
+    <li>Studio-specific: Studio Type (Onsite/Hybrid/Remote), Geography, Signing Entity</li>
+    <li>Freelancer-specific: Talent Sourcing type</li>
+    <li>Opportunity Stage, POD selection, Client Details textarea</li>
+    <li>Deal-Level Financials: MRR with integrated currency selector, Contract Duration, Target Margin %</li>
+    <li>Replacement hiring toggle</li>
+  </ul>
+
+  <h4>Line Items (Hiring Flow)</h4>
+  <p>Add/remove multiple. Each line item:</p>
+  <ul>
+    <li>Creator Type (14 options + "Other"), # Creators, Experience Level, Payment Model</li>
+    <li>Bidirectional pricing: Client Unit Price ↔ Supply Unit Pay (linked via Target Margin %)</li>
+    <li>Monthly Output, Hours/Month</li>
+    <li>Domain Expertise, Language, Tools, Portfolio expectations</li>
+    <li>Calculated: Gross Margin, Gross Margin %</li>
+  </ul>
+
+  <h3>Currencies Supported</h3>
+  <p>
+    <span class="tag">🇮🇳 INR ₹</span>
+    <span class="tag">🇺🇸 USD $</span>
+    <span class="tag">🇬🇧 GBP £</span>
+    <span class="tag">🇪🇺 EUR €</span>
+    <span class="tag">🇦🇪 AED د.إ</span>
+    <span class="tag">🇸🇬 SGD S$</span>
+    <span class="tag">🇦🇺 AUD A$</span>
+  </p>
+</div>
+
+<h2>6. Creator Handover <code>/handover</code></h2>
+
+<div class="card">
+  <p>Hand over finalized creators to the Account Management team after requisition is fulfilled.</p>
+  <h4>Handover Form</h4>
+  <ul>
+    <li>Associated Deal (dropdown of eligible requisitions: Yet to start, In progress, Approved but not assigned)</li>
+    <li>Recruiter name, Currency</li>
+    <li>Multiple creators per handover — each with: Name, Email, Creator Type, Portal Link, Phone, Payment Model, Finalized Pay, Margin % (auto-filled from requisition, overridable)</li>
+    <li>Share via Email and/or Slack, Recipient field, Notes</li>
+    <li>Submit copies a formatted share message to clipboard</li>
+  </ul>
+
+  <h4>Recent Handovers Table</h4>
+  <p>Creator, Email, Type, Deal, Pay Model, Pay, Recruiter, Date, Copy button.</p>
+</div>
+
+<h2>7. Talent X Client View <code>/deals</code></h2>
+
+<div class="card">
+  <p>Deep operational view of all clients, deals, and deployed creators organized by POD.</p>
+
+  <h4>Summary Cards</h4>
+  <p>Active Clients, Active Creators, Avg Margin, Revenue, and Cost — with trend indicators.</p>
+
+  <h4>POD Tabs</h4>
+  <p>All, Integrated, India B2B, US B2B, FMCG, BFSI. Toggle: Show Inactive creators.</p>
+
+  <h4>Per Client</h4>
+  <p>Client name, VSD Name, Principal BOPM, Senior BOPM, Junior BOPM — editable. Expandable to show deals.</p>
+
+  <h4>Per Deal</h4>
+  <p>Deal Name, Type, Revenue, Cost, Margin%, Status — editable. Expandable to show creators.</p>
+
+  <h4>Per Creator</h4>
+  <table>
+    <tr><th>Field</th><th>Details</th></tr>
+    <tr><td>Identity</td><td>Name, Source (Freelancer/In-house), Role, City</td></tr>
+    <tr><td>Financials</td><td>Pay Model, Pay Rate, Total Cost, Client Billing, Gross Margin %</td></tr>
+    <tr><td>Ratings</td><td>Capability Lead Rating (G/Y/R) + BOPM Rating (G/Y/R) — Yellow/Red require reason + optional email feedback to creator</td></tr>
+    <tr><td>Status</td><td>Active, Inactive, Removed, Flagged — inline editable</td></tr>
+  </table>
+
+  <h4>Handover Cross-Reference</h4>
+  <p>Shows creators that have been handed over to this deal from the handover flow.</p>
+
+  <h4>Add Creator</h4>
+  <p>Dialog: Name, Role, Source, Pay Model, City, Total Cost, Client Billing.</p>
+</div>
+
+<h2>8. Studio Dashboard <code>/studio</code></h2>
+
+<div class="card">
+  <h4>Financial Summary (hidden for Pod Lead/Recruiter role)</h4>
+  <p>Active Clients, Active Creators, Total Revenue, Total Cost, Gross Margin.</p>
+
+  <h4>MoM Trends Toggle</h4>
+  <p>Bar chart showing Revenue vs Cost over 6 months.</p>
+
+  <h4>POD Tabs + View Modes</h4>
+  <ul>
+    <li><strong>Deals View:</strong> Expandable deal cards with creator tables — Revenue, Cost, Margin, Status, HRBP connects, Monthly Pay tracking, Agreement uploads</li>
+    <li><strong>Geography View:</strong> City-level grouping showing creator count by role, total revenue & cost per city</li>
+  </ul>
+
+  <h4>HRBP Connect Logging</h4>
+  <p>Per-creator dialog to log connects: HRBP Name, Summary, Outcome. History displayed.</p>
+
+  <h4>Agreement Upload (Mock)</h4>
+  <p>File name entry per creator per deal. Count displayed in table.</p>
+</div>
+
+<h2>9. Creator Database <code>/creators</code></h2>
+<div class="card">
+  <p>Admin-only view. Creator exploration and database management page.</p>
+</div>
+
+<h2>10. Settings <code>/settings</code></h2>
+
+<div class="card">
+  <h4>User Management (Admin)</h4>
+  <p>Add new users (name, email, role). Existing users listed with role badges and "Pending Setup" indicator for users who haven't set their password.</p>
+
+  <h4>Requisition Status Management</h4>
+  <p>Default statuses: Yet to start, In progress, RMG approval Pending, Approved but not assigned, On hold, Scrapped, Closed – allotment pending, Closed – allotted.</p>
+  <p>Admin can add custom statuses which appear in all status dropdowns app-wide.</p>
+</div>
+
+<h2>11. Data Model Summary</h2>
+
+<div class="card">
+  <h3>Requisition (<code>AdvancedRequisition</code>)</h3>
+  <p>Central entity. Two flows: Sales (pre-deal sample profiles) and Hiring (studio or freelancer). Contains:</p>
+  <ul>
+    <li>Identity: ID (S-001, F-001, CS-001), flow type, raised-by info</li>
+    <li>Flow-specific data: <code>SalesFlowData</code> or <code>HiringFlowData</code> (with <code>VSDLineItem[]</code>)</li>
+    <li>Workflow: status, RMG notes, rejection reason, POD lead, recruiter, target closure date</li>
+    <li>Financials: total revenue, total cost, gross margin, margin %, target margin %, currency</li>
+    <li>Tracking: daily updates (funnel metrics), audit log (field-change history), TA-edit flag</li>
+    <li>Links: LinkedIn Recruiter link, ATS sheet link</li>
+  </ul>
+
+  <h3>POD → Client → Deal → Creator Hierarchy</h3>
+  <table>
+    <tr><th>Entity</th><th>Key Fields</th></tr>
+    <tr><td>PodV2</td><td>name (Integrated, India B2B, US B2B, FMCG, BFSI), clients[]</td></tr>
+    <tr><td>ClientV2</td><td>clientName, vsdName, principalBOPM, seniorBOPM, juniorBOPM, deals[]</td></tr>
+    <tr><td>DealV2</td><td>dealName, dealType, totalContractValue, totalCreatorCost, grossMargin%, status, currency, signingEntity, geography, creators[]</td></tr>
+    <tr><td>DeployedCreatorV2</td><td>creatorName, role, source, payModel, payRate, totalCost, clientBilling, grossMargin%, dealStatus, capabilityLeadRating, bopmRating, hrbpConnects[], city</td></tr>
+  </table>
+
+  <h3>Handover</h3>
+  <p>Links a requisition to a creator delivery. Includes: creator info, payment model, finalized pay, currency, share method (email/slack), recruiter, margin tracking.</p>
+
+  <h3>Flag Logic</h3>
+  <p>Red flag = TAT breached (target date passed). Yellow flag = within 2 days (freelancer/sales) or 5 days (studio) of target.</p>
+</div>
+
+<h2>12. Design System Tokens</h2>
+
+<div class="card">
+  <div class="grid-2">
+    <div>
+      <h4>Colors</h4>
+      <p><span style="display:inline-block;width:14px;height:14px;background:#5B5FC7;border-radius:3px;vertical-align:middle;margin-right:6px;"></span> Primary: <code>#5B5FC7</code></p>
+      <p><span style="display:inline-block;width:14px;height:14px;background:#fafafe;border:1px solid #ebebf0;border-radius:3px;vertical-align:middle;margin-right:6px;"></span> Background: <code>#fafafe</code></p>
+      <p><span style="display:inline-block;width:14px;height:14px;background:#ffffff;border:1px solid #ebebf0;border-radius:3px;vertical-align:middle;margin-right:6px;"></span> Card: <code>#ffffff</code></p>
+      <p><span style="display:inline-block;width:14px;height:14px;background:#ebebf0;border-radius:3px;vertical-align:middle;margin-right:6px;"></span> Border: <code>#ebebf0</code></p>
+      <p>Status: soft green (success), soft yellow (warning), soft red (danger) backgrounds</p>
+    </div>
+    <div>
+      <h4>Typography</h4>
+      <p>Primary: DM Sans (300–700)</p>
+      <p>Monospace: JetBrains Mono (numbers, codes)</p>
+      <p>Page title: 16–18px bold</p>
+      <p>Section headers: 13px bold</p>
+      <p>Labels: 9–10px uppercase tracking-widest</p>
+      <p>Body: ~13px</p>
+    </div>
+    <div>
+      <h4>Spacing & Radii</h4>
+      <p>Cards: 14px radius, 1px border</p>
+      <p>Buttons/Inputs: 7px radius</p>
+      <p>Sidebar: 228px fixed</p>
+      <p>Topbar: 54px height</p>
+      <p>Content padding: 24px</p>
+    </div>
+    <div>
+      <h4>Motion</h4>
+      <p>0.15–0.2s transitions</p>
+      <p>fade-in animation on page load</p>
+      <p>Subtle hover on cards/rows</p>
+      <p>No bounce, no dramatic animations</p>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<h2>13. Reproduction Prompt</h2>
+
+<div class="prompt-box">Build an internal B2B SaaS application called "Marketplace Procurement Suite" using React 18, TypeScript, Vite, Tailwind CSS, and shadcn/ui. It is an operations and finance intelligence tool for a content marketing company that manages freelance creators, work requisitions, and profit margins.
+
+DESIGN: Clean, high-density enterprise dashboard. Off-white background (#fafafe), white cards with 14px radius and 1px borders (#ebebf0), primary brand color #5B5FC7. Typography: DM Sans for text, JetBrains Mono for numbers. 13px body, 9-10px uppercase labels, compact spacing. 228px fixed sidebar with 1px right border. 54px topbar. No gradients, no playful styling, no marketing aesthetics. The UI should feel like an enterprise financial workflow system.
+
+AUTH: In-memory authentication with three roles — Admin (full access), Pod Lead/Recruiter (Dashboard, Requisitions, Handover, Talent X Client, Studio Dashboard — but Studio hides overall financial summary), Capability Lead/AM (Requisitions own only, Talent X Client own clients only). Admin has a role-switcher dropdown in the sidebar footer. Login page with email/password. Settings page has user management (add users with role assignment).
+
+REQUISITIONS: Dual flow system — "Sample Profile Request" (sales/pre-deal) and "Hiring Request" (studio or freelancer). Sales flow captures client, opportunity, deal type, resource types (multi-chip select), currency, expected pay/billing/margin, opportunity stage (9 stages from Pre-Proposal to SLA signed), urgency (Low/Medium/High/Critical). Hiring flow adds Deal ID, studio type, signing entity, POD, client details, deal-level financials (MRR with currency, contract duration, target margin), line items with bidirectional pricing (client price ↔ supply pay linked via margin), replacement hiring toggle. Supports 7 currencies (INR, USD, GBP, EUR, AED, SGD, AUD). Requisition list has: multi-status filter, POD grouping, inline stage/status editing, pending approvals queue for Admin, daily update funnel tracking (profiles identified→selected), full audit log, TAT-based red/yellow flagging, and comprehensive edit dialog with TA-edit approval flow.
+
+DASHBOARD: Three tabs — Team Metrics (clickable stat cards opening drill-down dialogs, recruiter comparison table, pipeline bar chart, MoM table), HRBP (connects tracking), Creator Summary (role distribution chart, status grid). Time range selector: 30/60/90/180/365/Overall.
+
+TALENT X CLIENT VIEW: POD-based hierarchy (5 PODs: Integrated, India B2B, US B2B, FMCG, BFSI) → Clients → Deals → Creators. Full CRUD on all levels. Creator health ratings (green/yellow/red) with mandatory reason for yellow/red + optional email feedback. Creator statuses: Active/Inactive/Removed/Flagged. Show handover cross-references per deal.
+
+STUDIO DASHBOARD: Financial summary cards (role-gated), MoM trend chart, deal cards with creator tables showing HRBP connects, monthly payment tracking, agreement uploads. Geography view groups creators by city.
+
+CREATOR HANDOVER: Form linking requisitions to creator deliveries. Multiple creators per handover. Auto-fill margin from requisition. Share via Email/Slack with formatted message copied to clipboard.
+
+SETTINGS: User management (Admin adds users with roles, first-login password setup). Custom requisition status management.
+
+DATA: Use in-memory stores with mock data. POD hierarchy with 6 clients, 7 deals, 16 creators across 5 PODs. 8 mock requisitions across all three flows. All financial calculations are live (margin auto-calc on cost/revenue changes).</div>
+
+<hr>
+<p style="color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px;">
+  Marketplace Procurement Suite — Documentation generated February 2026
+</p>
+
+</body>
+</html>
