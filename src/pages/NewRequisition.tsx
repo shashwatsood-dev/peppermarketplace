@@ -331,6 +331,11 @@ const NewRequisition = () => {
                         <Input value={item.otherCreatorTypeSpec} onChange={e => updateLineItem(item.id, { otherCreatorTypeSpec: e.target.value })}
                           placeholder="Specify..." className="bg-background border-border h-9" /></div>
                     )}
+                    {item.creatorType === "Translator" && (
+                      <div className="space-y-1.5"><Label className="text-xs">Translation Language *</Label>
+                        <Input value={item.languageRequirement} onChange={e => updateLineItem(item.id, { languageRequirement: e.target.value })}
+                          placeholder="e.g. Hindi, Spanish, French" className="bg-background border-border h-9" /></div>
+                    )}
                     <div className="space-y-1.5"><Label className="text-xs"># Creators *</Label>
                       <Input type="number" min={1} value={item.numberOfCreators}
                         onChange={e => updateLineItem(item.id, { numberOfCreators: Number(e.target.value) })}

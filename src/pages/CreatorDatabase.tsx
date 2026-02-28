@@ -3,15 +3,102 @@ import { creators } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Star, Plus } from "lucide-react";
+import { Search, Star, Plus, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { getPods } from "@/lib/talent-client-store";
+import type { Creator } from "@/lib/mock-data";
 
 const formatCurrency = (n: number) => "₹" + (n / 1000).toFixed(0) + "K";
+
+// Find projects a creator has been part of by matching name
+function getCreatorProjects(creatorName: string) {
+  const pods = getPods();
+  const projects: { dealName: string; clientName: string; role: string; status: string; podName: string }[] = [];
+  for (const pod of pods) {
+    for (const client of pod.clients) {
+      for (const deal of client.deals) {
+        for (const c of deal.creators) {
+          if (c.creatorName.toLowerCase() === creatorName.toLowerCase()) {
+            projects.push({ dealName: deal.dealName, clientName: client.clientName, role: c.role, status: deal.status, podName: pod.name });
+          }
+        }
+      }
+    }
+  }
+  return projects;
+}
+
+function CreatorDetailDialog({ creator, open, onClose }: { creator: Creator; open: boolean; onClose: () => void }) {
+  const projects = getCreatorProjects(creator.name);
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {creator.name}
+            {creator.linkedIn && (
+              <a href={creator.linkedIn.startsWith("http") ? creator.linkedIn : `https://${creator.linkedIn}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            )}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div><span className="text-muted-foreground">Email:</span> <span className="text-foreground">{creator.email}</span></div>
+            <div><span className="text-muted-foreground">Phone:</span> <span className="text-foreground">{creator.phone}</span></div>
+            <div><span className="text-muted-foreground">City:</span> <span className="text-foreground">{creator.city}</span></div>
+            <div><span className="text-muted-foreground">Category:</span> <span className="text-foreground">{creator.category}</span></div>
+            <div><span className="text-muted-foreground">Language:</span> <span className="text-foreground">{creator.language}</span></div>
+            <div><span className="text-muted-foreground">Rating:</span> <span className="text-foreground flex items-center gap-1"><Star className="h-3 w-3 text-warning fill-warning" />{creator.rating}</span></div>
+            <div><span className="text-muted-foreground">Rate:</span> <span className="text-foreground font-mono">₹{creator.negotiatedRate.toLocaleString()}/{creator.payModel === "Per Word" ? "w" : "asgn"}</span></div>
+            <div><span className="text-muted-foreground">On-time:</span> <span className="text-foreground font-mono">{creator.onTimePercent}%</span></div>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2">Domains</h4>
+            <div className="flex gap-1 flex-wrap">
+              {creator.domains.map(d => (
+                <span key={d} className="text-xs bg-secondary px-1.5 py-0.5 rounded text-secondary-foreground">{d}</span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2">Past & Current Projects</h4>
+            {projects.length > 0 ? (
+              <div className="space-y-2">
+                {projects.map((p, i) => (
+                  <div key={i} className="p-2.5 rounded border border-border bg-muted/20 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground">{p.dealName}</span>
+                      <StatusBadge status={p.status} />
+                    </div>
+                    <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+                      <span>Client: {p.clientName}</span>
+                      <span>Role: {p.role}</span>
+                      <span>Pod: {p.podName}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No project history found.</p>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const CreatorDatabase = () => {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
 
   const filtered = creators.filter((c) => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -98,14 +185,16 @@ const CreatorDatabase = () => {
             {filtered.map((c) => (
               <tr key={c.id} className="data-table-row">
                 <td className="py-3 pr-4">
-                  <p className="font-medium text-foreground">{c.name}</p>
-                  <p className="text-xs text-muted-foreground">{c.email}</p>
+                  <button onClick={() => setSelectedCreator(c)} className="text-left hover:underline">
+                    <p className="font-medium text-primary">{c.name}</p>
+                    <p className="text-xs text-muted-foreground">{c.email}</p>
+                  </button>
                 </td>
                 <td className="py-3 pr-4">
                   {c.linkedIn ? (
                     <a href={c.linkedIn.startsWith("http") ? c.linkedIn : `https://${c.linkedIn}`} target="_blank" rel="noopener noreferrer"
                       className="text-primary hover:underline text-xs flex items-center gap-1">
-                      <span className="inline-block w-3 h-3">🔗</span> View
+                      <ExternalLink className="h-3 w-3" /> View
                     </a>
                   ) : <span className="text-xs text-muted-foreground">—</span>}
                 </td>
@@ -142,6 +231,10 @@ const CreatorDatabase = () => {
           <p className="text-center text-muted-foreground py-8">No creators found</p>
         )}
       </div>
+
+      {selectedCreator && (
+        <CreatorDetailDialog creator={selectedCreator} open={!!selectedCreator} onClose={() => setSelectedCreator(null)} />
+      )}
     </div>
   );
 };
