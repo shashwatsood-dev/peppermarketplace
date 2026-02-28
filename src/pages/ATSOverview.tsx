@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { advancedRequisitions } from "@/lib/requisition-mock-data";
 import { getPipelineCandidates } from "@/lib/ats-store";
-import { getStagesForFlow } from "@/lib/ats-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, ChevronRight } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Search, ChevronRight, Kanban, UserSearch, PieChart } from "lucide-react";
+import CandidateDatabase from "./CandidateDatabaseATS";
+import ATSReporting from "./ATSReporting";
 
-const ATSOverview = () => {
+const PipelineTab = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
@@ -34,13 +36,7 @@ const ATSOverview = () => {
   );
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      <div>
-        <h1 className="text-lg font-semibold text-foreground">ATS Pipeline</h1>
-        <div className="h-0.5 w-8 bg-primary rounded-full mt-1" />
-        <p className="text-xs text-muted-foreground mt-0.5">Click any requisition to view its candidate pipeline</p>
-      </div>
-
+    <div className="space-y-5">
       <div className="relative max-w-[320px]">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input placeholder="Search by client or Req ID..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-8 text-xs" />
@@ -80,6 +76,49 @@ const ATSOverview = () => {
           </Table>
         </CardContent>
       </Card>
+    </div>
+  );
+};
+
+const ATSOverview = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "pipeline";
+
+  const handleTabChange = (tab: string) => {
+    setSearchParams({ tab });
+  };
+
+  return (
+    <div className="space-y-5 animate-fade-in">
+      <div>
+        <h1 className="text-lg font-semibold text-foreground">ATS</h1>
+        <div className="h-0.5 w-8 bg-primary rounded-full mt-1" />
+        <p className="text-xs text-muted-foreground mt-0.5">Applicant Tracking System — Pipeline, Candidates & Reporting</p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="bg-muted border border-border">
+          <TabsTrigger value="pipeline" className="text-xs font-mono gap-1.5">
+            <Kanban className="h-3.5 w-3.5" /> ATS Pipeline
+          </TabsTrigger>
+          <TabsTrigger value="candidates" className="text-xs font-mono gap-1.5">
+            <UserSearch className="h-3.5 w-3.5" /> Candidates
+          </TabsTrigger>
+          <TabsTrigger value="reporting" className="text-xs font-mono gap-1.5">
+            <PieChart className="h-3.5 w-3.5" /> ATS Reporting
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pipeline" className="mt-4">
+          <PipelineTab />
+        </TabsContent>
+        <TabsContent value="candidates" className="mt-4">
+          <CandidateDatabase />
+        </TabsContent>
+        <TabsContent value="reporting" className="mt-4">
+          <ATSReporting />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
