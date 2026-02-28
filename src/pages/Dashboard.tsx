@@ -86,7 +86,7 @@ const Dashboard = () => {
         <TabsList className="bg-muted border border-border">
           <TabsTrigger value="team" className="text-xs font-mono gap-1"><BarChart2 className="h-3.5 w-3.5" /> Team Metrics</TabsTrigger>
           <TabsTrigger value="ats" className="text-xs font-mono gap-1"><Kanban className="h-3.5 w-3.5" /> ATS Pipeline</TabsTrigger>
-          <TabsTrigger value="hrbp" className="text-xs font-mono gap-1"><Users className="h-3.5 w-3.5" /> HRBP</TabsTrigger>
+          {/* HRBP tab removed */}
           <TabsTrigger value="creators" className="text-xs font-mono gap-1"><Target className="h-3.5 w-3.5" /> Creator Summary</TabsTrigger>
         </TabsList>
 
@@ -307,36 +307,7 @@ const Dashboard = () => {
           })()}
         </TabsContent>
 
-        {/* ─── HRBP View ────────────────────────────────── */}
-        <TabsContent value="hrbp" className="space-y-6 mt-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <StatCard label="Creators with HRBP" value={String(allCreators.filter(c => c.hrbpName).length)} icon={Users} />
-            <StatCard label="Total Connects" value={String(allCreators.reduce((s, c) => s + c.hrbpConnects.length, 0))} icon={UserCheck} />
-            <StatCard label="Without HRBP" value={String(allCreators.filter(c => !c.hrbpName).length)} icon={AlertTriangle} changeType="negative" />
-          </div>
-          <div className="stat-card">
-            <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Recent HRBP Connects</h3>
-            <div className="space-y-2">
-              {allCreators
-                .flatMap(c => c.hrbpConnects.map(conn => ({ ...conn, creatorName: c.creatorName })))
-                .sort((a, b) => b.date.localeCompare(a.date))
-                .slice(0, 10)
-                .map(conn => (
-                  <div key={conn.id} className="p-3 rounded bg-muted/30 border border-border text-sm">
-                    <div className="flex justify-between">
-                      <span className="font-medium text-foreground">{conn.creatorName}</span>
-                      <span className="font-mono text-xs text-muted-foreground">{conn.date}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{conn.summary}</p>
-                    {conn.outcome && <p className="text-xs text-success mt-1">→ {conn.outcome}</p>}
-                  </div>
-                ))}
-              {allCreators.every(c => c.hrbpConnects.length === 0) && (
-                <p className="text-sm text-muted-foreground">No HRBP connects logged yet.</p>
-              )}
-            </div>
-          </div>
-        </TabsContent>
+        {/* HRBP View removed */}
 
         {/* ─── Creator Summary ──────────────────────────── */}
         <TabsContent value="creators" className="space-y-6 mt-4">

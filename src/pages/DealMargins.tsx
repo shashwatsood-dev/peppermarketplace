@@ -123,7 +123,7 @@ function AddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boo
     creatorName: "", role: "Writer" as RoleType, source: "Freelancer" as ResourceSource,
     payModel: "Per Word" as PayModel, payRate: 0, expectedVolume: 0, totalCost: 0, clientBilling: 0,
     dealStatus: "Active" as CreatorDealStatus, capabilityLeadRating: "" as HealthColor | "", bopmRating: "" as HealthColor | "",
-    city: "",
+    city: "", translationLanguage: "",
   });
   const save = () => {
     if (!form.creatorName) { toast.error("Name required"); return; }
@@ -142,6 +142,10 @@ function AddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boo
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{(["Writer", "Editor", "Designer", "Video", "Translator", "Other"] as RoleType[]).map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
             </Select></div>
+          {form.role === "Translator" && (
+            <div><Label className="text-xs">Translation Language</Label>
+              <Input value={form.translationLanguage || ""} onChange={e => setForm(p => ({ ...p, translationLanguage: e.target.value }))} placeholder="e.g. Hindi, Spanish" /></div>
+          )}
           <div><Label className="text-xs">Source</Label>
             <Select value={form.source} onValueChange={v => setForm(p => ({ ...p, source: v as ResourceSource }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>

@@ -1,6 +1,7 @@
+import { useState } from "react";
 import {
   LayoutDashboard, FileText, Users, Database, BarChart3, Settings,
-  UserCheck, User, LogOut, Kanban, UserSearch, PieChart,
+  UserCheck, User, LogOut, Kanban, UserSearch, PieChart, ChevronRight,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -11,12 +12,16 @@ import { useAuth, getRoleLabel, type UserRole } from "@/lib/auth-context";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
+const atsSubItems = [
+  { title: "ATS Pipeline", url: "/ats", icon: Kanban },
+  { title: "Candidates", url: "/candidates", icon: UserSearch },
+  { title: "ATS Reporting", url: "/ats-reporting", icon: PieChart },
+];
+
 const allNavItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["admin", "pod_lead_recruiter"] },
   { title: "Requisitions", url: "/requisitions", icon: FileText, roles: ["admin", "pod_lead_recruiter", "capability_lead_am"] },
-  { title: "ATS Pipeline", url: "/ats", icon: Kanban, roles: ["admin", "pod_lead_recruiter"] },
-  { title: "Candidates", url: "/candidates", icon: UserSearch, roles: ["admin", "pod_lead_recruiter"] },
-  { title: "ATS Reporting", url: "/ats-reporting", icon: PieChart, roles: ["admin", "pod_lead_recruiter"] },
+  { title: "ATS", url: "__ats__", icon: Kanban, roles: ["admin", "pod_lead_recruiter"], hasSubmenu: true },
   { title: "Handover", url: "/handover", icon: UserCheck, roles: ["admin", "pod_lead_recruiter"] },
   { title: "Talent X Client View", url: "/deals", icon: User, roles: ["admin", "pod_lead_recruiter", "capability_lead_am"] },
   { title: "Studio Dashboard", url: "/studio", icon: BarChart3, roles: ["admin", "pod_lead_recruiter"] },
@@ -26,6 +31,45 @@ const allNavItems = [
 const systemItems = [
   { title: "Settings", url: "/settings", icon: Settings, roles: ["admin"] },
 ];
+
+function ATSSubmenuItem() {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <SidebarMenuItem>
+      <div
+        className="relative"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <SidebarMenuButton asChild>
+          <button className="flex items-center justify-between w-full rounded-md px-3 py-1.5 text-[13px] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground">
+            <span className="flex items-center gap-2.5">
+              <Kanban className="h-4 w-4" />
+              <span>ATS</span>
+            </span>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </SidebarMenuButton>
+        {hovered && (
+          <div className="absolute left-full top-0 ml-1 z-50 min-w-[180px] rounded-md border border-border bg-popover p-1 shadow-md animate-fade-in">
+            {atsSubItems.map(sub => (
+              <NavLink
+                key={sub.title}
+                to={sub.url}
+                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+                activeClassName="bg-accent text-accent-foreground font-medium"
+              >
+                <sub.icon className="h-4 w-4" />
+                <span>{sub.title}</span>
+              </NavLink>
+            ))}
+          </div>
+        )}
+      </div>
+    </SidebarMenuItem>
+  );
+}
 
 export function AppSidebar() {
   const { currentUser, currentRole, switchRole, logout } = useAuth();
@@ -55,18 +99,22 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end={item.url === "/"}
-                      className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
-                      activeClassName="bg-accent text-accent-foreground font-medium border-l-2 border-primary">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {visibleNav.map((item) =>
+                item.hasSubmenu ? (
+                  <ATSSubmenuItem key={item.title} />
+                ) : (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url} end={item.url === "/"}
+                        className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+                        activeClassName="bg-accent text-accent-foreground font-medium border-l-2 border-primary">
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
