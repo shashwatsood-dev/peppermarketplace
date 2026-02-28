@@ -52,7 +52,7 @@ function ATSSubmenuItem() {
           </button>
         </SidebarMenuButton>
         {hovered && (
-          <div className="absolute left-full top-0 ml-1 z-50 min-w-[180px] rounded-md border border-border bg-popover p-1 shadow-md animate-fade-in">
+          <div className="absolute left-full top-0 ml-1 z-[999] min-w-[180px] rounded-md border border-border bg-popover p-1 shadow-md animate-fade-in">
             {atsSubItems.map(sub => (
               <NavLink
                 key={sub.title}
