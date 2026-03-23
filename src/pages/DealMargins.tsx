@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react";
 import {
-  getPods, updateClient, updateDeal, updateCreatorInDeal, addCreatorToDeal,
+  getPods, updateClient, updateDeal, updateCreatorInDeal, addCreatorToDeal, addClientToPod, addDealToClient, exportAllDataAsCSV,
   POD_NAMES, type PodV2, type ClientV2, type DealV2, type DeployedCreatorV2,
-  type CreatorDealStatus, type HealthColor, type ResourceSource, type DealStatus,
+  type CreatorDealStatus, type HealthColor, type ResourceSource, type DealStatus, type PodName,
 } from "@/lib/talent-client-store";
 import { type RoleType, type PayModel } from "@/lib/mock-data";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User, Mail } from "lucide-react";
+import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User, Mail, Download, Upload, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { getHandoversByDeal } from "@/lib/handover-store";
+import { parseClientCSV, getClientCSVTemplate } from "@/lib/talent-client-store";
+import type { CurrencyCode } from "@/lib/requisition-types";
 
 const formatCurrency = (n: number) => "₹" + (n / 100000).toFixed(1) + "L";
 
@@ -93,6 +95,75 @@ function EditClientDialog({ client, open, onClose }: { client: ClientV2; open: b
   );
 }
 
+// ─── Add Client Dialog ──────────────────────────────────
+function AddClientDialog({ podName, open, onClose }: { podName: PodName; open: boolean; onClose: () => void }) {
+  const [form, setForm] = useState({ clientName: "", vsdName: "", principalBOPM: "", seniorBOPM: "", juniorBOPM: "" });
+  const save = () => {
+    if (!form.clientName.trim()) { toast.error("Client name required"); return; }
+    addClientToPod(podName, form);
+    toast.success(`Client "${form.clientName}" added to ${podName}`);
+    setForm({ clientName: "", vsdName: "", principalBOPM: "", seniorBOPM: "", juniorBOPM: "" });
+    onClose();
+  };
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Add Client to {podName}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div><Label className="text-xs">Client Name *</Label><Input value={form.clientName} onChange={e => setForm(p => ({ ...p, clientName: e.target.value }))} placeholder="e.g. Razorpay" /></div>
+          <div><Label className="text-xs">VSD Name</Label><Input value={form.vsdName} onChange={e => setForm(p => ({ ...p, vsdName: e.target.value }))} /></div>
+          <div><Label className="text-xs">Principal BOPM</Label><Input value={form.principalBOPM} onChange={e => setForm(p => ({ ...p, principalBOPM: e.target.value }))} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label className="text-xs">Senior BOPM</Label><Input value={form.seniorBOPM} onChange={e => setForm(p => ({ ...p, seniorBOPM: e.target.value }))} /></div>
+            <div><Label className="text-xs">Junior BOPM</Label><Input value={form.juniorBOPM} onChange={e => setForm(p => ({ ...p, juniorBOPM: e.target.value }))} /></div>
+          </div>
+        </div>
+        <DialogFooter><Button onClick={save}>Add Client</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Add Deal Dialog ────────────────────────────────────
+function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: string; clientName: string; open: boolean; onClose: () => void }) {
+  const [form, setForm] = useState({ dealName: "", dealType: "Retainer", status: "Active" as DealStatus, currency: "INR" as CurrencyCode, signingEntity: "", geography: "" });
+  const save = () => {
+    if (!form.dealName.trim()) { toast.error("Deal name required"); return; }
+    addDealToClient(clientId, form);
+    toast.success(`Deal "${form.dealName}" added`);
+    setForm({ dealName: "", dealType: "Retainer", status: "Active", currency: "INR", signingEntity: "", geography: "" });
+    onClose();
+  };
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Add Deal to {clientName}</DialogTitle></DialogHeader>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2"><Label className="text-xs">Deal Name *</Label><Input value={form.dealName} onChange={e => setForm(p => ({ ...p, dealName: e.target.value }))} placeholder="e.g. Content Retainer" /></div>
+          <div><Label className="text-xs">Deal Type</Label>
+            <Select value={form.dealType} onValueChange={v => setForm(p => ({ ...p, dealType: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="Retainer">Retainer</SelectItem><SelectItem value="Project">Project</SelectItem></SelectContent>
+            </Select></div>
+          <div><Label className="text-xs">Status</Label>
+            <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v as DealStatus }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{(["Active", "Completed", "On Hold"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select></div>
+          <div><Label className="text-xs">Currency</Label>
+            <Select value={form.currency} onValueChange={v => setForm(p => ({ ...p, currency: v as CurrencyCode }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="INR">INR</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
+            </Select></div>
+          <div><Label className="text-xs">Geography</Label><Input value={form.geography} onChange={e => setForm(p => ({ ...p, geography: e.target.value }))} placeholder="e.g. India" /></div>
+          <div className="col-span-2"><Label className="text-xs">Signing Entity</Label><Input value={form.signingEntity} onChange={e => setForm(p => ({ ...p, signingEntity: e.target.value }))} placeholder="e.g. Pepper Content Pvt Ltd" /></div>
+        </div>
+        <DialogFooter><Button onClick={save}>Add Deal</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Edit Deal Dialog ───────────────────────────────────
 function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; onClose: () => void }) {
   const [form, setForm] = useState({ dealName: deal.dealName, dealType: deal.dealType, status: deal.status as DealStatus });
@@ -117,50 +188,83 @@ function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; 
   );
 }
 
-// ─── Add Creator Dialog ─────────────────────────────────
-function AddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boolean; onClose: () => void }) {
-  const [form, setForm] = useState({
-    creatorName: "", role: "Writer" as RoleType, source: "Freelancer" as ResourceSource,
-    payModel: "Per Word" as PayModel, payRate: 0, expectedVolume: 0, totalCost: 0, clientBilling: 0,
-    dealStatus: "Active" as CreatorDealStatus, capabilityLeadRating: "" as HealthColor | "", bopmRating: "" as HealthColor | "",
-    city: "", translationLanguage: "",
-  });
+// ─── Bulk Add Creator (Line-Item Form) ──────────────────
+interface CreatorLineItem {
+  id: string;
+  creatorName: string;
+  role: RoleType;
+  source: ResourceSource;
+  payModel: PayModel;
+  payRate: number;
+  totalCost: number;
+  clientBilling: number;
+  city: string;
+  translationLanguage: string;
+}
+
+function emptyLineItem(): CreatorLineItem {
+  return { id: crypto.randomUUID(), creatorName: "", role: "Writer", source: "Freelancer", payModel: "Per Word", payRate: 0, totalCost: 0, clientBilling: 0, city: "", translationLanguage: "" };
+}
+
+function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boolean; onClose: () => void }) {
+  const [rows, setRows] = useState<CreatorLineItem[]>([emptyLineItem()]);
+
+  const updateRow = (id: string, updates: Partial<CreatorLineItem>) => {
+    setRows(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  };
+
+  const addRow = () => setRows(prev => [...prev, emptyLineItem()]);
+  const removeRow = (id: string) => setRows(prev => prev.filter(r => r.id !== id));
+
   const save = () => {
-    if (!form.creatorName) { toast.error("Name required"); return; }
-    addCreatorToDeal(dealId, form);
-    toast.success("Creator added");
+    const valid = rows.filter(r => r.creatorName.trim());
+    if (valid.length === 0) { toast.error("At least one creator name required"); return; }
+    for (const r of valid) {
+      addCreatorToDeal(dealId, {
+        creatorName: r.creatorName, role: r.role, source: r.source, payModel: r.payModel,
+        payRate: r.payRate, expectedVolume: 0, totalCost: r.totalCost, clientBilling: r.clientBilling,
+        dealStatus: "Active", capabilityLeadRating: "", bopmRating: "", city: r.city,
+      });
+    }
+    toast.success(`${valid.length} creator(s) added`);
+    setRows([emptyLineItem()]);
     onClose();
   };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Add Creator</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2"><Label className="text-xs">Name</Label><Input value={form.creatorName} onChange={e => setForm(p => ({ ...p, creatorName: e.target.value }))} /></div>
-          <div><Label className="text-xs">Role</Label>
-            <Select value={form.role} onValueChange={v => setForm(p => ({ ...p, role: v as RoleType }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{(["Writer", "Editor", "Designer", "Video", "Translator", "Other"] as RoleType[]).map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-            </Select></div>
-          {form.role === "Translator" && (
-            <div><Label className="text-xs">Translation Language</Label>
-              <Input value={form.translationLanguage || ""} onChange={e => setForm(p => ({ ...p, translationLanguage: e.target.value }))} placeholder="e.g. Hindi, Spanish" /></div>
-          )}
-          <div><Label className="text-xs">Source</Label>
-            <Select value={form.source} onValueChange={v => setForm(p => ({ ...p, source: v as ResourceSource }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="Freelancer">Freelancer</SelectItem><SelectItem value="In-house">In-house</SelectItem></SelectContent>
-            </Select></div>
-          <div><Label className="text-xs">Pay Model</Label>
-            <Select value={form.payModel} onValueChange={v => setForm(p => ({ ...p, payModel: v as PayModel }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{(["Per Word", "Per Assignment", "Retainer", "Hourly"] as PayModel[]).map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-            </Select></div>
-          <div><Label className="text-xs">City</Label><Input value={form.city} onChange={e => setForm(p => ({ ...p, city: e.target.value }))} placeholder="e.g. Mumbai" /></div>
-          <div><Label className="text-xs">Total Cost</Label><Input type="number" value={form.totalCost || ""} onChange={e => setForm(p => ({ ...p, totalCost: +e.target.value }))} /></div>
-          <div><Label className="text-xs">Client Billing</Label><Input type="number" value={form.clientBilling || ""} onChange={e => setForm(p => ({ ...p, clientBilling: +e.target.value }))} /></div>
+      <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Add Creators to Deal</DialogTitle></DialogHeader>
+        <div className="space-y-2">
+          {/* Header */}
+          <div className="grid grid-cols-[1fr_90px_90px_90px_80px_80px_80px_70px_32px] gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-1">
+            <span>Name</span><span>Role</span><span>Source</span><span>Pay Model</span><span>Rate</span><span>Cost</span><span>Billing</span><span>City</span><span></span>
+          </div>
+          {rows.map((r) => (
+            <div key={r.id} className="grid grid-cols-[1fr_90px_90px_90px_80px_80px_80px_70px_32px] gap-1.5 items-center">
+              <Input className="h-8 text-xs" placeholder="Name" value={r.creatorName} onChange={e => updateRow(r.id, { creatorName: e.target.value })} />
+              <Select value={r.role} onValueChange={v => updateRow(r.id, { role: v as RoleType })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>{(["Writer", "Editor", "Designer", "Video", "Translator", "Other"] as RoleType[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+              </Select>
+              <Select value={r.source} onValueChange={v => updateRow(r.id, { source: v as ResourceSource })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="Freelancer">Freelancer</SelectItem><SelectItem value="In-house">In-house</SelectItem></SelectContent>
+              </Select>
+              <Select value={r.payModel} onValueChange={v => updateRow(r.id, { payModel: v as PayModel })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>{(["Per Word", "Per Assignment", "Retainer", "Hourly"] as PayModel[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+              </Select>
+              <Input className="h-8 text-xs font-mono" type="number" placeholder="₹" value={r.payRate || ""} onChange={e => updateRow(r.id, { payRate: +e.target.value })} />
+              <Input className="h-8 text-xs font-mono" type="number" placeholder="₹" value={r.totalCost || ""} onChange={e => updateRow(r.id, { totalCost: +e.target.value })} />
+              <Input className="h-8 text-xs font-mono" type="number" placeholder="₹" value={r.clientBilling || ""} onChange={e => updateRow(r.id, { clientBilling: +e.target.value })} />
+              <Input className="h-8 text-xs" placeholder="City" value={r.city} onChange={e => updateRow(r.id, { city: e.target.value })} />
+              <button onClick={() => removeRow(r.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={addRow} className="gap-1 text-xs"><Plus className="h-3 w-3" /> Add Row</Button>
         </div>
-        <DialogFooter><Button onClick={save}>Add</Button></DialogFooter>
+        <DialogFooter><Button onClick={save}>Add {rows.filter(r => r.creatorName.trim()).length} Creator(s)</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -250,7 +354,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
         <div className="px-4 pb-4 space-y-3 animate-fade-in">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">{visibleCreators.length} creator{visibleCreators.length !== 1 ? "s" : ""} shown</span>
-            <Button variant="outline" size="sm" onClick={() => setAddCreator(true)} className="h-7 text-xs gap-1"><Plus className="h-3 w-3" />Add Creator</Button>
+            <Button variant="outline" size="sm" onClick={() => setAddCreator(true)} className="h-7 text-xs gap-1"><Plus className="h-3 w-3" />Add Creators</Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -307,7 +411,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
       )}
 
       <EditDealDialog deal={deal} open={editDeal} onClose={() => setEditDeal(false)} />
-      <AddCreatorDialog dealId={deal.id} open={addCreator} onClose={() => setAddCreator(false)} />
+      <BulkAddCreatorDialog dealId={deal.id} open={addCreator} onClose={() => setAddCreator(false)} />
     </div>
   );
 }
@@ -316,6 +420,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
 function ClientCard({ client }: { client: ClientV2 }) {
   const [expanded, setExpanded] = useState(false);
   const [editClient, setEditClient] = useState(false);
+  const [addDeal, setAddDeal] = useState(false);
   const [showInactiveDeals, setShowInactiveDeals] = useState(false);
   const [showInactiveCreators, setShowInactiveCreators] = useState(false);
 
@@ -359,6 +464,7 @@ function ClientCard({ client }: { client: ClientV2 }) {
               <input type="checkbox" checked={showInactiveCreators} onChange={e => setShowInactiveCreators(e.target.checked)} className="rounded border-border" />
               Show all creators
             </label>
+            <Button variant="outline" size="sm" onClick={() => setAddDeal(true)} className="h-7 text-xs gap-1 ml-auto"><Plus className="h-3 w-3" />Add Deal</Button>
           </div>
           <div className="space-y-3">
             {visibleDeals.map(deal => <DealRow key={deal.id} deal={deal} showInactive={showInactiveCreators} />)}
@@ -367,7 +473,67 @@ function ClientCard({ client }: { client: ClientV2 }) {
         </div>
       )}
       <EditClientDialog client={client} open={editClient} onClose={() => setEditClient(false)} />
+      <AddDealDialog clientId={client.id} clientName={client.clientName} open={addDeal} onClose={() => setAddDeal(false)} />
     </div>
+  );
+}
+
+// ─── CSV Import Dialog ──────────────────────────────────
+function CSVImportDialog({ selectedPod, open, onClose }: { selectedPod: string; open: boolean; onClose: () => void }) {
+  const [csvText, setCsvText] = useState("");
+  const [targetPod, setTargetPod] = useState<PodName>(selectedPod !== "All" ? selectedPod as PodName : "Integrated");
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setCsvText(ev.target?.result as string || "");
+    reader.readAsText(file);
+  };
+
+  const downloadTemplate = () => {
+    const blob = new Blob([getClientCSVTemplate()], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "client-deal-template.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importData = () => {
+    if (!csvText.trim()) { toast.error("No CSV data"); return; }
+    const result = parseClientCSV(csvText, targetPod);
+    toast.success(`Imported ${result.added} creator(s) into ${targetPod}`);
+    setCsvText("");
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Import Clients & Deals via CSV</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-1 text-xs"><Download className="h-3 w-3" />Download Template</Button>
+            <span className="text-xs text-muted-foreground">Use the template to format your data</span>
+          </div>
+          <div>
+            <Label className="text-xs">Target Pod</Label>
+            <Select value={targetPod} onValueChange={v => setTargetPod(v as PodName)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{POD_NAMES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Upload CSV File</Label>
+            <Input type="file" accept=".csv" onChange={handleFileUpload} className="text-xs" />
+          </div>
+          <div>
+            <Label className="text-xs">Or paste CSV data</Label>
+            <Textarea value={csvText} onChange={e => setCsvText(e.target.value)} rows={6} placeholder="Paste CSV content here..." className="text-xs font-mono" />
+          </div>
+        </div>
+        <DialogFooter><Button onClick={importData} disabled={!csvText.trim()}>Import</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -395,17 +561,37 @@ const DealMargins = () => {
   const [_, setTick] = useState(0);
   const refresh = () => setTick(t => t + 1);
   const [selectedPod, setSelectedPod] = useState<string>("All");
+  const [addClient, setAddClient] = useState(false);
+  const [csvImport, setCsvImport] = useState(false);
 
   const pods = getPods();
   const allClients = pods.flatMap(p => p.clients);
   const visibleClients = selectedPod === "All" ? allClients : pods.find(p => p.name === selectedPod)?.clients ?? [];
 
+  const handleExportCSV = () => {
+    const csv = exportAllDataAsCSV();
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "talent-client-data.csv"; a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Data exported as CSV");
+  };
+
   return (
     <div className="space-y-6 animate-fade-in" onClick={() => refresh()}>
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Talent X Client View</h1>
-        <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
-        <p className="text-sm text-muted-foreground mt-1">Pod → Client → Deal hierarchy with creator insights</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Talent X Client View</h1>
+          <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
+          <p className="text-sm text-muted-foreground mt-1">Pod → Client → Deal hierarchy with creator insights</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setCsvImport(true)} className="gap-1 text-xs"><Upload className="h-3 w-3" />Import CSV</Button>
+          <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-1 text-xs"><Download className="h-3 w-3" />Export CSV</Button>
+          {selectedPod !== "All" && (
+            <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client</Button>
+          )}
+        </div>
       </div>
 
       <SummaryCards clients={visibleClients} />
@@ -422,11 +608,19 @@ const DealMargins = () => {
         </TabsContent>
         {pods.map(pod => (
           <TabsContent key={pod.name} value={pod.name} className="space-y-4 mt-4">
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {pod.name}</Button>
+            </div>
             {pod.clients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
             {pod.clients.map(client => <ClientCard key={client.id} client={client} />)}
           </TabsContent>
         ))}
       </Tabs>
+
+      {selectedPod !== "All" && (
+        <AddClientDialog podName={selectedPod as PodName} open={addClient} onClose={() => setAddClient(false)} />
+      )}
+      <CSVImportDialog selectedPod={selectedPod} open={csvImport} onClose={() => setCsvImport(false)} />
     </div>
   );
 };

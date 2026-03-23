@@ -182,6 +182,49 @@ let pods: PodV2[] = [
 
 export function getPods(): PodV2[] { return pods; }
 
+export function addClientToPod(podName: PodName, client: Omit<ClientV2, "id" | "deals"> & { deals?: DealV2[] }): ClientV2 {
+  const newClient: ClientV2 = {
+    ...client,
+    id: `CL-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    deals: client.deals || [],
+  };
+  pods = pods.map(p => p.name === podName ? { ...p, clients: [...p.clients, newClient] } : p);
+  return newClient;
+}
+
+export function addDealToClient(clientId: string, deal: { dealName: string; dealType: string; status: DealStatus; currency: CurrencyCode; signingEntity: string; geography: string }): DealV2 {
+  const newDeal: DealV2 = {
+    id: `D-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    ...deal,
+    creators: [],
+    totalContractValue: 0,
+    totalCreatorCost: 0,
+    grossMargin: 0,
+    grossMarginPercent: 0,
+  };
+  pods = pods.map(p => ({
+    ...p, clients: p.clients.map(c => c.id === clientId ? { ...c, deals: [...c.deals, newDeal] } : c),
+  }));
+  return newDeal;
+}
+
+export function exportAllDataAsCSV(): string {
+  const rows: string[] = ["Pod,Client,VSD,PrincipalBOPM,DealName,DealType,DealStatus,Currency,CreatorName,Role,Source,PayModel,PayRate,Volume,Cost,Billing,City,Status"];
+  for (const pod of pods) {
+    for (const client of pod.clients) {
+      for (const deal of client.deals) {
+        if (deal.creators.length === 0) {
+          rows.push([pod.name, client.clientName, client.vsdName, client.principalBOPM, deal.dealName, deal.dealType, deal.status, deal.currency, "", "", "", "", "", "", "", "", "", ""].join(","));
+        }
+        for (const cr of deal.creators) {
+          rows.push([pod.name, client.clientName, client.vsdName, client.principalBOPM, deal.dealName, deal.dealType, deal.status, deal.currency, cr.creatorName, cr.role, cr.source, cr.payModel, cr.payRate, cr.expectedVolume, cr.totalCost, cr.clientBilling, cr.city, cr.dealStatus].join(","));
+        }
+      }
+    }
+  }
+  return rows.join("\n");
+}
+
 export function updateClient(clientId: string, updates: Partial<Pick<ClientV2, "vsdName" | "principalBOPM" | "seniorBOPM" | "juniorBOPM">>) {
   pods = pods.map(p => ({ ...p, clients: p.clients.map(c => c.id === clientId ? { ...c, ...updates } : c) }));
 }
