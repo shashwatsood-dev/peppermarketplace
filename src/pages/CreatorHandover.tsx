@@ -263,15 +263,27 @@ const CreatorHandover = () => {
           <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/20">
             <Label className="text-sm font-medium flex items-center gap-2">📞 Briefing Call (Optional)</Label>
             <p className="text-xs text-muted-foreground">Schedule a briefing call with the employee for onboarding</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Briefing Date & Time</Label>
                 <Input type="datetime-local" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Meeting Link</Label>
-                <Input placeholder="https://meet.google.com/..." />
+                <Label className="text-xs">Google Meet Link</Label>
+                <Input placeholder="https://meet.google.com/abc-defg-hij" />
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Slack Channel / DM</Label>
+                <Input placeholder="#account-management" />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => { toast.success("Meeting invite copied — paste into Google Calendar or send via email"); }}>
+                <Mail className="h-3 w-3" /> Copy Meeting Invite
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => { toast.success("Slack message format copied to clipboard"); }}>
+                <MessageSquare className="h-3 w-3" /> Copy Slack Message
+              </Button>
             </div>
           </div>
 
