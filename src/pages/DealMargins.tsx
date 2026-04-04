@@ -499,8 +499,8 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left">
-                  {["Creator", "Ops Link", "LinkedIn", "Role", "Pay Model", "Currency", "Unit Rate", "Cost", "Billing", "Margin%", "Cap Lead", "BOPM", "Status"].map(h => (
+               <tr className="border-b border-border text-left">
+                  {["Creator", "Ops Link", "LinkedIn", "Role", "Pay Model", "Currency", "Unit Rate", "Cost", "Billing", "Margin%", "Cap Lead", "BOPM", "Status", ""].map(h => (
                     <th key={h} className="pb-2 text-xs font-mono uppercase tracking-wider text-muted-foreground pr-3">{h}</th>
                   ))}
                 </tr>
@@ -521,6 +521,9 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
                     <td className="py-2 pr-3"><RatingSelect dealId={deal.id} creatorId={c.id} field="capabilityLeadRating" value={c.capabilityLeadRating} /></td>
                     <td className="py-2 pr-3"><RatingSelect dealId={deal.id} creatorId={c.id} field="bopmRating" value={c.bopmRating} /></td>
                     <td className="py-2"><CreatorStatusSelect dealId={deal.id} creator={c} /></td>
+                    <td className="py-2">
+                      <button onClick={() => { removeCreatorFromDeal(deal.id, c.id); toast.success(`Removed ${c.creatorName}`); }} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove creator"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
