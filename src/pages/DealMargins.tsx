@@ -424,7 +424,7 @@ function ClientCard({ client }: { client: ClientV2 }) {
   const [showInactiveDeals, setShowInactiveDeals] = useState(false);
   const [showInactiveCreators, setShowInactiveCreators] = useState(false);
 
-  const visibleDeals = showInactiveDeals ? client.deals : client.deals.filter(d => d.status === "Active");
+  const visibleDeals = (showInactiveDeals ? client.deals : client.deals.filter(d => d.status === "Active")).sort((a, b) => a.dealName.localeCompare(b.dealName));
   const totalRev = client.deals.reduce((s, d) => s + d.totalContractValue, 0);
   const totalCost = client.deals.reduce((s, d) => s + d.totalCreatorCost, 0);
 
