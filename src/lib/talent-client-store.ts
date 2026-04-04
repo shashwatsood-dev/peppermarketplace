@@ -26,6 +26,7 @@ function makeCreator(
     hrbpName: "", hrbpConnects: [], monthlyPayments: [],
     startDate: "2026-01-01",
     city: city || CITIES[Math.floor(Math.random() * CITIES.length)],
+    opsLink: "", linkedinId: "", currency: "INR",
   };
 }
 
