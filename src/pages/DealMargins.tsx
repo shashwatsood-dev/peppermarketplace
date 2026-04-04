@@ -182,7 +182,7 @@ function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: stri
 
 // ─── Edit Deal Dialog ───────────────────────────────────
 function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; onClose: () => void }) {
-  const [form, setForm] = useState({ dealName: deal.dealName, dealType: deal.dealType, status: deal.status as DealStatus });
+  const [form, setForm] = useState({ dealName: deal.dealName, dealType: deal.dealType, status: deal.status as DealStatus, vsdName: deal.vsdName || "" });
   const save = () => { updateDeal(deal.id, form); toast.success("Deal updated"); onClose(); };
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -190,6 +190,15 @@ function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; 
         <DialogHeader><DialogTitle>Edit Deal</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label className="text-xs">Deal Name</Label><Input value={form.dealName} onChange={e => setForm(p => ({ ...p, dealName: e.target.value }))} /></div>
+          <div><Label className="text-xs">VSD</Label>
+            <Select value={form.vsdName || "none"} onValueChange={v => setForm(p => ({ ...p, vsdName: v === "none" ? "" : v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— None —</SelectItem>
+                {Object.keys(VSD_POD_MAP).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           <div><Label className="text-xs">Deal Type</Label><Input value={form.dealType} onChange={e => setForm(p => ({ ...p, dealType: e.target.value }))} /></div>
           <div><Label className="text-xs">Status</Label>
             <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v as DealStatus }))}>
