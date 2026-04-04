@@ -5,7 +5,7 @@ import type { CurrencyCode } from "@/lib/requisition-types";
 export type { CreatorDealStatus, DealStatus, HealthColor, ResourceSource, PodName, HRBPConnect, MonthlyPayment, DeployedCreatorV2, DealV2, ClientV2, PodV2 } from "./talent-client-types";
 export { POD_NAMES } from "./talent-client-types";
 
-import type { CreatorDealStatus, DealStatus, HealthColor, ResourceSource, DeployedCreatorV2, DealV2, ClientV2, PodV2, PodName } from "./talent-client-types";
+import type { CreatorDealStatus, DealStatus, HealthColor, ResourceSource, DeployedCreatorV2, DealV2, ClientV2, PodV2, PodName, HRBPConnect } from "./talent-client-types";
 
 const CITIES = ["Mumbai", "Bangalore", "Delhi", "Chennai", "Pune", "Hyderabad", "Kochi", "New York", "San Francisco"];
 
