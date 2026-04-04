@@ -623,22 +623,38 @@ const DealMargins = () => {
           {POD_NAMES.map(name => (
             <TabsTrigger key={name} value={name} className="text-xs font-mono">{name}</TabsTrigger>
           ))}
+          {unassignedPod && unassignedPod.clients.length > 0 && (
+            <TabsTrigger value="Unassigned" className="text-xs font-mono text-warning">⚠ Unassigned ({unassignedPod.clients.length})</TabsTrigger>
+          )}
         </TabsList>
         <TabsContent value="All" className="space-y-4 mt-4">
           {allClients.map(client => <ClientCard key={client.id} client={client} />)}
         </TabsContent>
-        {pods.map(pod => (
+        {pods.filter(p => p.name !== "Unassigned").map(pod => (
           <TabsContent key={pod.name} value={pod.name} className="space-y-4 mt-4">
             <div className="flex justify-end">
               <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {pod.name}</Button>
             </div>
             {pod.clients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
-            {pod.clients.map(client => <ClientCard key={client.id} client={client} />)}
+            {pod.clients.sort((a, b) => a.clientName.localeCompare(b.clientName)).map(client => <ClientCard key={client.id} client={client} />)}
           </TabsContent>
         ))}
+        {unassignedPod && unassignedPod.clients.length > 0 && (
+          <TabsContent value="Unassigned" className="space-y-4 mt-4">
+            <div className="p-4 rounded-lg border border-warning/30 bg-warning/5">
+              <h3 className="text-sm font-semibold text-foreground mb-1">Unassigned Clients</h3>
+              <p className="text-xs text-muted-foreground mb-4">These clients need a Pod and VSD assignment. Assign them to continue tracking.</p>
+              <div className="space-y-3">
+                {unassignedPod.clients.sort((a, b) => a.clientName.localeCompare(b.clientName)).map(client => (
+                  <UnassignedClientRow key={client.id} client={client} onAssign={refresh} />
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
 
-      {selectedPod !== "All" && (
+      {selectedPod !== "All" && selectedPod !== "Unassigned" && (
         <AddClientDialog podName={selectedPod as PodName} open={addClient} onClose={() => setAddClient(false)} />
       )}
       <CSVImportDialog selectedPod={selectedPod} open={csvImport} onClose={() => setCsvImport(false)} />
