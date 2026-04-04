@@ -110,75 +110,8 @@ function makeDeal(id: string, name: string, type: string, status: DealStatus, cr
   };
 }
 
-let pods: PodV2[] = [
-  {
-    name: "Integrated",
-    clients: [{
-      id: "CL-001", clientName: "Razorpay", vsdName: "Amit Shah", principalBOPM: "Priya Sharma", seniorBOPM: "Neha Gupta", juniorBOPM: "Riya Patel",
-      deals: [
-        makeDeal("D-001", "Fintech Content Hub", "Retainer", "Active", [
-          makeCreator("DC-001", "Ananya Desai", "Writer", "Freelancer", "Per Word", 7, 120000, 84000, 140000),
-          makeCreator("DC-002", "Divya Krishnan", "Writer", "Freelancer", "Per Word", 6.5, 100000, 65000, 108000),
-          makeCreator("DC-003", "Sanya Malhotra", "Editor", "In-house", "Retainer", 3500, 6, 21000, 36000),
-        ], "India", "Pepper Content Global Private Limited"),
-        makeDeal("D-002", "Payment Docs Refresh", "Project", "Completed", [
-          makeCreator("DC-004", "Rohan Kapoor", "Writer", "Freelancer", "Per Word", 5.5, 50000, 27500, 45000),
-        ]),
-      ],
-    }],
-  },
-  {
-    name: "India B2B",
-    clients: [
-      {
-        id: "CL-002", clientName: "Freshworks", vsdName: "Karan Mehta", principalBOPM: "Vikram Singh", seniorBOPM: "Arun Das", juniorBOPM: "Pooja Rao",
-        deals: [makeDeal("D-003", "Customer Success Content", "Retainer", "Active", [
-          makeCreator("DC-005", "Ananya Desai", "Writer", "Freelancer", "Per Word", 7, 150000, 105000, 175000),
-          makeCreator("DC-006", "Varun Reddy", "Designer", "Freelancer", "Per Assignment", 5500, 15, 82500, 140000),
-          makeCreator("DC-007", "Internal Design Team", "Designer", "In-house", "Retainer", 0, 10, 0, 25000),
-        ])],
-      },
-      {
-        id: "CL-003", clientName: "Zerodha", vsdName: "Sneha Jain", principalBOPM: "Priya Sharma", seniorBOPM: "", juniorBOPM: "Tanvi Nair",
-        deals: [makeDeal("D-004", "Investment Education Series", "Retainer", "Active", [
-          makeCreator("DC-008", "Megha Rao", "Designer", "Freelancer", "Per Assignment", 4500, 20, 90000, 156000, "Active", "green", "yellow"),
-          makeCreator("DC-009", "Karthik Nair", "Video", "Freelancer", "Per Assignment", 13000, 8, 104000, 160000, "Active", "yellow", "green"),
-        ])],
-      },
-    ],
-  },
-  {
-    name: "US B2B",
-    clients: [{
-      id: "CL-004", clientName: "Notion", vsdName: "Lisa Chen", principalBOPM: "Arjun Mehta", seniorBOPM: "Maya Patel", juniorBOPM: "",
-      deals: [makeDeal("D-005", "SaaS Blog Overhaul", "Project", "Active", [
-        makeCreator("DC-010", "Rohan Kapoor", "Writer", "Freelancer", "Per Word", 5.5, 80000, 44000, 72000, "Active", "green", "red"),
-        makeCreator("DC-011", "Megha Rao", "Designer", "Freelancer", "Per Assignment", 4500, 20, 90000, 156000),
-        makeCreator("DC-012", "Internal Copy Team", "Writer", "In-house", "Retainer", 0, 30000, 0, 18000),
-      ], "US", "Pepper Content Inc")],
-    }],
-  },
-  {
-    name: "FMCG",
-    clients: [{
-      id: "CL-005", clientName: "Swiggy", vsdName: "Rahul Verma", principalBOPM: "Arjun Mehta", seniorBOPM: "", juniorBOPM: "Isha Kulkarni",
-      deals: [makeDeal("D-006", "Brand Storytelling", "Project", "Active", [
-        makeCreator("DC-013", "Aditya Joshi", "Writer", "Freelancer", "Per Word", 4.5, 60000, 27000, 42000, "Flagged", "red", "yellow"),
-        makeCreator("DC-014", "Karthik Nair", "Video", "Freelancer", "Per Assignment", 13000, 5, 65000, 100000),
-      ])],
-    }],
-  },
-  {
-    name: "BFSI",
-    clients: [{
-      id: "CL-006", clientName: "HDFC Bank", vsdName: "Manish Gupta", principalBOPM: "Vikram Singh", seniorBOPM: "Neha Gupta", juniorBOPM: "",
-      deals: [makeDeal("D-007", "Digital Banking Content", "Retainer", "Active", [
-        makeCreator("DC-015", "Divya Krishnan", "Writer", "Freelancer", "Per Word", 6.5, 90000, 58500, 99000),
-        makeCreator("DC-016", "Sanya Malhotra", "Editor", "In-house", "Retainer", 3500, 6, 21000, 36000),
-      ])],
-    }],
-  },
-];
+import { initialPods } from "./pods-seed-data";
+let pods: PodV2[] = initialPods;
 
 export function getPods(): PodV2[] { return pods; }
 
