@@ -55,10 +55,11 @@ export function addClientToPod(podName: PodName, client: Omit<ClientV2, "id" | "
   return newClient;
 }
 
-export function addDealToClient(clientId: string, deal: { dealName: string; dealType: string; status: DealStatus; currency: CurrencyCode; signingEntity: string; geography: string }): DealV2 {
+export function addDealToClient(clientId: string, deal: { dealName: string; dealType: string; status: DealStatus; currency: CurrencyCode; signingEntity: string; geography: string; isContentStudio?: boolean }): DealV2 {
   const newDeal: DealV2 = {
     id: `D-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     ...deal,
+    isContentStudio: deal.isContentStudio ?? false,
     creators: [],
     totalContractValue: 0,
     totalCreatorCost: 0,
