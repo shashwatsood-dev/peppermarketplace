@@ -30,14 +30,14 @@ function makeCreator(
   };
 }
 
-function makeDeal(id: string, name: string, type: string, status: DealStatus, creators: DeployedCreatorV2[], geo: string = "", entity: string = ""): DealV2 {
+function makeDeal(id: string, name: string, type: string, status: DealStatus, creators: DeployedCreatorV2[], geo: string = "", entity: string = "", vsd: string = ""): DealV2 {
   const cost = creators.reduce((s, c) => s + c.totalCost, 0);
   const rev = creators.reduce((s, c) => s + c.clientBilling, 0);
   return {
     id, dealName: name, dealType: type, status, creators,
     totalContractValue: rev, totalCreatorCost: cost,
     grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
-    currency: "INR", signingEntity: entity, geography: geo, isContentStudio: false,
+    currency: "INR", signingEntity: entity, geography: geo, isContentStudio: false, vsdName: vsd,
   };
 }
 
@@ -56,11 +56,12 @@ export function addClientToPod(podName: PodName, client: Omit<ClientV2, "id" | "
   return newClient;
 }
 
-export function addDealToClient(clientId: string, deal: { dealName: string; dealType: string; status: DealStatus; currency: CurrencyCode; signingEntity: string; geography: string; isContentStudio?: boolean }): DealV2 {
+export function addDealToClient(clientId: string, deal: { dealName: string; dealType: string; status: DealStatus; currency: CurrencyCode; signingEntity: string; geography: string; isContentStudio?: boolean; vsdName?: string }): DealV2 {
   const newDeal: DealV2 = {
     id: `D-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     ...deal,
     isContentStudio: deal.isContentStudio ?? false,
+    vsdName: deal.vsdName ?? "",
     creators: [],
     totalContractValue: 0,
     totalCreatorCost: 0,
@@ -102,7 +103,7 @@ export function moveClientToPod(clientId: string, targetPod: PodName) {
   }
 }
 
-export function updateDeal(dealId: string, updates: Partial<Pick<DealV2, "dealName" | "dealType" | "status" | "totalContractValue" | "totalCreatorCost" | "currency" | "signingEntity" | "geography" | "isContentStudio">>) {
+export function updateDeal(dealId: string, updates: Partial<Pick<DealV2, "dealName" | "dealType" | "status" | "totalContractValue" | "totalCreatorCost" | "currency" | "signingEntity" | "geography" | "isContentStudio" | "vsdName">>) {
   pods = pods.map(p => ({
     ...p, clients: p.clients.map(c => ({
       ...c, deals: c.deals.map(d => {

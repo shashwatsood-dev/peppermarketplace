@@ -124,14 +124,22 @@ function AddClientDialog({ podName, open, onClose }: { podName: PodName; open: b
   );
 }
 
+const VSD_POD_MAP: Record<string, PodName> = {
+  "Aamir Khan": "Integrated",
+  "Aditya Shaw": "BFSI",
+  "Neema Jayadas": "US B2B",
+  "Sneha Iyer": "FMCG",
+  "Sumit Shekhawat": "India B2B",
+};
+
 // ─── Add Deal Dialog ────────────────────────────────────
 function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: string; clientName: string; open: boolean; onClose: () => void }) {
-  const [form, setForm] = useState({ dealName: "", dealType: "Retainer", status: "Active" as DealStatus, currency: "INR" as CurrencyCode, signingEntity: "", geography: "" });
+  const [form, setForm] = useState({ dealName: "", dealType: "Retainer", status: "Active" as DealStatus, currency: "INR" as CurrencyCode, signingEntity: "", geography: "", vsdName: "" });
   const save = () => {
     if (!form.dealName.trim()) { toast.error("Deal name required"); return; }
     addDealToClient(clientId, form);
     toast.success(`Deal "${form.dealName}" added`);
-    setForm({ dealName: "", dealType: "Retainer", status: "Active", currency: "INR", signingEntity: "", geography: "" });
+    setForm({ dealName: "", dealType: "Retainer", status: "Active", currency: "INR", signingEntity: "", geography: "", vsdName: "" });
     onClose();
   };
   return (
@@ -140,6 +148,14 @@ function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: stri
         <DialogHeader><DialogTitle>Add Deal to {clientName}</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2"><Label className="text-xs">Deal Name *</Label><Input value={form.dealName} onChange={e => setForm(p => ({ ...p, dealName: e.target.value }))} placeholder="e.g. Content Retainer" /></div>
+          <div><Label className="text-xs">VSD</Label>
+            <Select value={form.vsdName || "none"} onValueChange={v => setForm(p => ({ ...p, vsdName: v === "none" ? "" : v }))}>
+              <SelectTrigger><SelectValue placeholder="Select VSD" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Select —</SelectItem>
+                {Object.keys(VSD_POD_MAP).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select></div>
           <div><Label className="text-xs">Deal Type</Label>
             <Select value={form.dealType} onValueChange={v => setForm(p => ({ ...p, dealType: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -166,7 +182,7 @@ function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: stri
 
 // ─── Edit Deal Dialog ───────────────────────────────────
 function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; onClose: () => void }) {
-  const [form, setForm] = useState({ dealName: deal.dealName, dealType: deal.dealType, status: deal.status as DealStatus });
+  const [form, setForm] = useState({ dealName: deal.dealName, dealType: deal.dealType, status: deal.status as DealStatus, vsdName: deal.vsdName || "" });
   const save = () => { updateDeal(deal.id, form); toast.success("Deal updated"); onClose(); };
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -174,6 +190,15 @@ function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; 
         <DialogHeader><DialogTitle>Edit Deal</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label className="text-xs">Deal Name</Label><Input value={form.dealName} onChange={e => setForm(p => ({ ...p, dealName: e.target.value }))} /></div>
+          <div><Label className="text-xs">VSD</Label>
+            <Select value={form.vsdName || "none"} onValueChange={v => setForm(p => ({ ...p, vsdName: v === "none" ? "" : v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— None —</SelectItem>
+                {Object.keys(VSD_POD_MAP).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           <div><Label className="text-xs">Deal Type</Label><Input value={form.dealType} onChange={e => setForm(p => ({ ...p, dealType: e.target.value }))} /></div>
           <div><Label className="text-xs">Status</Label>
             <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v as DealStatus }))}>
@@ -354,6 +379,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
           <div>
             <span className="font-medium text-sm text-foreground">{deal.dealName}</span>
             <span className="ml-2 text-xs text-muted-foreground">{deal.dealType}</span>
+            {deal.vsdName && <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{deal.vsdName}</span>}
             {deal.isContentStudio && <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">Studio</span>}
           </div>
         </div>
@@ -438,16 +464,17 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
 }
 
 // ─── Client Card ────────────────────────────────────────
-function ClientCard({ client }: { client: ClientV2 }) {
+function ClientCard({ client, filterDeals }: { client: ClientV2; filterDeals?: DealV2[] }) {
   const [expanded, setExpanded] = useState(false);
   const [editClient, setEditClient] = useState(false);
   const [addDeal, setAddDeal] = useState(false);
   const [showInactiveDeals, setShowInactiveDeals] = useState(false);
   const [showInactiveCreators, setShowInactiveCreators] = useState(false);
 
-  const visibleDeals = (showInactiveDeals ? client.deals : client.deals.filter(d => d.status === "Active")).sort((a, b) => a.dealName.localeCompare(b.dealName));
-  const totalRev = client.deals.reduce((s, d) => s + d.totalContractValue, 0);
-  const totalCost = client.deals.reduce((s, d) => s + d.totalCreatorCost, 0);
+  const deals = filterDeals ?? client.deals;
+  const visibleDeals = (showInactiveDeals ? deals : deals.filter(d => d.status === "Active")).sort((a, b) => a.dealName.localeCompare(b.dealName));
+  const totalRev = deals.reduce((s, d) => s + d.totalContractValue, 0);
+  const totalCost = deals.reduce((s, d) => s + d.totalCreatorCost, 0);
 
   return (
     <div className="stat-card">
@@ -456,14 +483,14 @@ function ClientCard({ client }: { client: ClientV2 }) {
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
           <div>
             <p className="font-semibold text-foreground">{client.clientName}</p>
-            <p className="text-xs text-muted-foreground">VSD: {client.vsdName || "—"} · BOPM: {client.principalBOPM || "—"}</p>
+            <p className="text-xs text-muted-foreground">BOPM: {client.principalBOPM || "—"}</p>
           </div>
         </div>
         <div className="flex items-center gap-5">
           <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Revenue</p><p className="font-mono text-foreground">{formatCurrency(totalRev)}</p></div>
           <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Cost</p><p className="font-mono text-muted-foreground">{formatCurrency(totalCost)}</p></div>
           <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Margin</p><p className="font-mono text-success">{totalRev ? ((totalRev - totalCost) / totalRev * 100).toFixed(1) : 0}%</p></div>
-          <span className="text-xs text-muted-foreground">{client.deals.length} deal{client.deals.length !== 1 ? "s" : ""}</span>
+          <span className="text-xs text-muted-foreground">{deals.length} deal{deals.length !== 1 ? "s" : ""}</span>
           <button onClick={e => { e.stopPropagation(); setEditClient(true); }} className="p-1 rounded hover:bg-muted"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
         </div>
       </div>
@@ -471,7 +498,6 @@ function ClientCard({ client }: { client: ClientV2 }) {
       {expanded && (
         <div className="mt-4 pt-4 border-t border-border space-y-4 animate-fade-in">
           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-            <span><strong>VSD:</strong> {client.vsdName || "—"}</span>
             <span><strong>Principal BOPM:</strong> {client.principalBOPM || "—"}</span>
             <span><strong>Senior BOPM:</strong> {client.seniorBOPM || "—"}</span>
             <span><strong>Junior BOPM:</strong> {client.juniorBOPM || "—"}</span>
@@ -578,13 +604,6 @@ function SummaryCards({ clients }: { clients: ClientV2[] }) {
 }
 
 // ─── Unassigned Client Row ──────────────────────────────
-const VSD_POD_MAP: Record<string, PodName> = {
-  "Aamir Khan": "Integrated",
-  "Aditya Shaw": "BFSI",
-  "Neema Jayadas": "US B2B",
-  "Sneha Iyer": "FMCG",
-  "Sumit Shekhawat": "India B2B",
-};
 
 function UnassignedClientRow({ client, onAssign }: { client: ClientV2; onAssign: () => void }) {
   const [selectedPodTarget, setSelectedPodTarget] = useState<string>("");
@@ -643,9 +662,30 @@ const DealMargins = () => {
   const [csvImport, setCsvImport] = useState(false);
 
   const pods = getPods();
-  const unassignedPod = pods.find(p => p.name === "Unassigned");
-  const allClients = pods.filter(p => p.name !== "Unassigned").flatMap(p => p.clients).sort((a, b) => a.clientName.localeCompare(b.clientName));
-  const visibleClients = selectedPod === "All" ? allClients : (pods.find(p => p.name === selectedPod)?.clients ?? []).sort((a, b) => a.clientName.localeCompare(b.clientName));
+  const allClientsRaw = pods.flatMap(p => p.clients);
+  // Deduplicate clients (same client can be in multiple pods)
+  const clientMap = new Map<string, ClientV2>();
+  allClientsRaw.forEach(c => clientMap.set(c.id, c));
+  const allClients = Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+  // Derive pod-filtered views from deal-level VSD
+  const getClientsForPod = (podName: string): { client: ClientV2; deals: DealV2[] }[] => {
+    const vsdNames = Object.entries(VSD_POD_MAP).filter(([, pod]) => pod === podName).map(([vsd]) => vsd);
+    const results: { client: ClientV2; deals: DealV2[] }[] = [];
+    for (const client of allClients) {
+      const podDeals = client.deals.filter(d => vsdNames.includes(d.vsdName));
+      if (podDeals.length > 0) results.push({ client, deals: podDeals });
+    }
+    return results.sort((a, b) => a.client.clientName.localeCompare(b.client.clientName));
+  };
+
+  // Unassigned: deals with no VSD or VSD not in the map
+  const unassignedEntries = allClients.filter(c => c.deals.some(d => !d.vsdName || !VSD_POD_MAP[d.vsdName])).map(c => ({
+    client: c,
+    deals: c.deals.filter(d => !d.vsdName || !VSD_POD_MAP[d.vsdName]),
+  }));
+
+  const visibleClients = selectedPod === "All" ? allClients : [];
 
   const handleExportCSV = () => {
     const csv = exportAllDataAsCSV();
@@ -679,32 +719,35 @@ const DealMargins = () => {
         <TabsList className="bg-muted border border-border">
           <TabsTrigger value="All" className="text-xs font-mono">All</TabsTrigger>
           {POD_NAMES.map(name => (
-            <TabsTrigger key={name} value={name} className="text-xs font-mono">{name}</TabsTrigger>
+            <TabsTrigger key={name} value={name} className="text-xs font-mono">{name} ({getClientsForPod(name).length})</TabsTrigger>
           ))}
-          {unassignedPod && unassignedPod.clients.length > 0 && (
-            <TabsTrigger value="Unassigned" className="text-xs font-mono text-warning">⚠ Unassigned ({unassignedPod.clients.length})</TabsTrigger>
+          {unassignedEntries.length > 0 && (
+            <TabsTrigger value="Unassigned" className="text-xs font-mono text-warning">⚠ Unassigned ({unassignedEntries.length})</TabsTrigger>
           )}
         </TabsList>
         <TabsContent value="All" className="space-y-4 mt-4">
           {allClients.map(client => <ClientCard key={client.id} client={client} />)}
         </TabsContent>
-        {pods.filter(p => p.name !== "Unassigned").map(pod => (
-          <TabsContent key={pod.name} value={pod.name} className="space-y-4 mt-4">
-            <div className="flex justify-end">
-              <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {pod.name}</Button>
-            </div>
-            {pod.clients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
-            {pod.clients.sort((a, b) => a.clientName.localeCompare(b.clientName)).map(client => <ClientCard key={client.id} client={client} />)}
-          </TabsContent>
-        ))}
-        {unassignedPod && unassignedPod.clients.length > 0 && (
+        {POD_NAMES.map(podName => {
+          const podClients = getClientsForPod(podName);
+          return (
+            <TabsContent key={podName} value={podName} className="space-y-4 mt-4">
+              <div className="flex justify-end">
+                <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {podName}</Button>
+              </div>
+              {podClients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
+              {podClients.map(({ client, deals }) => <ClientCard key={`${client.id}-${podName}`} client={client} filterDeals={deals} />)}
+            </TabsContent>
+          );
+        })}
+        {unassignedEntries.length > 0 && (
           <TabsContent value="Unassigned" className="space-y-4 mt-4">
             <div className="p-4 rounded-lg border border-warning/30 bg-warning/5">
-              <h3 className="text-sm font-semibold text-foreground mb-1">Unassigned Clients</h3>
-              <p className="text-xs text-muted-foreground mb-4">These clients need a Pod and VSD assignment. Assign them to continue tracking.</p>
+              <h3 className="text-sm font-semibold text-foreground mb-1">Deals without VSD Assignment</h3>
+              <p className="text-xs text-muted-foreground mb-4">These deals need a VSD assigned. Edit each deal to set a VSD, which will automatically map it to the correct pod.</p>
               <div className="space-y-3">
-                {unassignedPod.clients.sort((a, b) => a.clientName.localeCompare(b.clientName)).map(client => (
-                  <UnassignedClientRow key={client.id} client={client} onAssign={refresh} />
+                {unassignedEntries.map(({ client, deals }) => (
+                  <ClientCard key={`${client.id}-unassigned`} client={client} filterDeals={deals} />
                 ))}
               </div>
             </div>

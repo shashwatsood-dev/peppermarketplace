@@ -26,6 +26,14 @@ function getAgreements(dealId: string, creatorId: string) {
   return agreements.filter(a => a.dealId === dealId && a.creatorId === creatorId);
 }
 
+const VSD_POD_MAP: Record<string, string> = {
+  "Aamir Khan": "Integrated",
+  "Aditya Shaw": "BFSI",
+  "Neema Jayadas": "US B2B",
+  "Sneha Iyer": "FMCG",
+  "Sumit Shekhawat": "India B2B",
+};
+
 function getAllStudioData() {
   const pods = getPods();
   const results: { podName: string; clientName: string; client: ClientV2; deal: DealV2 }[] = [];
@@ -33,7 +41,8 @@ function getAllStudioData() {
     for (const client of pod.clients) {
       for (const deal of client.deals) {
         if (deal.isContentStudio) {
-          results.push({ podName: pod.name, clientName: client.clientName, client, deal });
+          const podName = VSD_POD_MAP[deal.vsdName] || pod.name;
+          results.push({ podName, clientName: client.clientName, client, deal });
         }
       }
     }
