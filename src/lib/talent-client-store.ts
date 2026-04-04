@@ -42,7 +42,71 @@ function makeDeal(id: string, name: string, type: string, status: DealStatus, cr
 }
 
 import { initialPods } from "./pods-seed-data";
-let pods: PodV2[] = initialPods;
+import { importedCreatorsByDeal, newClientDeals } from "./csv-creator-import";
+
+// Merge CSV-imported creators into seed data
+function mergeImportedData(basePods: PodV2[]): PodV2[] {
+  let result = basePods.map(p => ({
+    ...p,
+    clients: p.clients.map(c => ({
+      ...c,
+      deals: c.deals.map(d => {
+        const imported = importedCreatorsByDeal[d.id];
+        if (!imported || imported.length === 0) return d;
+        const creators = [...d.creators, ...imported];
+        const cost = creators.reduce((s, cr) => s + cr.totalCost, 0);
+        const rev = creators.reduce((s, cr) => s + cr.clientBilling, 0);
+        return { ...d, creators, totalCreatorCost: cost, totalContractValue: rev, grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0 };
+      }),
+    })),
+  }));
+
+  // Add new clients/deals from CSV
+  const unassignedPodIdx = result.findIndex(p => p.name === "Unassigned");
+  for (const nd of newClientDeals) {
+    // Check if client already exists
+    let found = false;
+    result = result.map(p => ({
+      ...p,
+      clients: p.clients.map(c => {
+        if (c.clientName.toLowerCase() === nd.clientName.toLowerCase()) {
+          found = true;
+          const cost = nd.creators.reduce((s, cr) => s + cr.totalCost, 0);
+          const rev = nd.creators.reduce((s, cr) => s + cr.clientBilling, 0);
+          const newDeal: DealV2 = {
+            id: nd.csvDealId ? `D-${nd.csvDealId}` : `D-NEW-${Date.now()}-${Math.random().toString(36).slice(2,5)}`,
+            dealName: nd.dealName, dealType: "Retainer", status: "Active" as const,
+            creators: nd.creators, totalContractValue: rev, totalCreatorCost: cost,
+            grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
+            currency: "INR", signingEntity: "", geography: "", isContentStudio: false, vsdName: "",
+          };
+          return { ...c, deals: [...c.deals, newDeal] };
+        }
+        return c;
+      }),
+    }));
+    if (!found && unassignedPodIdx >= 0) {
+      const cost = nd.creators.reduce((s, cr) => s + cr.totalCost, 0);
+      const rev = nd.creators.reduce((s, cr) => s + cr.clientBilling, 0);
+      const newClient: ClientV2 = {
+        id: `CL-NEW-${Date.now()}-${Math.random().toString(36).slice(2,5)}`,
+        clientName: nd.clientName, vsdName: "", principalBOPM: "", seniorBOPM: "", juniorBOPM: "",
+        deals: [{
+          id: nd.csvDealId ? `D-${nd.csvDealId}` : `D-NEW-${Date.now()}-${Math.random().toString(36).slice(2,5)}`,
+          dealName: nd.dealName, dealType: "Retainer", status: "Active",
+          creators: nd.creators, totalContractValue: rev, totalCreatorCost: cost,
+          grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
+          currency: "INR", signingEntity: "", geography: "", isContentStudio: false, vsdName: "",
+        }],
+      };
+      result = result.map((p, i) => i === unassignedPodIdx ? { ...p, clients: [...p.clients, newClient] } : p);
+    }
+  }
+
+  return result;
+}
+
+let pods: PodV2[] = mergeImportedData(initialPods);
 
 export function getPods(): PodV2[] { return pods; }
 
@@ -185,6 +249,83 @@ export function recalcDealFinancials(dealId: string) {
       }),
     })),
   }));
+}
+
+// ── Copy/Transfer Creators between Deals ───────────────────────────
+
+export function copyCreatorsToDeal(sourceDealId: string, targetDealId: string, creatorIds: string[], removeFromSource: boolean = false) {
+  let creatorsToCopy: DeployedCreatorV2[] = [];
+
+  // Find the creators in the source deal
+  for (const p of pods) {
+    for (const c of p.clients) {
+      for (const d of c.deals) {
+        if (d.id === sourceDealId) {
+          creatorsToCopy = d.creators.filter(cr => creatorIds.includes(cr.id));
+        }
+      }
+    }
+  }
+
+  if (creatorsToCopy.length === 0) return;
+
+  // Add copies to target deal with new IDs
+  const newCreators = creatorsToCopy.map(cr => ({
+    ...cr,
+    id: `DC-CPY-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  }));
+
+  pods = pods.map(p => ({
+    ...p, clients: p.clients.map(c => ({
+      ...c, deals: c.deals.map(d => {
+        if (d.id === targetDealId) {
+          const creators = [...d.creators, ...newCreators];
+          const cost = creators.reduce((s, cr) => s + cr.totalCost, 0);
+          const rev = creators.reduce((s, cr) => s + cr.clientBilling, 0);
+          return { ...d, creators, totalCreatorCost: cost, totalContractValue: rev, grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0 };
+        }
+        if (removeFromSource && d.id === sourceDealId) {
+          const creators = d.creators.filter(cr => !creatorIds.includes(cr.id));
+          const cost = creators.reduce((s, cr) => s + cr.totalCost, 0);
+          const rev = creators.reduce((s, cr) => s + cr.clientBilling, 0);
+          return { ...d, creators, totalCreatorCost: cost, totalContractValue: rev, grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0 };
+        }
+        return d;
+      }),
+    })),
+  }));
+}
+
+export function removeCreatorFromDeal(dealId: string, creatorId: string) {
+  pods = pods.map(p => ({
+    ...p, clients: p.clients.map(c => ({
+      ...c, deals: c.deals.map(d => {
+        if (d.id !== dealId) return d;
+        const creators = d.creators.filter(cr => cr.id !== creatorId);
+        const cost = creators.reduce((s, cr) => s + cr.totalCost, 0);
+        const rev = creators.reduce((s, cr) => s + cr.clientBilling, 0);
+        return { ...d, creators, totalCreatorCost: cost, totalContractValue: rev, grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0 };
+      }),
+    })),
+  }));
+}
+
+export function getDealsForClient(clientId: string): DealV2[] {
+  for (const p of pods) {
+    for (const c of p.clients) {
+      if (c.id === clientId) return c.deals;
+    }
+  }
+  return [];
+}
+
+export function findClientForDeal(dealId: string): ClientV2 | undefined {
+  for (const p of pods) {
+    for (const c of p.clients) {
+      if (c.deals.some(d => d.id === dealId)) return c;
+    }
+  }
+  return undefined;
 }
 
 // ── CSV Import for Talent x Client view ────────────────────────────
