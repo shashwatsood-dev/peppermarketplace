@@ -45,6 +45,9 @@ export interface DeployedCreatorV2 {
   monthlyPayments: MonthlyPayment[];
   startDate: string;
   city: string;
+  opsLink: string;
+  linkedinId: string;
+  currency: CurrencyCode;
 }
 
 export interface DealV2 {
