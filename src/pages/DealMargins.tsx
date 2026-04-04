@@ -379,7 +379,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
-                  {["Creator", "Source", "Role", "Pay Model", "Rate", "Cost", "Billing", "Margin%", "Cap Lead", "BOPM", "Status"].map(h => (
+                  {["Creator", "Ops Link", "LinkedIn", "Role", "Pay Model", "Currency", "Unit Rate", "Cost", "Billing", "Margin%", "Cap Lead", "BOPM", "Status"].map(h => (
                     <th key={h} className="pb-2 text-xs font-mono uppercase tracking-wider text-muted-foreground pr-3">{h}</th>
                   ))}
                 </tr>
@@ -388,10 +388,12 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
                 {visibleCreators.map(c => (
                   <tr key={c.id} className={`data-table-row ${c.dealStatus === "Inactive" ? "bg-warning/5" : c.dealStatus === "Removed" ? "bg-destructive/5" : ""}`}>
                     <td className="py-2 font-medium text-foreground pr-3">{c.creatorName}</td>
-                    <td className="py-2 pr-3"><span className={`text-xs px-1.5 py-0.5 rounded ${c.source === "In-house" ? "bg-primary/10 text-primary" : "bg-primary/15 text-primary font-medium"}`}>{c.source}</span></td>
+                    <td className="py-2 pr-3">{c.opsLink ? <a href={c.opsLink} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs truncate max-w-[100px] inline-block">Link</a> : <span className="text-muted-foreground text-xs">—</span>}</td>
+                    <td className="py-2 pr-3">{c.linkedinId ? <a href={c.linkedinId} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs truncate max-w-[100px] inline-block">Profile</a> : <span className="text-muted-foreground text-xs">—</span>}</td>
                     <td className="py-2 text-muted-foreground pr-3">{c.role}</td>
                     <td className="py-2 text-muted-foreground pr-3">{c.payModel}</td>
-                    <td className="py-2 font-mono text-foreground pr-3">₹{c.payRate.toLocaleString()}</td>
+                    <td className="py-2 text-muted-foreground pr-3">{c.currency}</td>
+                    <td className="py-2 font-mono text-foreground pr-3">{c.payRate.toLocaleString()}</td>
                     <td className="py-2 font-mono text-muted-foreground pr-3">{formatCurrency(c.totalCost)}</td>
                     <td className="py-2 font-mono text-foreground pr-3">{formatCurrency(c.clientBilling)}</td>
                     <td className="py-2 font-mono text-success pr-3">{c.grossMarginPercent}%</td>
