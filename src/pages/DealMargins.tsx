@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import {
   getPods, updateClient, updateDeal, updateCreatorInDeal, addCreatorToDeal, addClientToPod, addDealToClient, exportAllDataAsCSV, moveClientToPod,
+  copyCreatorsToDeal, removeCreatorFromDeal, findClientForDeal, getDealsForClient,
   POD_NAMES, ALL_POD_NAMES, type PodV2, type ClientV2, type DealV2, type DeployedCreatorV2,
   type CreatorDealStatus, type HealthColor, type ResourceSource, type DealStatus, type PodName,
 } from "@/lib/talent-client-store";
