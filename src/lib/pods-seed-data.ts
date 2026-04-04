@@ -3949,5 +3949,9 @@ export const initialPods: PodV2[] = [
         ],
       },
     ],
+  },,
+  {
+    name: "Unassigned",
+    clients: [],
   },
 ];
