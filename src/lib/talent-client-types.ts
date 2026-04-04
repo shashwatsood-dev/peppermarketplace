@@ -60,6 +60,7 @@ export interface DealV2 {
   currency: CurrencyCode;
   signingEntity: string;
   geography: string;
+  isContentStudio: boolean;
 }
 
 export interface ClientV2 {
