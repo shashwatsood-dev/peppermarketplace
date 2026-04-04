@@ -586,8 +586,8 @@ const DealMargins = () => {
   const [csvImport, setCsvImport] = useState(false);
 
   const pods = getPods();
-  const allClients = pods.flatMap(p => p.clients);
-  const visibleClients = selectedPod === "All" ? allClients : pods.find(p => p.name === selectedPod)?.clients ?? [];
+  const allClients = pods.flatMap(p => p.clients).sort((a, b) => a.clientName.localeCompare(b.clientName));
+  const visibleClients = selectedPod === "All" ? allClients : (pods.find(p => p.name === selectedPod)?.clients ?? []).sort((a, b) => a.clientName.localeCompare(b.clientName));
 
   const handleExportCSV = () => {
     const csv = exportAllDataAsCSV();
