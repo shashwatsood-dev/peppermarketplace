@@ -487,10 +487,15 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
 
       {expanded && (
         <div className="px-4 pb-4 space-y-3 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">{visibleCreators.length} creator{visibleCreators.length !== 1 ? "s" : ""} shown</span>
-            <Button variant="outline" size="sm" onClick={() => setAddCreator(true)} className="h-7 text-xs gap-1"><Plus className="h-3 w-3" />Add Creators</Button>
-          </div>
+           <div className="flex items-center justify-between">
+             <span className="text-xs text-muted-foreground">{visibleCreators.length} creator{visibleCreators.length !== 1 ? "s" : ""} shown</span>
+             <div className="flex items-center gap-2">
+               {deal.creators.length > 0 && (
+                 <Button variant="outline" size="sm" onClick={() => setTransferCreators(true)} className="h-7 text-xs gap-1"><ArrowRightLeft className="h-3 w-3" />Transfer/Copy</Button>
+               )}
+               <Button variant="outline" size="sm" onClick={() => setAddCreator(true)} className="h-7 text-xs gap-1"><Plus className="h-3 w-3" />Add Creators</Button>
+             </div>
+           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
