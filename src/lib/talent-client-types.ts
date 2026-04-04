@@ -7,7 +7,8 @@ export type HealthColor = "green" | "yellow" | "red";
 export type ResourceSource = "Freelancer" | "In-house";
 
 export const POD_NAMES = ["Integrated", "India B2B", "US B2B", "FMCG", "BFSI"] as const;
-export type PodName = typeof POD_NAMES[number];
+export const ALL_POD_NAMES = [...POD_NAMES, "Unassigned"] as const;
+export type PodName = typeof ALL_POD_NAMES[number];
 
 export interface HRBPConnect {
   id: string;

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import {
-  getPods, updateClient, updateDeal, updateCreatorInDeal, addCreatorToDeal, addClientToPod, addDealToClient, exportAllDataAsCSV,
-  POD_NAMES, type PodV2, type ClientV2, type DealV2, type DeployedCreatorV2,
+  getPods, updateClient, updateDeal, updateCreatorInDeal, addCreatorToDeal, addClientToPod, addDealToClient, exportAllDataAsCSV, moveClientToPod,
+  POD_NAMES, ALL_POD_NAMES, type PodV2, type ClientV2, type DealV2, type DeployedCreatorV2,
   type CreatorDealStatus, type HealthColor, type ResourceSource, type DealStatus, type PodName,
 } from "@/lib/talent-client-store";
 import { type RoleType, type PayModel } from "@/lib/mock-data";
@@ -577,6 +577,63 @@ function SummaryCards({ clients }: { clients: ClientV2[] }) {
   );
 }
 
+// ─── Unassigned Client Row ──────────────────────────────
+const VSD_POD_MAP: Record<string, PodName> = {
+  "Aamir Khan": "Integrated",
+  "Aditya Shaw": "BFSI",
+  "Neema Jayadas": "US B2B",
+  "Sneha Iyer": "FMCG",
+  "Sumit Shekhawat": "India B2B",
+};
+
+function UnassignedClientRow({ client, onAssign }: { client: ClientV2; onAssign: () => void }) {
+  const [selectedPodTarget, setSelectedPodTarget] = useState<string>("");
+  const [vsd, setVsd] = useState(client.vsdName);
+
+  const handleAssign = () => {
+    if (!selectedPodTarget) { toast.error("Select a pod"); return; }
+    if (vsd.trim()) updateClient(client.id, { vsdName: vsd.trim() });
+    moveClientToPod(client.id, selectedPodTarget as PodName);
+    toast.success(`"${client.clientName}" assigned to ${selectedPodTarget}`);
+    onAssign();
+  };
+
+  const handleVsdChange = (v: string) => {
+    setVsd(v);
+    if (VSD_POD_MAP[v]) setSelectedPodTarget(VSD_POD_MAP[v]);
+  };
+
+  return (
+    <div className="flex items-center gap-4 p-3 rounded-md border border-border bg-card">
+      <div className="flex-1">
+        <p className="font-medium text-sm text-foreground">{client.clientName}</p>
+        <p className="text-xs text-muted-foreground">{client.deals.length} deal{client.deals.length !== 1 ? "s" : ""}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <div>
+          <Label className="text-[10px] text-muted-foreground">VSD</Label>
+          <Select value={vsd} onValueChange={handleVsdChange}>
+            <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue placeholder="Select VSD" /></SelectTrigger>
+            <SelectContent>
+              {Object.keys(VSD_POD_MAP).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-[10px] text-muted-foreground">Pod</Label>
+          <Select value={selectedPodTarget} onValueChange={setSelectedPodTarget}>
+            <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue placeholder="Select Pod" /></SelectTrigger>
+            <SelectContent>
+              {POD_NAMES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button size="sm" onClick={handleAssign} className="h-8 text-xs mt-3.5">Assign</Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ──────────────────────────────────────────
 const DealMargins = () => {
   const [_, setTick] = useState(0);
@@ -586,7 +643,8 @@ const DealMargins = () => {
   const [csvImport, setCsvImport] = useState(false);
 
   const pods = getPods();
-  const allClients = pods.flatMap(p => p.clients).sort((a, b) => a.clientName.localeCompare(b.clientName));
+  const unassignedPod = pods.find(p => p.name === "Unassigned");
+  const allClients = pods.filter(p => p.name !== "Unassigned").flatMap(p => p.clients).sort((a, b) => a.clientName.localeCompare(b.clientName));
   const visibleClients = selectedPod === "All" ? allClients : (pods.find(p => p.name === selectedPod)?.clients ?? []).sort((a, b) => a.clientName.localeCompare(b.clientName));
 
   const handleExportCSV = () => {
@@ -623,22 +681,38 @@ const DealMargins = () => {
           {POD_NAMES.map(name => (
             <TabsTrigger key={name} value={name} className="text-xs font-mono">{name}</TabsTrigger>
           ))}
+          {unassignedPod && unassignedPod.clients.length > 0 && (
+            <TabsTrigger value="Unassigned" className="text-xs font-mono text-warning">⚠ Unassigned ({unassignedPod.clients.length})</TabsTrigger>
+          )}
         </TabsList>
         <TabsContent value="All" className="space-y-4 mt-4">
           {allClients.map(client => <ClientCard key={client.id} client={client} />)}
         </TabsContent>
-        {pods.map(pod => (
+        {pods.filter(p => p.name !== "Unassigned").map(pod => (
           <TabsContent key={pod.name} value={pod.name} className="space-y-4 mt-4">
             <div className="flex justify-end">
               <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {pod.name}</Button>
             </div>
             {pod.clients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
-            {pod.clients.map(client => <ClientCard key={client.id} client={client} />)}
+            {pod.clients.sort((a, b) => a.clientName.localeCompare(b.clientName)).map(client => <ClientCard key={client.id} client={client} />)}
           </TabsContent>
         ))}
+        {unassignedPod && unassignedPod.clients.length > 0 && (
+          <TabsContent value="Unassigned" className="space-y-4 mt-4">
+            <div className="p-4 rounded-lg border border-warning/30 bg-warning/5">
+              <h3 className="text-sm font-semibold text-foreground mb-1">Unassigned Clients</h3>
+              <p className="text-xs text-muted-foreground mb-4">These clients need a Pod and VSD assignment. Assign them to continue tracking.</p>
+              <div className="space-y-3">
+                {unassignedPod.clients.sort((a, b) => a.clientName.localeCompare(b.clientName)).map(client => (
+                  <UnassignedClientRow key={client.id} client={client} onAssign={refresh} />
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
 
-      {selectedPod !== "All" && (
+      {selectedPod !== "All" && selectedPod !== "Unassigned" && (
         <AddClientDialog podName={selectedPod as PodName} open={addClient} onClose={() => setAddClient(false)} />
       )}
       <CSVImportDialog selectedPod={selectedPod} open={csvImport} onClose={() => setCsvImport(false)} />

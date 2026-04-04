@@ -3,7 +3,7 @@ import type { CurrencyCode } from "@/lib/requisition-types";
 
 // Re-export all types from the dedicated types file
 export type { CreatorDealStatus, DealStatus, HealthColor, ResourceSource, PodName, HRBPConnect, MonthlyPayment, DeployedCreatorV2, DealV2, ClientV2, PodV2 } from "./talent-client-types";
-export { POD_NAMES } from "./talent-client-types";
+export { POD_NAMES, ALL_POD_NAMES } from "./talent-client-types";
 
 import type { CreatorDealStatus, DealStatus, HealthColor, ResourceSource, DeployedCreatorV2, DealV2, ClientV2, PodV2, PodName, HRBPConnect } from "./talent-client-types";
 
@@ -92,6 +92,14 @@ export function exportAllDataAsCSV(): string {
 
 export function updateClient(clientId: string, updates: Partial<Pick<ClientV2, "vsdName" | "principalBOPM" | "seniorBOPM" | "juniorBOPM">>) {
   pods = pods.map(p => ({ ...p, clients: p.clients.map(c => c.id === clientId ? { ...c, ...updates } : c) }));
+}
+
+export function moveClientToPod(clientId: string, targetPod: PodName) {
+  let client: ClientV2 | undefined;
+  pods = pods.map(p => ({ ...p, clients: p.clients.filter(c => { if (c.id === clientId) { client = c; return false; } return true; }) }));
+  if (client) {
+    pods = pods.map(p => p.name === targetPod ? { ...p, clients: [...p.clients, client!] } : p);
+  }
 }
 
 export function updateDeal(dealId: string, updates: Partial<Pick<DealV2, "dealName" | "dealType" | "status" | "totalContractValue" | "totalCreatorCost" | "currency" | "signingEntity" | "geography" | "isContentStudio">>) {
