@@ -586,13 +586,6 @@ function SummaryCards({ clients }: { clients: ClientV2[] }) {
 }
 
 // ─── Unassigned Client Row ──────────────────────────────
-const VSD_POD_MAP: Record<string, PodName> = {
-  "Aamir Khan": "Integrated",
-  "Aditya Shaw": "BFSI",
-  "Neema Jayadas": "US B2B",
-  "Sneha Iyer": "FMCG",
-  "Sumit Shekhawat": "India B2B",
-};
 
 function UnassignedClientRow({ client, onAssign }: { client: ClientV2; onAssign: () => void }) {
   const [selectedPodTarget, setSelectedPodTarget] = useState<string>("");
