@@ -663,9 +663,30 @@ const DealMargins = () => {
   const [csvImport, setCsvImport] = useState(false);
 
   const pods = getPods();
-  const unassignedPod = pods.find(p => p.name === "Unassigned");
-  const allClients = pods.filter(p => p.name !== "Unassigned").flatMap(p => p.clients).sort((a, b) => a.clientName.localeCompare(b.clientName));
-  const visibleClients = selectedPod === "All" ? allClients : (pods.find(p => p.name === selectedPod)?.clients ?? []).sort((a, b) => a.clientName.localeCompare(b.clientName));
+  const allClientsRaw = pods.flatMap(p => p.clients);
+  // Deduplicate clients (same client can be in multiple pods)
+  const clientMap = new Map<string, ClientV2>();
+  allClientsRaw.forEach(c => clientMap.set(c.id, c));
+  const allClients = Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+  // Derive pod-filtered views from deal-level VSD
+  const getClientsForPod = (podName: string): { client: ClientV2; deals: DealV2[] }[] => {
+    const vsdNames = Object.entries(VSD_POD_MAP).filter(([, pod]) => pod === podName).map(([vsd]) => vsd);
+    const results: { client: ClientV2; deals: DealV2[] }[] = [];
+    for (const client of allClients) {
+      const podDeals = client.deals.filter(d => vsdNames.includes(d.vsdName));
+      if (podDeals.length > 0) results.push({ client, deals: podDeals });
+    }
+    return results.sort((a, b) => a.client.clientName.localeCompare(b.client.clientName));
+  };
+
+  // Unassigned: deals with no VSD or VSD not in the map
+  const unassignedEntries = allClients.filter(c => c.deals.some(d => !d.vsdName || !VSD_POD_MAP[d.vsdName])).map(c => ({
+    client: c,
+    deals: c.deals.filter(d => !d.vsdName || !VSD_POD_MAP[d.vsdName]),
+  }));
+
+  const visibleClients = selectedPod === "All" ? allClients : [];
 
   const handleExportCSV = () => {
     const csv = exportAllDataAsCSV();
