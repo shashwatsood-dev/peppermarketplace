@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import {
-  getPods, updateClient, updateDeal, updateCreatorInDeal, addCreatorToDeal, addClientToPod, addDealToClient, exportAllDataAsCSV,
-  POD_NAMES, type PodV2, type ClientV2, type DealV2, type DeployedCreatorV2,
+  getPods, updateClient, updateDeal, updateCreatorInDeal, addCreatorToDeal, addClientToPod, addDealToClient, exportAllDataAsCSV, moveClientToPod,
+  POD_NAMES, ALL_POD_NAMES, type PodV2, type ClientV2, type DealV2, type DeployedCreatorV2,
   type CreatorDealStatus, type HealthColor, type ResourceSource, type DealStatus, type PodName,
 } from "@/lib/talent-client-store";
 import { type RoleType, type PayModel } from "@/lib/mock-data";
