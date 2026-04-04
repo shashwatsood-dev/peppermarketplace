@@ -305,7 +305,94 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
   );
 }
 
-// ─── Creator Status Edit ────────────────────────────────
+// ─── Transfer/Copy Creators Dialog ──────────────────────
+function TransferCreatorsDialog({ dealId, creators, open, onClose }: { dealId: string; creators: DeployedCreatorV2[]; open: boolean; onClose: () => void }) {
+  const [selectedCreators, setSelectedCreators] = useState<Set<string>>(new Set());
+  const [targetDealId, setTargetDealId] = useState("");
+  const [mode, setMode] = useState<"copy" | "move">("copy");
+
+  const client = findClientForDeal(dealId);
+  const otherDeals = client ? client.deals.filter(d => d.id !== dealId) : [];
+
+  const toggleCreator = (id: string) => {
+    setSelectedCreators(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedCreators.size === creators.length) {
+      setSelectedCreators(new Set());
+    } else {
+      setSelectedCreators(new Set(creators.map(c => c.id)));
+    }
+  };
+
+  const handleTransfer = () => {
+    if (selectedCreators.size === 0) { toast.error("Select at least one creator"); return; }
+    if (!targetDealId) { toast.error("Select a target deal"); return; }
+    copyCreatorsToDeal(dealId, targetDealId, Array.from(selectedCreators), mode === "move");
+    const targetDeal = otherDeals.find(d => d.id === targetDealId);
+    toast.success(`${selectedCreators.size} creator(s) ${mode === "move" ? "moved" : "copied"} to ${targetDeal?.dealName || targetDealId}`);
+    setSelectedCreators(new Set());
+    setTargetDealId("");
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{mode === "copy" ? "Copy" : "Move"} Creators to Another Deal</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <Button variant={mode === "copy" ? "default" : "outline"} size="sm" onClick={() => setMode("copy")} className="gap-1 text-xs"><Copy className="h-3 w-3" />Copy</Button>
+            <Button variant={mode === "move" ? "default" : "outline"} size="sm" onClick={() => setMode("move")} className="gap-1 text-xs"><ArrowRightLeft className="h-3 w-3" />Move</Button>
+          </div>
+          <div>
+            <Label className="text-xs">Target Deal</Label>
+            {otherDeals.length === 0 ? (
+              <p className="text-xs text-muted-foreground mt-1">No other deals for this client. Add a deal first.</p>
+            ) : (
+              <Select value={targetDealId} onValueChange={setTargetDealId}>
+                <SelectTrigger><SelectValue placeholder="Select target deal" /></SelectTrigger>
+                <SelectContent>
+                  {otherDeals.map(d => <SelectItem key={d.id} value={d.id}>{d.dealName} ({d.id})</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-xs">Select Creators</Label>
+              <Button variant="ghost" size="sm" onClick={selectAll} className="h-6 text-xs">
+                {selectedCreators.size === creators.length ? "Deselect All" : "Select All"}
+              </Button>
+            </div>
+            <div className="space-y-1 max-h-[300px] overflow-y-auto border border-border rounded-md p-2">
+              {creators.map(c => (
+                <label key={c.id} className="flex items-center gap-2 py-1 px-1 rounded hover:bg-muted cursor-pointer text-sm">
+                  <input type="checkbox" checked={selectedCreators.has(c.id)} onChange={() => toggleCreator(c.id)} className="rounded border-border" />
+                  <span className="font-medium text-foreground">{c.creatorName}</span>
+                  <span className="text-xs text-muted-foreground">{c.role}</span>
+                  <span className="text-xs font-mono text-muted-foreground ml-auto">{formatCurrency(c.clientBilling)}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleTransfer} disabled={selectedCreators.size === 0 || !targetDealId}>
+            {mode === "copy" ? "Copy" : "Move"} {selectedCreators.size} Creator(s)
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 function CreatorStatusSelect({ dealId, creator }: { dealId: string; creator: DeployedCreatorV2 }) {
   return (
     <Select value={creator.dealStatus} onValueChange={v => { updateCreatorInDeal(dealId, creator.id, { dealStatus: v as CreatorDealStatus }); toast.success("Status updated"); }}>
