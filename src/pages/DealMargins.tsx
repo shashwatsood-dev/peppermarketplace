@@ -199,11 +199,13 @@ interface CreatorLineItem {
   totalCost: number;
   clientBilling: number;
   city: string;
-  translationLanguage: string;
+  opsLink: string;
+  linkedinId: string;
+  currency: CurrencyCode;
 }
 
 function emptyLineItem(): CreatorLineItem {
-  return { id: crypto.randomUUID(), creatorName: "", role: "Writer", source: "Freelancer", payModel: "Per Word", payRate: 0, totalCost: 0, clientBilling: 0, city: "", translationLanguage: "" };
+  return { id: crypto.randomUUID(), creatorName: "", role: "Writer", source: "Freelancer", payModel: "Per Word", payRate: 0, totalCost: 0, clientBilling: 0, city: "", opsLink: "", linkedinId: "", currency: "INR" };
 }
 
 function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boolean; onClose: () => void }) {
