@@ -498,7 +498,6 @@ function ClientCard({ client, filterDeals }: { client: ClientV2; filterDeals?: D
       {expanded && (
         <div className="mt-4 pt-4 border-t border-border space-y-4 animate-fade-in">
           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-            <span><strong>VSD:</strong> {client.vsdName || "—"}</span>
             <span><strong>Principal BOPM:</strong> {client.principalBOPM || "—"}</span>
             <span><strong>Senior BOPM:</strong> {client.seniorBOPM || "—"}</span>
             <span><strong>Junior BOPM:</strong> {client.juniorBOPM || "—"}</span>
