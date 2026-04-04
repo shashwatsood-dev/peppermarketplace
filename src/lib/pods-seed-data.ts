@@ -1,4 +1,6 @@
-let pods: PodV2[] = [
+import type { PodV2 } from "./talent-client-store";
+
+export const initialPods: PodV2[] = [
   {
     name: "Integrated",
     clients: [
