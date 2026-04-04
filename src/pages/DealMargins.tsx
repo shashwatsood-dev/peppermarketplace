@@ -379,6 +379,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
           <div>
             <span className="font-medium text-sm text-foreground">{deal.dealName}</span>
             <span className="ml-2 text-xs text-muted-foreground">{deal.dealType}</span>
+            {deal.vsdName && <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{deal.vsdName}</span>}
             {deal.isContentStudio && <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">Studio</span>}
           </div>
         </div>
