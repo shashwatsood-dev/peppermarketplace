@@ -226,6 +226,7 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
         creatorName: r.creatorName, role: r.role, source: r.source, payModel: r.payModel,
         payRate: r.payRate, expectedVolume: 0, totalCost: r.totalCost, clientBilling: r.clientBilling,
         dealStatus: "Active", capabilityLeadRating: "", bopmRating: "", city: r.city,
+        opsLink: r.opsLink, linkedinId: r.linkedinId, currency: r.currency,
       });
     }
     toast.success(`${valid.length} creator(s) added`);
