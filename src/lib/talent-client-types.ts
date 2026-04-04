@@ -65,6 +65,7 @@ export interface DealV2 {
   signingEntity: string;
   geography: string;
   isContentStudio: boolean;
+  vsdName: string;
 }
 
 export interface ClientV2 {
