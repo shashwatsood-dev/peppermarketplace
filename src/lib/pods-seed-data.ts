@@ -1,4 +1,4 @@
-import type { PodV2 } from "./talent-client-store";
+import type { PodV2 } from "./talent-client-types";
 
 export const initialPods: PodV2[] = [
   {
