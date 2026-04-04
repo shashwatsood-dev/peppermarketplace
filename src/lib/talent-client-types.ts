@@ -2,7 +2,7 @@ import { PayModel, RoleType } from "@/lib/mock-data";
 import type { CurrencyCode } from "@/lib/requisition-types";
 
 export type CreatorDealStatus = "Active" | "Inactive" | "Removed" | "Flagged";
-export type DealStatus = "Active" | "Completed" | "On Hold";
+export type DealStatus = "Active" | "Completed" | "On Hold" | "Disputed" | "New Deal in SLA/PO";
 export type HealthColor = "green" | "yellow" | "red";
 export type ResourceSource = "Freelancer" | "In-house";
 
@@ -45,6 +45,9 @@ export interface DeployedCreatorV2 {
   monthlyPayments: MonthlyPayment[];
   startDate: string;
   city: string;
+  opsLink: string;
+  linkedinId: string;
+  currency: CurrencyCode;
 }
 
 export interface DealV2 {

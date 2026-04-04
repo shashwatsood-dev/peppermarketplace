@@ -148,7 +148,7 @@ function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: stri
           <div><Label className="text-xs">Status</Label>
             <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v as DealStatus }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{(["Active", "Completed", "On Hold"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent>{(["Active", "Completed", "On Hold", "Disputed", "New Deal in SLA/PO"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select></div>
           <div><Label className="text-xs">Currency</Label>
             <Select value={form.currency} onValueChange={v => setForm(p => ({ ...p, currency: v as CurrencyCode }))}>
@@ -178,7 +178,7 @@ function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; 
           <div><Label className="text-xs">Status</Label>
             <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v as DealStatus }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{(["Active", "Completed", "On Hold"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent>{(["Active", "Completed", "On Hold", "Disputed", "New Deal in SLA/PO"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
           </div>
         </div>
@@ -199,11 +199,13 @@ interface CreatorLineItem {
   totalCost: number;
   clientBilling: number;
   city: string;
-  translationLanguage: string;
+  opsLink: string;
+  linkedinId: string;
+  currency: CurrencyCode;
 }
 
 function emptyLineItem(): CreatorLineItem {
-  return { id: crypto.randomUUID(), creatorName: "", role: "Writer", source: "Freelancer", payModel: "Per Word", payRate: 0, totalCost: 0, clientBilling: 0, city: "", translationLanguage: "" };
+  return { id: crypto.randomUUID(), creatorName: "", role: "Writer", source: "Freelancer", payModel: "Per Word", payRate: 0, totalCost: 0, clientBilling: 0, city: "", opsLink: "", linkedinId: "", currency: "INR" };
 }
 
 function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boolean; onClose: () => void }) {
@@ -224,6 +226,7 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
         creatorName: r.creatorName, role: r.role, source: r.source, payModel: r.payModel,
         payRate: r.payRate, expectedVolume: 0, totalCost: r.totalCost, clientBilling: r.clientBilling,
         dealStatus: "Active", capabilityLeadRating: "", bopmRating: "", city: r.city,
+        opsLink: r.opsLink, linkedinId: r.linkedinId, currency: r.currency,
       });
     }
     toast.success(`${valid.length} creator(s) added`);
@@ -237,11 +240,11 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
         <DialogHeader><DialogTitle>Add Creators to Deal</DialogTitle></DialogHeader>
         <div className="space-y-2">
           {/* Header */}
-          <div className="grid grid-cols-[1fr_90px_90px_90px_80px_80px_80px_70px_32px] gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-1">
-            <span>Name</span><span>Role</span><span>Source</span><span>Pay Model</span><span>Rate</span><span>Cost</span><span>Billing</span><span>City</span><span></span>
+          <div className="grid grid-cols-[1fr_90px_90px_90px_70px_80px_80px_70px_120px_120px_70px_32px] gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-1">
+            <span>Name</span><span>Role</span><span>Source</span><span>Pay Model</span><span>Currency</span><span>Unit Rate</span><span>Cost</span><span>Billing</span><span>Ops Link</span><span>LinkedIn</span><span>City</span><span></span>
           </div>
           {rows.map((r) => (
-            <div key={r.id} className="grid grid-cols-[1fr_90px_90px_90px_80px_80px_80px_70px_32px] gap-1.5 items-center">
+            <div key={r.id} className="grid grid-cols-[1fr_90px_90px_90px_70px_80px_80px_70px_120px_120px_70px_32px] gap-1.5 items-center">
               <Input className="h-8 text-xs" placeholder="Name" value={r.creatorName} onChange={e => updateRow(r.id, { creatorName: e.target.value })} />
               <Select value={r.role} onValueChange={v => updateRow(r.id, { role: v as RoleType })}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -255,9 +258,15 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>{(["Per Word", "Per Assignment", "Retainer", "Hourly"] as PayModel[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
               </Select>
-              <Input className="h-8 text-xs font-mono" type="number" placeholder="₹" value={r.payRate || ""} onChange={e => updateRow(r.id, { payRate: +e.target.value })} />
-              <Input className="h-8 text-xs font-mono" type="number" placeholder="₹" value={r.totalCost || ""} onChange={e => updateRow(r.id, { totalCost: +e.target.value })} />
-              <Input className="h-8 text-xs font-mono" type="number" placeholder="₹" value={r.clientBilling || ""} onChange={e => updateRow(r.id, { clientBilling: +e.target.value })} />
+              <Select value={r.currency} onValueChange={v => updateRow(r.id, { currency: v as CurrencyCode })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="INR">INR</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
+              </Select>
+              <Input className="h-8 text-xs font-mono" type="number" placeholder="Rate" value={r.payRate || ""} onChange={e => updateRow(r.id, { payRate: +e.target.value })} />
+              <Input className="h-8 text-xs font-mono" type="number" placeholder="Cost" value={r.totalCost || ""} onChange={e => updateRow(r.id, { totalCost: +e.target.value })} />
+              <Input className="h-8 text-xs font-mono" type="number" placeholder="Billing" value={r.clientBilling || ""} onChange={e => updateRow(r.id, { clientBilling: +e.target.value })} />
+              <Input className="h-8 text-xs" placeholder="Ops link" value={r.opsLink} onChange={e => updateRow(r.id, { opsLink: e.target.value })} />
+              <Input className="h-8 text-xs" placeholder="LinkedIn URL" value={r.linkedinId} onChange={e => updateRow(r.id, { linkedinId: e.target.value })} />
               <Input className="h-8 text-xs" placeholder="City" value={r.city} onChange={e => updateRow(r.id, { city: e.target.value })} />
               <button onClick={() => removeRow(r.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
@@ -370,7 +379,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
-                  {["Creator", "Source", "Role", "Pay Model", "Rate", "Cost", "Billing", "Margin%", "Cap Lead", "BOPM", "Status"].map(h => (
+                  {["Creator", "Ops Link", "LinkedIn", "Role", "Pay Model", "Currency", "Unit Rate", "Cost", "Billing", "Margin%", "Cap Lead", "BOPM", "Status"].map(h => (
                     <th key={h} className="pb-2 text-xs font-mono uppercase tracking-wider text-muted-foreground pr-3">{h}</th>
                   ))}
                 </tr>
@@ -379,10 +388,12 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
                 {visibleCreators.map(c => (
                   <tr key={c.id} className={`data-table-row ${c.dealStatus === "Inactive" ? "bg-warning/5" : c.dealStatus === "Removed" ? "bg-destructive/5" : ""}`}>
                     <td className="py-2 font-medium text-foreground pr-3">{c.creatorName}</td>
-                    <td className="py-2 pr-3"><span className={`text-xs px-1.5 py-0.5 rounded ${c.source === "In-house" ? "bg-primary/10 text-primary" : "bg-primary/15 text-primary font-medium"}`}>{c.source}</span></td>
+                    <td className="py-2 pr-3">{c.opsLink ? <a href={c.opsLink} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs truncate max-w-[100px] inline-block">Link</a> : <span className="text-muted-foreground text-xs">—</span>}</td>
+                    <td className="py-2 pr-3">{c.linkedinId ? <a href={c.linkedinId} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs truncate max-w-[100px] inline-block">Profile</a> : <span className="text-muted-foreground text-xs">—</span>}</td>
                     <td className="py-2 text-muted-foreground pr-3">{c.role}</td>
                     <td className="py-2 text-muted-foreground pr-3">{c.payModel}</td>
-                    <td className="py-2 font-mono text-foreground pr-3">₹{c.payRate.toLocaleString()}</td>
+                    <td className="py-2 text-muted-foreground pr-3">{c.currency}</td>
+                    <td className="py-2 font-mono text-foreground pr-3">{c.payRate.toLocaleString()}</td>
                     <td className="py-2 font-mono text-muted-foreground pr-3">{formatCurrency(c.totalCost)}</td>
                     <td className="py-2 font-mono text-foreground pr-3">{formatCurrency(c.clientBilling)}</td>
                     <td className="py-2 font-mono text-success pr-3">{c.grossMarginPercent}%</td>
