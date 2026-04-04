@@ -449,6 +449,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
   const [expanded, setExpanded] = useState(false);
   const [editDeal, setEditDeal] = useState(false);
   const [addCreator, setAddCreator] = useState(false);
+  const [transferCreators, setTransferCreators] = useState(false);
 
   const visibleCreators = showInactive ? deal.creators : deal.creators.filter(c => c.dealStatus === "Active");
   const handovers = getHandoversByDeal(deal.id);
