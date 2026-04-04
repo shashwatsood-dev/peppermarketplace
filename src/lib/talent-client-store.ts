@@ -1,81 +1,11 @@
 import { PayModel, RoleType } from "@/lib/mock-data";
 import type { CurrencyCode } from "@/lib/requisition-types";
 
-export type CreatorDealStatus = "Active" | "Inactive" | "Removed" | "Flagged";
-export type DealStatus = "Active" | "Completed" | "On Hold";
-export type HealthColor = "green" | "yellow" | "red";
-export type ResourceSource = "Freelancer" | "In-house";
+// Re-export all types from the dedicated types file
+export type { CreatorDealStatus, DealStatus, HealthColor, ResourceSource, PodName, HRBPConnect, MonthlyPayment, DeployedCreatorV2, DealV2, ClientV2, PodV2 } from "./talent-client-types";
+export { POD_NAMES } from "./talent-client-types";
 
-export const POD_NAMES = ["Integrated", "India B2B", "US B2B", "FMCG", "BFSI"] as const;
-export type PodName = typeof POD_NAMES[number];
-
-export interface HRBPConnect {
-  id: string;
-  date: string;
-  summary: string;
-  outcome: string;
-  hrbpName: string;
-}
-
-export interface MonthlyPayment {
-  month: string; // YYYY-MM
-  amount: number;
-  paid: boolean;
-}
-
-export interface DeployedCreatorV2 {
-  id: string;
-  creatorName: string;
-  role: RoleType;
-  source: ResourceSource;
-  payModel: PayModel;
-  payRate: number;
-  expectedVolume: number;
-  totalCost: number;
-  clientBilling: number;
-  grossMargin: number;
-  grossMarginPercent: number;
-  dealStatus: CreatorDealStatus;
-  capabilityLeadRating: HealthColor | "";
-  bopmRating: HealthColor | "";
-  capabilityRatingReason: string;
-  bopmRatingReason: string;
-  hrbpName: string;
-  hrbpConnects: HRBPConnect[];
-  monthlyPayments: MonthlyPayment[];
-  startDate: string;
-  city: string;
-}
-
-export interface DealV2 {
-  id: string;
-  dealName: string;
-  dealType: string;
-  totalContractValue: number;
-  totalCreatorCost: number;
-  grossMargin: number;
-  grossMarginPercent: number;
-  status: DealStatus;
-  creators: DeployedCreatorV2[];
-  currency: CurrencyCode;
-  signingEntity: string;
-  geography: string;
-}
-
-export interface ClientV2 {
-  id: string;
-  clientName: string;
-  vsdName: string;
-  principalBOPM: string;
-  seniorBOPM: string;
-  juniorBOPM: string;
-  deals: DealV2[];
-}
-
-export interface PodV2 {
-  name: PodName;
-  clients: ClientV2[];
-}
+import type { CreatorDealStatus, DealStatus, HealthColor, ResourceSource, DeployedCreatorV2, DealV2, ClientV2, PodV2, PodName } from "./talent-client-types";
 
 const CITIES = ["Mumbai", "Bangalore", "Delhi", "Chennai", "Pune", "Hyderabad", "Kochi", "New York", "San Francisco"];
 
