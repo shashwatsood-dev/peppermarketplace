@@ -251,6 +251,83 @@ export function recalcDealFinancials(dealId: string) {
   }));
 }
 
+// ── Copy/Transfer Creators between Deals ───────────────────────────
+
+export function copyCreatorsToDeal(sourceDealId: string, targetDealId: string, creatorIds: string[], removeFromSource: boolean = false) {
+  let creatorsToCopy: DeployedCreatorV2[] = [];
+
+  // Find the creators in the source deal
+  for (const p of pods) {
+    for (const c of p.clients) {
+      for (const d of c.deals) {
+        if (d.id === sourceDealId) {
+          creatorsToCopy = d.creators.filter(cr => creatorIds.includes(cr.id));
+        }
+      }
+    }
+  }
+
+  if (creatorsToCopy.length === 0) return;
+
+  // Add copies to target deal with new IDs
+  const newCreators = creatorsToCopy.map(cr => ({
+    ...cr,
+    id: `DC-CPY-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  }));
+
+  pods = pods.map(p => ({
+    ...p, clients: p.clients.map(c => ({
+      ...c, deals: c.deals.map(d => {
+        if (d.id === targetDealId) {
+          const creators = [...d.creators, ...newCreators];
+          const cost = creators.reduce((s, cr) => s + cr.totalCost, 0);
+          const rev = creators.reduce((s, cr) => s + cr.clientBilling, 0);
+          return { ...d, creators, totalCreatorCost: cost, totalContractValue: rev, grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0 };
+        }
+        if (removeFromSource && d.id === sourceDealId) {
+          const creators = d.creators.filter(cr => !creatorIds.includes(cr.id));
+          const cost = creators.reduce((s, cr) => s + cr.totalCost, 0);
+          const rev = creators.reduce((s, cr) => s + cr.clientBilling, 0);
+          return { ...d, creators, totalCreatorCost: cost, totalContractValue: rev, grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0 };
+        }
+        return d;
+      }),
+    })),
+  }));
+}
+
+export function removeCreatorFromDeal(dealId: string, creatorId: string) {
+  pods = pods.map(p => ({
+    ...p, clients: p.clients.map(c => ({
+      ...c, deals: c.deals.map(d => {
+        if (d.id !== dealId) return d;
+        const creators = d.creators.filter(cr => cr.id !== creatorId);
+        const cost = creators.reduce((s, cr) => s + cr.totalCost, 0);
+        const rev = creators.reduce((s, cr) => s + cr.clientBilling, 0);
+        return { ...d, creators, totalCreatorCost: cost, totalContractValue: rev, grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0 };
+      }),
+    })),
+  }));
+}
+
+export function getDealsForClient(clientId: string): DealV2[] {
+  for (const p of pods) {
+    for (const c of p.clients) {
+      if (c.id === clientId) return c.deals;
+    }
+  }
+  return [];
+}
+
+export function findClientForDeal(dealId: string): ClientV2 | undefined {
+  for (const p of pods) {
+    for (const c of p.clients) {
+      if (c.deals.some(d => d.id === dealId)) return c;
+    }
+  }
+  return undefined;
+}
+
 // ── CSV Import for Talent x Client view ────────────────────────────
 
 export function getClientCSVTemplate(): string {
