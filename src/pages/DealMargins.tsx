@@ -483,7 +483,7 @@ function ClientCard({ client, filterDeals }: { client: ClientV2; filterDeals?: D
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
           <div>
             <p className="font-semibold text-foreground">{client.clientName}</p>
-            <p className="text-xs text-muted-foreground">VSD: {client.vsdName || "—"} · BOPM: {client.principalBOPM || "—"}</p>
+            <p className="text-xs text-muted-foreground">BOPM: {client.principalBOPM || "—"}</p>
           </div>
         </div>
         <div className="flex items-center gap-5">
