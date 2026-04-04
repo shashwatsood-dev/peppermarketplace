@@ -557,6 +557,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
 
       <EditDealDialog deal={deal} open={editDeal} onClose={() => setEditDeal(false)} />
       <BulkAddCreatorDialog dealId={deal.id} open={addCreator} onClose={() => setAddCreator(false)} />
+      {deal.creators.length > 0 && <TransferCreatorsDialog dealId={deal.id} creators={deal.creators} open={transferCreators} onClose={() => setTransferCreators(false)} />}
     </div>
   );
 }
