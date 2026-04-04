@@ -103,7 +103,7 @@ export function moveClientToPod(clientId: string, targetPod: PodName) {
   }
 }
 
-export function updateDeal(dealId: string, updates: Partial<Pick<DealV2, "dealName" | "dealType" | "status" | "totalContractValue" | "totalCreatorCost" | "currency" | "signingEntity" | "geography" | "isContentStudio">>) {
+export function updateDeal(dealId: string, updates: Partial<Pick<DealV2, "dealName" | "dealType" | "status" | "totalContractValue" | "totalCreatorCost" | "currency" | "signingEntity" | "geography" | "isContentStudio" | "vsdName">>) {
   pods = pods.map(p => ({
     ...p, clients: p.clients.map(c => ({
       ...c, deals: c.deals.map(d => {
