@@ -240,11 +240,11 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
         <DialogHeader><DialogTitle>Add Creators to Deal</DialogTitle></DialogHeader>
         <div className="space-y-2">
           {/* Header */}
-          <div className="grid grid-cols-[1fr_90px_90px_90px_80px_80px_80px_70px_32px] gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-1">
-            <span>Name</span><span>Role</span><span>Source</span><span>Pay Model</span><span>Rate</span><span>Cost</span><span>Billing</span><span>City</span><span></span>
+          <div className="grid grid-cols-[1fr_90px_90px_90px_70px_80px_80px_70px_120px_120px_70px_32px] gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-1">
+            <span>Name</span><span>Role</span><span>Source</span><span>Pay Model</span><span>Currency</span><span>Unit Rate</span><span>Cost</span><span>Billing</span><span>Ops Link</span><span>LinkedIn</span><span>City</span><span></span>
           </div>
           {rows.map((r) => (
-            <div key={r.id} className="grid grid-cols-[1fr_90px_90px_90px_80px_80px_80px_70px_32px] gap-1.5 items-center">
+            <div key={r.id} className="grid grid-cols-[1fr_90px_90px_90px_70px_80px_80px_70px_120px_120px_70px_32px] gap-1.5 items-center">
               <Input className="h-8 text-xs" placeholder="Name" value={r.creatorName} onChange={e => updateRow(r.id, { creatorName: e.target.value })} />
               <Select value={r.role} onValueChange={v => updateRow(r.id, { role: v as RoleType })}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -258,9 +258,15 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>{(["Per Word", "Per Assignment", "Retainer", "Hourly"] as PayModel[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
               </Select>
-              <Input className="h-8 text-xs font-mono" type="number" placeholder="₹" value={r.payRate || ""} onChange={e => updateRow(r.id, { payRate: +e.target.value })} />
-              <Input className="h-8 text-xs font-mono" type="number" placeholder="₹" value={r.totalCost || ""} onChange={e => updateRow(r.id, { totalCost: +e.target.value })} />
-              <Input className="h-8 text-xs font-mono" type="number" placeholder="₹" value={r.clientBilling || ""} onChange={e => updateRow(r.id, { clientBilling: +e.target.value })} />
+              <Select value={r.currency} onValueChange={v => updateRow(r.id, { currency: v as CurrencyCode })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="INR">INR</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
+              </Select>
+              <Input className="h-8 text-xs font-mono" type="number" placeholder="Rate" value={r.payRate || ""} onChange={e => updateRow(r.id, { payRate: +e.target.value })} />
+              <Input className="h-8 text-xs font-mono" type="number" placeholder="Cost" value={r.totalCost || ""} onChange={e => updateRow(r.id, { totalCost: +e.target.value })} />
+              <Input className="h-8 text-xs font-mono" type="number" placeholder="Billing" value={r.clientBilling || ""} onChange={e => updateRow(r.id, { clientBilling: +e.target.value })} />
+              <Input className="h-8 text-xs" placeholder="Ops link" value={r.opsLink} onChange={e => updateRow(r.id, { opsLink: e.target.value })} />
+              <Input className="h-8 text-xs" placeholder="LinkedIn URL" value={r.linkedinId} onChange={e => updateRow(r.id, { linkedinId: e.target.value })} />
               <Input className="h-8 text-xs" placeholder="City" value={r.city} onChange={e => updateRow(r.id, { city: e.target.value })} />
               <button onClick={() => removeRow(r.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
