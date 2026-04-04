@@ -178,7 +178,7 @@ function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; 
           <div><Label className="text-xs">Status</Label>
             <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v as DealStatus }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{(["Active", "Completed", "On Hold"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent>{(["Active", "Completed", "On Hold", "Disputed", "New Deal in SLA/PO"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
           </div>
         </div>
