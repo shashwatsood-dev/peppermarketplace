@@ -126,7 +126,7 @@ export function updateCreatorInDeal(dealId: string, creatorId: string, updates: 
   }));
 }
 
-export function addCreatorToDeal(dealId: string, creator: Omit<DeployedCreatorV2, "id" | "grossMargin" | "grossMarginPercent" | "capabilityRatingReason" | "bopmRatingReason" | "hrbpName" | "hrbpConnects" | "monthlyPayments" | "startDate" | "city"> & { city?: string }) {
+export function addCreatorToDeal(dealId: string, creator: Omit<DeployedCreatorV2, "id" | "grossMargin" | "grossMarginPercent" | "capabilityRatingReason" | "bopmRatingReason" | "hrbpName" | "hrbpConnects" | "monthlyPayments" | "startDate" | "city"> & { city?: string; opsLink?: string; linkedinId?: string; currency?: CurrencyCode }) {
   const newCreator: DeployedCreatorV2 = {
     ...creator,
     id: `DC-${Date.now()}`,
@@ -136,6 +136,9 @@ export function addCreatorToDeal(dealId: string, creator: Omit<DeployedCreatorV2
     hrbpName: "", hrbpConnects: [], monthlyPayments: [],
     startDate: new Date().toISOString().split("T")[0],
     city: creator.city || "",
+    opsLink: creator.opsLink || "",
+    linkedinId: creator.linkedinId || "",
+    currency: creator.currency || "INR",
   };
   pods = pods.map(p => ({
     ...p, clients: p.clients.map(c => ({
