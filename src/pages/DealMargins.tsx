@@ -124,6 +124,14 @@ function AddClientDialog({ podName, open, onClose }: { podName: PodName; open: b
   );
 }
 
+const VSD_POD_MAP: Record<string, PodName> = {
+  "Aamir Khan": "Integrated",
+  "Aditya Shaw": "BFSI",
+  "Neema Jayadas": "US B2B",
+  "Sneha Iyer": "FMCG",
+  "Sumit Shekhawat": "India B2B",
+};
+
 // ─── Add Deal Dialog ────────────────────────────────────
 function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: string; clientName: string; open: boolean; onClose: () => void }) {
   const [form, setForm] = useState({ dealName: "", dealType: "Retainer", status: "Active" as DealStatus, currency: "INR" as CurrencyCode, signingEntity: "", geography: "", vsdName: "" });
