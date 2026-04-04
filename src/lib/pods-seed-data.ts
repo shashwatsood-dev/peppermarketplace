@@ -95,16 +95,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0003",
-        clientName: "Lenskart",
-        vsdName: "Aamir Khan",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0004",
         clientName: "PhonePe Group",
         vsdName: "Aamir Khan",
@@ -369,16 +359,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0008",
-        clientName: "Tripathi Group",
-        vsdName: "Aamir Khan",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0009",
         clientName: "Zepto",
         vsdName: "Aamir Khan",
@@ -400,16 +380,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0010",
-        clientName: "D B DIGITAL",
-        vsdName: "Aamir Khan",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -795,146 +765,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0024",
-        clientName: "Livguard",
-        vsdName: "Aamir Khan",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0025",
-        clientName: "Bajaj Allianz General Insurance",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0026",
-        clientName: "VFS - OneVasco",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0027",
-        clientName: "Zuari Finserv",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0028",
-        clientName: "Dream11- Comms",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0029",
-        clientName: "Tredence",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0030",
-        clientName: "Tellius Inc.",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0031",
-        clientName: "Finology Ventures",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0032",
-        clientName: "Diana HR",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0033",
-        clientName: "Netenrich",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0034",
-        clientName: "Amoeboid",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0035",
-        clientName: "Vedant Fashions Limited",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0036",
-        clientName: "NPCI Website",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0037",
-        clientName: "Apollo 24|7",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0038",
         clientName: "Hindustan Unilever Ltd.",
         vsdName: "Not Applicable",
@@ -973,36 +803,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0039",
-        clientName: "Mobile Premier League - US",
-        vsdName: "Aamir Khan",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0040",
-        clientName: "Bentley",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0041",
-        clientName: "ShareChat",
-        vsdName: "Aamir Khan",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0042",
         clientName: "Truemeds",
         vsdName: "Aamir Khan",
@@ -1024,206 +824,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0043",
-        clientName: "RELIANCE FOUNDATION HOSPITAL TRUST",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0044",
-        clientName: "Roar Bank",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0045",
-        clientName: "ICICI Bank",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0046",
-        clientName: "TATA AIA",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0047",
-        clientName: "MIcrotek",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0048",
-        clientName: "ITC Bangalore",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0049",
-        clientName: "Piramal",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0050",
-        clientName: "LnT Infotech",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0051",
-        clientName: "PIRAMAL PHARMA LIMITED",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0052",
-        clientName: "SBI Life",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0053",
-        clientName: "Tech Mahindra",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0054",
-        clientName: "Youlry",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0055",
-        clientName: "Tellius",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0056",
-        clientName: "Neptune",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0057",
-        clientName: "Flipkart",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0058",
-        clientName: "Axis Bank",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0059",
-        clientName: "Wipro Consumers",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0060",
-        clientName: "Angel One",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0061",
-        clientName: "Amazon Seller Services",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0062",
-        clientName: "Emirates NBD Bank",
-        vsdName: "Aamir Khan",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -1313,16 +913,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0066",
-        clientName: "Kubix",
-        vsdName: "Not Applicable",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0067",
         clientName: "Lupin Diagnostics",
         vsdName: "Aamir Khan",
@@ -1392,16 +982,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0070",
-        clientName: "Dalmia Cement",
-        vsdName: "Yet to be assigned",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -1596,26 +1176,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0077",
-        clientName: "About Amazon",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "Karna Shah",
-        juniorBOPM: "Mansi Velani",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0078",
-        clientName: "Federal Bank",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "Anisha Jaisinghani",
-        juniorBOPM: "Jeneel Narodia",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0079",
         clientName: "ConverzAI Inc",
         vsdName: "Sumit Shekhawat",
@@ -1713,16 +1273,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0082",
-        clientName: "Frido",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "Anisha Jaisinghani",
-        juniorBOPM: "Jeneel Narodia",
-        deals: [
         ],
       },
       {
@@ -1884,16 +1434,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0089",
-        clientName: "Sprinklr",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0090",
         clientName: "Murf.ai",
         vsdName: "Sumit Shekhawat",
@@ -1915,26 +1455,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0091",
-        clientName: "Altimetrik",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0092",
-        clientName: "TCS Japan",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -2048,76 +1568,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0097",
-        clientName: "Amazon Seller Services",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0098",
-        clientName: "Xiaomi",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0099",
-        clientName: "Thomas Cook",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0100",
-        clientName: "My Healing Hands",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0101",
-        clientName: "Manyavar",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0102",
-        clientName: "XYXX",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0103",
-        clientName: "Aditya Birla Fashion and Retail Ltd",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0104",
         clientName: "Mahindra Holidays & Resorts India Ltd",
         vsdName: "Sumit Shekhawat",
@@ -2167,16 +1617,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0105",
-        clientName: "ZOMATO LIMITED",
-        vsdName: "Sumit Shekhawat",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -2567,16 +2007,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0119",
-        clientName: "Compare Remit",
-        vsdName: "Neema Jayadas",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "Venkatesh Durgam",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0120",
         clientName: "Earnin",
         vsdName: "Neema Jayadas",
@@ -2598,16 +2028,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0121",
-        clientName: "UseMultiplier",
-        vsdName: "Neema Jayadas",
-        principalBOPM: "",
-        seniorBOPM: "Rishabh Agarwal",
-        juniorBOPM: "Khushi Rajpurohit",
-        deals: [
         ],
       },
       {
@@ -2793,16 +2213,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0129",
-        clientName: "Wipro Consumers",
-        vsdName: "Neema Jayadas",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0130",
         clientName: "Akeyless Security",
         vsdName: "Neema Jayadas",
@@ -2838,26 +2248,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0131",
-        clientName: "Turgon AI",
-        vsdName: "Neema Jayadas",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0132",
-        clientName: "Turgon",
-        vsdName: "Neema Jayadas",
-        principalBOPM: "",
-        seniorBOPM: "Vivek Teotia",
-        juniorBOPM: "Anshika Sharma",
-        deals: [
         ],
       },
       {
@@ -2954,26 +2344,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0137",
-        clientName: "Murf.ai",
-        vsdName: "Neema Jayadas",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0138",
-        clientName: "TCS",
-        vsdName: "Neema Jayadas",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -3094,16 +2464,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0144",
-        clientName: "Samba Nova",
-        vsdName: "Neema Jayadas",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -3784,16 +3144,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0166",
-        clientName: "3M India",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0167",
         clientName: "Zydus Wellness",
         vsdName: "Sneha Iyer",
@@ -3815,16 +3165,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0168",
-        clientName: "ITC Personal Care",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -3919,16 +3259,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0170",
-        clientName: "Pepe Jeans",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -4042,96 +3372,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0175",
-        clientName: "Pepe jeans",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0176",
-        clientName: "Reserve Bank of India",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0177",
-        clientName: "Tata Consumer",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0178",
-        clientName: "Adani Wilmar",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0179",
-        clientName: "Youlry",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0180",
-        clientName: "Wipro Consumers",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0181",
-        clientName: "DS Group",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0182",
-        clientName: "Cheffin",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0183",
-        clientName: "Allied Blenders & Distillers Ltd.",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0184",
         clientName: "Tasty Bites",
         vsdName: "Sneha Iyer",
@@ -4153,16 +3393,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0185",
-        clientName: "Truva",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "Romario Fernandes",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
@@ -4201,36 +3431,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0187",
-        clientName: "Ajio",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0188",
-        clientName: "Britannia",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "Sumitha Shetty",
-        seniorBOPM: "",
-        juniorBOPM: "Janhavi Trivedi",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0189",
-        clientName: "MRSI",
-        vsdName: "Sneha Iyer",
-        principalBOPM: "Vrusha Mawani",
-        seniorBOPM: "",
-        juniorBOPM: "Karishma Sawlani",
-        deals: [
         ],
       },
       {
@@ -4543,16 +3743,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0198",
-        clientName: "HSBC Bank",
-        vsdName: "Aditya Shaw",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0199",
         clientName: "TATA AIA",
         vsdName: "Aditya Shaw",
@@ -4639,16 +3829,6 @@ export const initialPods: PodV2[] = [
         ],
       },
       {
-        id: "CL-0202",
-        clientName: "ICICI HFC",
-        vsdName: "Aditya Shaw",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
         id: "CL-0203",
         clientName: "Aditya Birla Sun Life Insurance",
         vsdName: "Aditya Shaw",
@@ -4694,36 +3874,6 @@ export const initialPods: PodV2[] = [
             signingEntity: "",
             geography: "", isContentStudio: false,
           },
-        ],
-      },
-      {
-        id: "CL-0205",
-        clientName: "Future Generali India Insurance Company",
-        vsdName: "Aditya Shaw",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0206",
-        clientName: "DSP Mutual Fund",
-        vsdName: "Aditya Shaw",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
-        ],
-      },
-      {
-        id: "CL-0207",
-        clientName: "HDFC Ergo",
-        vsdName: "Aditya Shaw",
-        principalBOPM: "",
-        seniorBOPM: "",
-        juniorBOPM: "",
-        deals: [
         ],
       },
       {
