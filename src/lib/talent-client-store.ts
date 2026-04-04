@@ -36,7 +36,7 @@ function makeDeal(id: string, name: string, type: string, status: DealStatus, cr
     id, dealName: name, dealType: type, status, creators,
     totalContractValue: rev, totalCreatorCost: cost,
     grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
-    currency: "INR", signingEntity: entity, geography: geo,
+    currency: "INR", signingEntity: entity, geography: geo, isContentStudio: false,
   };
 }
 
@@ -55,10 +55,11 @@ export function addClientToPod(podName: PodName, client: Omit<ClientV2, "id" | "
   return newClient;
 }
 
-export function addDealToClient(clientId: string, deal: { dealName: string; dealType: string; status: DealStatus; currency: CurrencyCode; signingEntity: string; geography: string }): DealV2 {
+export function addDealToClient(clientId: string, deal: { dealName: string; dealType: string; status: DealStatus; currency: CurrencyCode; signingEntity: string; geography: string; isContentStudio?: boolean }): DealV2 {
   const newDeal: DealV2 = {
     id: `D-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     ...deal,
+    isContentStudio: deal.isContentStudio ?? false,
     creators: [],
     totalContractValue: 0,
     totalCreatorCost: 0,
@@ -92,7 +93,7 @@ export function updateClient(clientId: string, updates: Partial<Pick<ClientV2, "
   pods = pods.map(p => ({ ...p, clients: p.clients.map(c => c.id === clientId ? { ...c, ...updates } : c) }));
 }
 
-export function updateDeal(dealId: string, updates: Partial<Pick<DealV2, "dealName" | "dealType" | "status" | "totalContractValue" | "totalCreatorCost" | "currency" | "signingEntity" | "geography">>) {
+export function updateDeal(dealId: string, updates: Partial<Pick<DealV2, "dealName" | "dealType" | "status" | "totalContractValue" | "totalCreatorCost" | "currency" | "signingEntity" | "geography" | "isContentStudio">>) {
   pods = pods.map(p => ({
     ...p, clients: p.clients.map(c => ({
       ...c, deals: c.deals.map(d => {

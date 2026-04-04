@@ -32,7 +32,9 @@ function getAllStudioData() {
   for (const pod of pods) {
     for (const client of pod.clients) {
       for (const deal of client.deals) {
-        results.push({ podName: pod.name, clientName: client.clientName, client, deal });
+        if (deal.isContentStudio) {
+          results.push({ podName: pod.name, clientName: client.clientName, client, deal });
+        }
       }
     }
   }

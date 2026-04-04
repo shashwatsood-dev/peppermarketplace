@@ -331,6 +331,12 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
   const visibleCreators = showInactive ? deal.creators : deal.creators.filter(c => c.dealStatus === "Active");
   const handovers = getHandoversByDeal(deal.id);
 
+  const toggleContentStudio = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    updateDeal(deal.id, { isContentStudio: !deal.isContentStudio });
+    toast.success(deal.isContentStudio ? "Removed from Content Studio" : "Added to Content Studio");
+  };
+
   return (
     <div className="border border-border rounded-md bg-card/50">
       <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>
@@ -339,6 +345,7 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
           <div>
             <span className="font-medium text-sm text-foreground">{deal.dealName}</span>
             <span className="ml-2 text-xs text-muted-foreground">{deal.dealType}</span>
+            {deal.isContentStudio && <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">Studio</span>}
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -346,6 +353,9 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
           <span className="text-xs font-mono text-muted-foreground">Cost {formatCurrency(deal.totalCreatorCost)}</span>
           <span className="text-xs font-mono text-success">{deal.grossMarginPercent}%</span>
           <StatusBadge status={deal.status} />
+          <button onClick={toggleContentStudio} className={`p-1 rounded text-xs border ${deal.isContentStudio ? "bg-primary/10 border-primary text-primary" : "border-border text-muted-foreground hover:bg-muted"}`} title={deal.isContentStudio ? "Remove from Studio" : "Mark as Content Studio"}>
+            CS
+          </button>
           <button onClick={e => { e.stopPropagation(); setEditDeal(true); }} className="p-1 rounded hover:bg-muted"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
         </div>
       </div>
@@ -424,7 +434,7 @@ function ClientCard({ client }: { client: ClientV2 }) {
   const [showInactiveDeals, setShowInactiveDeals] = useState(false);
   const [showInactiveCreators, setShowInactiveCreators] = useState(false);
 
-  const visibleDeals = showInactiveDeals ? client.deals : client.deals.filter(d => d.status === "Active");
+  const visibleDeals = (showInactiveDeals ? client.deals : client.deals.filter(d => d.status === "Active")).sort((a, b) => a.dealName.localeCompare(b.dealName));
   const totalRev = client.deals.reduce((s, d) => s + d.totalContractValue, 0);
   const totalCost = client.deals.reduce((s, d) => s + d.totalCreatorCost, 0);
 
