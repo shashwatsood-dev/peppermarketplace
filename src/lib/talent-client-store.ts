@@ -36,7 +36,7 @@ function makeDeal(id: string, name: string, type: string, status: DealStatus, cr
     id, dealName: name, dealType: type, status, creators,
     totalContractValue: rev, totalCreatorCost: cost,
     grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
-    currency: "INR", signingEntity: entity, geography: geo,
+    currency: "INR", signingEntity: entity, geography: geo, isContentStudio: false,
   };
 }
 
