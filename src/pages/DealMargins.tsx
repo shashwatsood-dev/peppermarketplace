@@ -577,6 +577,63 @@ function SummaryCards({ clients }: { clients: ClientV2[] }) {
   );
 }
 
+// ─── Unassigned Client Row ──────────────────────────────
+const VSD_POD_MAP: Record<string, PodName> = {
+  "Aamir Khan": "Integrated",
+  "Aditya Shaw": "BFSI",
+  "Neema Jayadas": "US B2B",
+  "Sneha Iyer": "FMCG",
+  "Sumit Shekhawat": "India B2B",
+};
+
+function UnassignedClientRow({ client, onAssign }: { client: ClientV2; onAssign: () => void }) {
+  const [selectedPodTarget, setSelectedPodTarget] = useState<string>("");
+  const [vsd, setVsd] = useState(client.vsdName);
+
+  const handleAssign = () => {
+    if (!selectedPodTarget) { toast.error("Select a pod"); return; }
+    if (vsd.trim()) updateClient(client.id, { vsdName: vsd.trim() });
+    moveClientToPod(client.id, selectedPodTarget as PodName);
+    toast.success(`"${client.clientName}" assigned to ${selectedPodTarget}`);
+    onAssign();
+  };
+
+  const handleVsdChange = (v: string) => {
+    setVsd(v);
+    if (VSD_POD_MAP[v]) setSelectedPodTarget(VSD_POD_MAP[v]);
+  };
+
+  return (
+    <div className="flex items-center gap-4 p-3 rounded-md border border-border bg-card">
+      <div className="flex-1">
+        <p className="font-medium text-sm text-foreground">{client.clientName}</p>
+        <p className="text-xs text-muted-foreground">{client.deals.length} deal{client.deals.length !== 1 ? "s" : ""}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <div>
+          <Label className="text-[10px] text-muted-foreground">VSD</Label>
+          <Select value={vsd} onValueChange={handleVsdChange}>
+            <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue placeholder="Select VSD" /></SelectTrigger>
+            <SelectContent>
+              {Object.keys(VSD_POD_MAP).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-[10px] text-muted-foreground">Pod</Label>
+          <Select value={selectedPodTarget} onValueChange={setSelectedPodTarget}>
+            <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue placeholder="Select Pod" /></SelectTrigger>
+            <SelectContent>
+              {POD_NAMES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button size="sm" onClick={handleAssign} className="h-8 text-xs mt-3.5">Assign</Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ──────────────────────────────────────────
 const DealMargins = () => {
   const [_, setTick] = useState(0);
