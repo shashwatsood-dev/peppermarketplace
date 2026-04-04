@@ -126,12 +126,12 @@ function AddClientDialog({ podName, open, onClose }: { podName: PodName; open: b
 
 // ─── Add Deal Dialog ────────────────────────────────────
 function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: string; clientName: string; open: boolean; onClose: () => void }) {
-  const [form, setForm] = useState({ dealName: "", dealType: "Retainer", status: "Active" as DealStatus, currency: "INR" as CurrencyCode, signingEntity: "", geography: "" });
+  const [form, setForm] = useState({ dealName: "", dealType: "Retainer", status: "Active" as DealStatus, currency: "INR" as CurrencyCode, signingEntity: "", geography: "", vsdName: "" });
   const save = () => {
     if (!form.dealName.trim()) { toast.error("Deal name required"); return; }
     addDealToClient(clientId, form);
     toast.success(`Deal "${form.dealName}" added`);
-    setForm({ dealName: "", dealType: "Retainer", status: "Active", currency: "INR", signingEntity: "", geography: "" });
+    setForm({ dealName: "", dealType: "Retainer", status: "Active", currency: "INR", signingEntity: "", geography: "", vsdName: "" });
     onClose();
   };
   return (
@@ -140,6 +140,14 @@ function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: stri
         <DialogHeader><DialogTitle>Add Deal to {clientName}</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2"><Label className="text-xs">Deal Name *</Label><Input value={form.dealName} onChange={e => setForm(p => ({ ...p, dealName: e.target.value }))} placeholder="e.g. Content Retainer" /></div>
+          <div><Label className="text-xs">VSD</Label>
+            <Select value={form.vsdName || "none"} onValueChange={v => setForm(p => ({ ...p, vsdName: v === "none" ? "" : v }))}>
+              <SelectTrigger><SelectValue placeholder="Select VSD" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Select —</SelectItem>
+                {Object.keys(VSD_POD_MAP).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select></div>
           <div><Label className="text-xs">Deal Type</Label>
             <Select value={form.dealType} onValueChange={v => setForm(p => ({ ...p, dealType: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
