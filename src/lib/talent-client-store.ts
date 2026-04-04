@@ -42,7 +42,71 @@ function makeDeal(id: string, name: string, type: string, status: DealStatus, cr
 }
 
 import { initialPods } from "./pods-seed-data";
-let pods: PodV2[] = initialPods;
+import { importedCreatorsByDeal, newClientDeals } from "./csv-creator-import";
+
+// Merge CSV-imported creators into seed data
+function mergeImportedData(basePods: PodV2[]): PodV2[] {
+  let result = basePods.map(p => ({
+    ...p,
+    clients: p.clients.map(c => ({
+      ...c,
+      deals: c.deals.map(d => {
+        const imported = importedCreatorsByDeal[d.id];
+        if (!imported || imported.length === 0) return d;
+        const creators = [...d.creators, ...imported];
+        const cost = creators.reduce((s, cr) => s + cr.totalCost, 0);
+        const rev = creators.reduce((s, cr) => s + cr.clientBilling, 0);
+        return { ...d, creators, totalCreatorCost: cost, totalContractValue: rev, grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0 };
+      }),
+    })),
+  }));
+
+  // Add new clients/deals from CSV
+  const unassignedPodIdx = result.findIndex(p => p.name === "Unassigned");
+  for (const nd of newClientDeals) {
+    // Check if client already exists
+    let found = false;
+    result = result.map(p => ({
+      ...p,
+      clients: p.clients.map(c => {
+        if (c.clientName.toLowerCase() === nd.clientName.toLowerCase()) {
+          found = true;
+          const cost = nd.creators.reduce((s, cr) => s + cr.totalCost, 0);
+          const rev = nd.creators.reduce((s, cr) => s + cr.clientBilling, 0);
+          const newDeal: DealV2 = {
+            id: nd.csvDealId ? `D-${nd.csvDealId}` : `D-NEW-${Date.now()}-${Math.random().toString(36).slice(2,5)}`,
+            dealName: nd.dealName, dealType: "Retainer", status: "Active" as const,
+            creators: nd.creators, totalContractValue: rev, totalCreatorCost: cost,
+            grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
+            currency: "INR", signingEntity: "", geography: "", isContentStudio: false, vsdName: "",
+          };
+          return { ...c, deals: [...c.deals, newDeal] };
+        }
+        return c;
+      }),
+    }));
+    if (!found && unassignedPodIdx >= 0) {
+      const cost = nd.creators.reduce((s, cr) => s + cr.totalCost, 0);
+      const rev = nd.creators.reduce((s, cr) => s + cr.clientBilling, 0);
+      const newClient: ClientV2 = {
+        id: `CL-NEW-${Date.now()}-${Math.random().toString(36).slice(2,5)}`,
+        clientName: nd.clientName, vsdName: "", principalBOPM: "", seniorBOPM: "", juniorBOPM: "",
+        deals: [{
+          id: nd.csvDealId ? `D-${nd.csvDealId}` : `D-NEW-${Date.now()}-${Math.random().toString(36).slice(2,5)}`,
+          dealName: nd.dealName, dealType: "Retainer", status: "Active",
+          creators: nd.creators, totalContractValue: rev, totalCreatorCost: cost,
+          grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
+          currency: "INR", signingEntity: "", geography: "", isContentStudio: false, vsdName: "",
+        }],
+      };
+      result = result.map((p, i) => i === unassignedPodIdx ? { ...p, clients: [...p.clients, newClient] } : p);
+    }
+  }
+
+  return result;
+}
+
+let pods: PodV2[] = mergeImportedData(initialPods);
 
 export function getPods(): PodV2[] { return pods; }
 
