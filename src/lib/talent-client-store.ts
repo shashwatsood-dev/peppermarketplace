@@ -30,14 +30,14 @@ function makeCreator(
   };
 }
 
-function makeDeal(id: string, name: string, type: string, status: DealStatus, creators: DeployedCreatorV2[], geo: string = "", entity: string = ""): DealV2 {
+function makeDeal(id: string, name: string, type: string, status: DealStatus, creators: DeployedCreatorV2[], geo: string = "", entity: string = "", vsd: string = ""): DealV2 {
   const cost = creators.reduce((s, c) => s + c.totalCost, 0);
   const rev = creators.reduce((s, c) => s + c.clientBilling, 0);
   return {
     id, dealName: name, dealType: type, status, creators,
     totalContractValue: rev, totalCreatorCost: cost,
     grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
-    currency: "INR", signingEntity: entity, geography: geo, isContentStudio: false,
+    currency: "INR", signingEntity: entity, geography: geo, isContentStudio: false, vsdName: vsd,
   };
 }
 
