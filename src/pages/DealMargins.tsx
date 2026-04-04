@@ -720,32 +720,35 @@ const DealMargins = () => {
         <TabsList className="bg-muted border border-border">
           <TabsTrigger value="All" className="text-xs font-mono">All</TabsTrigger>
           {POD_NAMES.map(name => (
-            <TabsTrigger key={name} value={name} className="text-xs font-mono">{name}</TabsTrigger>
+            <TabsTrigger key={name} value={name} className="text-xs font-mono">{name} ({getClientsForPod(name).length})</TabsTrigger>
           ))}
-          {unassignedPod && unassignedPod.clients.length > 0 && (
-            <TabsTrigger value="Unassigned" className="text-xs font-mono text-warning">⚠ Unassigned ({unassignedPod.clients.length})</TabsTrigger>
+          {unassignedEntries.length > 0 && (
+            <TabsTrigger value="Unassigned" className="text-xs font-mono text-warning">⚠ Unassigned ({unassignedEntries.length})</TabsTrigger>
           )}
         </TabsList>
         <TabsContent value="All" className="space-y-4 mt-4">
           {allClients.map(client => <ClientCard key={client.id} client={client} />)}
         </TabsContent>
-        {pods.filter(p => p.name !== "Unassigned").map(pod => (
-          <TabsContent key={pod.name} value={pod.name} className="space-y-4 mt-4">
-            <div className="flex justify-end">
-              <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {pod.name}</Button>
-            </div>
-            {pod.clients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
-            {pod.clients.sort((a, b) => a.clientName.localeCompare(b.clientName)).map(client => <ClientCard key={client.id} client={client} />)}
-          </TabsContent>
-        ))}
-        {unassignedPod && unassignedPod.clients.length > 0 && (
+        {POD_NAMES.map(podName => {
+          const podClients = getClientsForPod(podName);
+          return (
+            <TabsContent key={podName} value={podName} className="space-y-4 mt-4">
+              <div className="flex justify-end">
+                <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {podName}</Button>
+              </div>
+              {podClients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
+              {podClients.map(({ client, deals }) => <ClientCard key={`${client.id}-${podName}`} client={client} filterDeals={deals} />)}
+            </TabsContent>
+          );
+        })}
+        {unassignedEntries.length > 0 && (
           <TabsContent value="Unassigned" className="space-y-4 mt-4">
             <div className="p-4 rounded-lg border border-warning/30 bg-warning/5">
-              <h3 className="text-sm font-semibold text-foreground mb-1">Unassigned Clients</h3>
-              <p className="text-xs text-muted-foreground mb-4">These clients need a Pod and VSD assignment. Assign them to continue tracking.</p>
+              <h3 className="text-sm font-semibold text-foreground mb-1">Deals without VSD Assignment</h3>
+              <p className="text-xs text-muted-foreground mb-4">These deals need a VSD assigned. Edit each deal to set a VSD, which will automatically map it to the correct pod.</p>
               <div className="space-y-3">
-                {unassignedPod.clients.sort((a, b) => a.clientName.localeCompare(b.clientName)).map(client => (
-                  <UnassignedClientRow key={client.id} client={client} onAssign={refresh} />
+                {unassignedEntries.map(({ client, deals }) => (
+                  <ClientCard key={`${client.id}-unassigned`} client={client} filterDeals={deals} />
                 ))}
               </div>
             </div>
