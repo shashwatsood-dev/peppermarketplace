@@ -138,7 +138,7 @@ export const requisitions: Requisition[] = [
   },
 ];
 
-export const creators: Creator[] = [
+export const baseCreators: Creator[] = [
   { id: "CRE-001", name: "Ananya Desai", email: "ananya@email.com", phone: "+91 98765 43210", city: "Mumbai", platformId: "PL-1001", linkedIn: "linkedin.com/in/ananya", category: "Writer", domains: ["Fintech", "SaaS"], language: "English", standardRate: 8, negotiatedRate: 7, payModel: "Per Word", rating: 4.8, feedbackScore: 92, onTimePercent: 97, lastActive: "2026-02-23", revenueGenerated: 245000, marginContribution: 98000, status: "Preferred" },
   { id: "CRE-002", name: "Rohan Kapoor", email: "rohan@email.com", phone: "+91 98765 43211", city: "Delhi", platformId: "PL-1002", linkedIn: "linkedin.com/in/rohan", category: "Writer", domains: ["Healthcare", "Wellness"], language: "English, Hindi", standardRate: 6, negotiatedRate: 5.5, payModel: "Per Word", rating: 4.5, feedbackScore: 88, onTimePercent: 94, lastActive: "2026-02-21", revenueGenerated: 178000, marginContribution: 71200, status: "Active" },
   { id: "CRE-003", name: "Megha Rao", email: "megha@email.com", phone: "+91 98765 43212", city: "Bangalore", platformId: "PL-1003", linkedIn: "linkedin.com/in/megha", category: "Designer", domains: ["SaaS", "Fintech", "Edtech"], language: "English", standardRate: 5000, negotiatedRate: 4500, payModel: "Per Assignment", rating: 4.9, feedbackScore: 96, onTimePercent: 99, lastActive: "2026-02-24", revenueGenerated: 320000, marginContribution: 128000, status: "Preferred" },
@@ -149,6 +149,56 @@ export const creators: Creator[] = [
   { id: "CRE-008", name: "Varun Reddy", email: "varun@email.com", phone: "+91 98765 43217", city: "Bangalore", platformId: "PL-1008", linkedIn: "linkedin.com/in/varun", category: "Designer", domains: ["Fintech", "Healthcare"], language: "English", standardRate: 6000, negotiatedRate: 5500, payModel: "Per Assignment", rating: 4.4, feedbackScore: 85, onTimePercent: 92, lastActive: "2026-02-18", revenueGenerated: 267000, marginContribution: 93450, status: "Active" },
   { id: "CRE-009", name: "Priya Translator", email: "priya.t@email.com", phone: "+91 98765 43218", city: "Delhi", platformId: "PL-1009", linkedIn: "linkedin.com/in/priyat", category: "Translator", domains: ["Fintech", "Legal"], language: "English, Hindi, Gujarati", standardRate: 3, negotiatedRate: 2.5, payModel: "Per Word", rating: 4.2, feedbackScore: 87, onTimePercent: 93, lastActive: "2026-02-19", revenueGenerated: 95000, marginContribution: 38000, status: "Active" },
 ];
+
+// Dynamic creator list: base creators + auto-synced from deals
+import { getPods } from "@/lib/talent-client-store";
+
+export function getCreators(): Creator[] {
+  const seen = new Set<string>();
+  const result: Creator[] = [...baseCreators];
+  baseCreators.forEach(c => seen.add(c.name.toLowerCase()));
+
+  // Pull all creators deployed on deals
+  const pods = getPods();
+  for (const pod of pods) {
+    for (const client of pod.clients) {
+      for (const deal of client.deals) {
+        for (const dc of deal.creators) {
+          const key = dc.creatorName.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            result.push({
+              id: `CRE-AUTO-${dc.id}`,
+              name: dc.creatorName,
+              email: "",
+              phone: "",
+              city: dc.city || "",
+              platformId: "",
+              linkedIn: dc.linkedinId || "",
+              category: dc.role as RoleType,
+              domains: [],
+              language: "English",
+              standardRate: dc.payRate,
+              negotiatedRate: dc.payRate,
+              payModel: dc.payModel,
+              rating: 0,
+              feedbackScore: 0,
+              onTimePercent: 0,
+              lastActive: dc.startDate || "",
+              revenueGenerated: dc.clientBilling,
+              marginContribution: dc.grossMargin,
+              status: dc.dealStatus === "Active" ? "Active" : "Inactive",
+            });
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// Keep backward-compat export (computed on access)
+export const creators: Creator[] = baseCreators;
 
 export const deals: Deal[] = [
   {

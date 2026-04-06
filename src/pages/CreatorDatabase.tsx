@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { creators } from "@/lib/mock-data";
+import { useState, useMemo } from "react";
+import { getCreators } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -99,6 +99,7 @@ const CreatorDatabase = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
+  const creators = useMemo(() => getCreators(), []);
 
   const filtered = creators.filter((c) => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||

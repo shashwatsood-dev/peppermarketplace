@@ -784,7 +784,13 @@ const DealMargins = () => {
     deals: c.deals.filter(d => !d.vsdName || !VSD_POD_MAP[d.vsdName]),
   }));
 
-  const visibleClients = selectedPod === "All" ? allClients : [];
+  const visibleClients = useMemo(() => {
+    if (selectedPod === "All") return allClients;
+    if (selectedPod === "Unassigned") return unassignedEntries.map(e => e.client);
+    const podClients = getClientsForPod(selectedPod);
+    // Build filtered client objects showing only pod-relevant deals
+    return podClients.map(({ client, deals }) => ({ ...client, deals }));
+  }, [selectedPod, allClients, unassignedEntries]);
 
   const handleExportCSV = () => {
     const csv = exportAllDataAsCSV();
