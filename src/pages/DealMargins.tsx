@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import {
-  getPods, updateClient, updateDeal, updateCreatorInDeal, addCreatorToDeal, addClientToPod, addDealToClient, exportAllDataAsCSV, moveClientToPod,
-  copyCreatorsToDeal, removeCreatorFromDeal, findClientForDeal, getDealsForClient,
-  POD_NAMES, ALL_POD_NAMES, type PodV2, type ClientV2, type DealV2, type DeployedCreatorV2,
-  type CreatorDealStatus, type HealthColor, type ResourceSource, type DealStatus, type PodName,
-} from "@/lib/talent-client-store";
+  dbUpdateClient, dbUpdateDeal, dbUpdateCreator, dbAddCreatorToDeal, dbAddClientToPod, dbAddDealToClient,
+  dbMoveClientToPod, dbCopyCreatorsToDeal, dbRemoveCreator, dbParseClientCSV, dbGetClientCSVTemplate, exportPodsAsCSV,
+} from "@/lib/db-store";
+import { usePods, useRefreshPods } from "@/lib/use-pods";
+import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName } from "@/lib/talent-client-types";
+import { POD_NAMES, ALL_POD_NAMES } from "@/lib/talent-client-types";
 import { type RoleType, type PayModel } from "@/lib/mock-data";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -18,8 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { getHandoversByDeal } from "@/lib/handover-store";
-import { parseClientCSV, getClientCSVTemplate } from "@/lib/talent-client-store";
 import type { CurrencyCode } from "@/lib/requisition-types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formatCurrency = (n: number) => "₹" + (n / 100000).toFixed(1) + "L";
 
@@ -77,9 +78,9 @@ function RatingReasonDialog({ open, onClose, onSave, rating }: { open: boolean; 
 }
 
 // ─── Edit Client Dialog ─────────────────────────────────
-function EditClientDialog({ client, open, onClose }: { client: ClientV2; open: boolean; onClose: () => void }) {
+function EditClientDialog({ client, open, onClose, onDone }: { client: ClientV2; open: boolean; onClose: () => void; onDone: () => void }) {
   const [form, setForm] = useState({ vsdName: client.vsdName, principalBOPM: client.principalBOPM, seniorBOPM: client.seniorBOPM, juniorBOPM: client.juniorBOPM });
-  const save = () => { updateClient(client.id, form); toast.success("Client updated"); onClose(); };
+  const save = async () => { await dbUpdateClient(client.id, form); toast.success("Client updated"); onDone(); onClose(); };
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -97,14 +98,14 @@ function EditClientDialog({ client, open, onClose }: { client: ClientV2; open: b
 }
 
 // ─── Add Client Dialog ──────────────────────────────────
-function AddClientDialog({ podName, open, onClose }: { podName: PodName; open: boolean; onClose: () => void }) {
+function AddClientDialog({ podName, open, onClose, onDone }: { podName: PodName; open: boolean; onClose: () => void; onDone: () => void }) {
   const [form, setForm] = useState({ clientName: "", vsdName: "", principalBOPM: "", seniorBOPM: "", juniorBOPM: "" });
-  const save = () => {
+  const save = async () => {
     if (!form.clientName.trim()) { toast.error("Client name required"); return; }
-    addClientToPod(podName, form);
+    await dbAddClientToPod(podName, form);
     toast.success(`Client "${form.clientName}" added to ${podName}`);
     setForm({ clientName: "", vsdName: "", principalBOPM: "", seniorBOPM: "", juniorBOPM: "" });
-    onClose();
+    onDone(); onClose();
   };
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -134,14 +135,14 @@ const VSD_POD_MAP: Record<string, PodName> = {
 };
 
 // ─── Add Deal Dialog ────────────────────────────────────
-function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: string; clientName: string; open: boolean; onClose: () => void }) {
+function AddDealDialog({ clientId, clientName, open, onClose, onDone }: { clientId: string; clientName: string; open: boolean; onClose: () => void; onDone: () => void }) {
   const [form, setForm] = useState({ dealName: "", dealType: "Retainer", status: "Active" as DealStatus, currency: "INR" as CurrencyCode, signingEntity: "", geography: "", vsdName: "" });
-  const save = () => {
+  const save = async () => {
     if (!form.dealName.trim()) { toast.error("Deal name required"); return; }
-    addDealToClient(clientId, form);
+    await dbAddDealToClient(clientId, form);
     toast.success(`Deal "${form.dealName}" added`);
     setForm({ dealName: "", dealType: "Retainer", status: "Active", currency: "INR", signingEntity: "", geography: "", vsdName: "" });
-    onClose();
+    onDone(); onClose();
   };
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -182,9 +183,9 @@ function AddDealDialog({ clientId, clientName, open, onClose }: { clientId: stri
 }
 
 // ─── Edit Deal Dialog ───────────────────────────────────
-function EditDealDialog({ deal, open, onClose }: { deal: DealV2; open: boolean; onClose: () => void }) {
+function EditDealDialog({ deal, open, onClose, onDone }: { deal: DealV2; open: boolean; onClose: () => void; onDone: () => void }) {
   const [form, setForm] = useState({ dealName: deal.dealName, dealType: deal.dealType, status: deal.status as DealStatus, vsdName: deal.vsdName || "" });
-  const save = () => { updateDeal(deal.id, form); toast.success("Deal updated"); onClose(); };
+  const save = async () => { await dbUpdateDeal(deal.id, form); toast.success("Deal updated"); onDone(); onClose(); };
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -234,7 +235,7 @@ function emptyLineItem(): CreatorLineItem {
   return { id: crypto.randomUUID(), creatorName: "", role: "Writer", source: "Freelancer", payModel: "Per Word", payRate: 0, totalCost: 0, clientBilling: 0, city: "", opsLink: "", linkedinId: "", currency: "INR" };
 }
 
-function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open: boolean; onClose: () => void }) {
+function BulkAddCreatorDialog({ dealId, open, onClose, onDone }: { dealId: string; open: boolean; onClose: () => void; onDone: () => void }) {
   const [rows, setRows] = useState<CreatorLineItem[]>([emptyLineItem()]);
 
   const updateRow = (id: string, updates: Partial<CreatorLineItem>) => {
@@ -244,11 +245,11 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
   const addRow = () => setRows(prev => [...prev, emptyLineItem()]);
   const removeRow = (id: string) => setRows(prev => prev.filter(r => r.id !== id));
 
-  const save = () => {
+  const save = async () => {
     const valid = rows.filter(r => r.creatorName.trim());
     if (valid.length === 0) { toast.error("At least one creator name required"); return; }
     for (const r of valid) {
-      addCreatorToDeal(dealId, {
+      await dbAddCreatorToDeal(dealId, {
         creatorName: r.creatorName, role: r.role, source: r.source, payModel: r.payModel,
         payRate: r.payRate, expectedVolume: 0, totalCost: r.totalCost, clientBilling: r.clientBilling,
         dealStatus: "Active", capabilityLeadRating: "", bopmRating: "", city: r.city,
@@ -257,7 +258,7 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
     }
     toast.success(`${valid.length} creator(s) added`);
     setRows([emptyLineItem()]);
-    onClose();
+    onDone(); onClose();
   };
 
   return (
@@ -265,7 +266,6 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
       <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Add Creators to Deal</DialogTitle></DialogHeader>
         <div className="space-y-2">
-          {/* Header */}
           <div className="grid grid-cols-[1fr_90px_90px_90px_70px_80px_80px_70px_120px_120px_70px_32px] gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-1">
             <span>Name</span><span>Role</span><span>Source</span><span>Pay Model</span><span>Currency</span><span>Unit Rate</span><span>Cost</span><span>Billing</span><span>Ops Link</span><span>LinkedIn</span><span>City</span><span></span>
           </div>
@@ -306,13 +306,10 @@ function BulkAddCreatorDialog({ dealId, open, onClose }: { dealId: string; open:
 }
 
 // ─── Transfer/Copy Creators Dialog ──────────────────────
-function TransferCreatorsDialog({ dealId, creators, open, onClose }: { dealId: string; creators: DeployedCreatorV2[]; open: boolean; onClose: () => void }) {
+function TransferCreatorsDialog({ dealId, creators, otherDeals, open, onClose, onDone }: { dealId: string; creators: DeployedCreatorV2[]; otherDeals: DealV2[]; open: boolean; onClose: () => void; onDone: () => void }) {
   const [selectedCreators, setSelectedCreators] = useState<Set<string>>(new Set());
   const [targetDealId, setTargetDealId] = useState("");
   const [mode, setMode] = useState<"copy" | "move">("copy");
-
-  const client = findClientForDeal(dealId);
-  const otherDeals = client ? client.deals.filter(d => d.id !== dealId) : [];
 
   const toggleCreator = (id: string) => {
     setSelectedCreators(prev => {
@@ -330,15 +327,15 @@ function TransferCreatorsDialog({ dealId, creators, open, onClose }: { dealId: s
     }
   };
 
-  const handleTransfer = () => {
+  const handleTransfer = async () => {
     if (selectedCreators.size === 0) { toast.error("Select at least one creator"); return; }
     if (!targetDealId) { toast.error("Select a target deal"); return; }
-    copyCreatorsToDeal(dealId, targetDealId, Array.from(selectedCreators), mode === "move");
+    await dbCopyCreatorsToDeal(dealId, targetDealId, Array.from(selectedCreators), mode === "move");
     const targetDeal = otherDeals.find(d => d.id === targetDealId);
     toast.success(`${selectedCreators.size} creator(s) ${mode === "move" ? "moved" : "copied"} to ${targetDeal?.dealName || targetDealId}`);
     setSelectedCreators(new Set());
     setTargetDealId("");
-    onClose();
+    onDone(); onClose();
   };
 
   return (
@@ -393,9 +390,9 @@ function TransferCreatorsDialog({ dealId, creators, open, onClose }: { dealId: s
 }
 
 
-function CreatorStatusSelect({ dealId, creator }: { dealId: string; creator: DeployedCreatorV2 }) {
+function CreatorStatusSelect({ creatorId, creator, onDone }: { creatorId: string; creator: DeployedCreatorV2; onDone: () => void }) {
   return (
-    <Select value={creator.dealStatus} onValueChange={v => { updateCreatorInDeal(dealId, creator.id, { dealStatus: v as CreatorDealStatus }); toast.success("Status updated"); }}>
+    <Select value={creator.dealStatus} onValueChange={async v => { await dbUpdateCreator(creatorId, { dealStatus: v as CreatorDealStatus }); toast.success("Status updated"); onDone(); }}>
       <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
       <SelectContent>
         {(["Active", "Inactive", "Removed", "Flagged"] as CreatorDealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -404,17 +401,18 @@ function CreatorStatusSelect({ dealId, creator }: { dealId: string; creator: Dep
   );
 }
 
-function RatingSelect({ dealId, creatorId, field, value }: { dealId: string; creatorId: string; field: "capabilityLeadRating" | "bopmRating"; value: HealthColor | "" }) {
+function RatingSelect({ creatorId, field, value, onDone }: { creatorId: string; field: "capabilityLeadRating" | "bopmRating"; value: HealthColor | ""; onDone: () => void }) {
   const [reasonDialog, setReasonDialog] = useState(false);
   const [pendingRating, setPendingRating] = useState<HealthColor | "">("");
 
-  const handleChange = (v: string) => {
+  const handleChange = async (v: string) => {
     const newVal = v === "none" ? "" : v as HealthColor;
     if (newVal === "yellow" || newVal === "red") {
       setPendingRating(newVal);
       setReasonDialog(true);
     } else {
-      updateCreatorInDeal(dealId, creatorId, { [field]: newVal });
+      await dbUpdateCreator(creatorId, { [field]: newVal });
+      onDone();
     }
   };
 
@@ -435,9 +433,10 @@ function RatingSelect({ dealId, creatorId, field, value }: { dealId: string; cre
         open={reasonDialog}
         onClose={() => setReasonDialog(false)}
         rating={pendingRating}
-        onSave={(reason) => {
-          updateCreatorInDeal(dealId, creatorId, { [field]: pendingRating, [reasonField]: reason });
+        onSave={async (reason) => {
+          await dbUpdateCreator(creatorId, { [field]: pendingRating, [reasonField]: reason });
           toast.success("Rating updated with reason");
+          onDone();
         }}
       />
     </>
@@ -445,7 +444,7 @@ function RatingSelect({ dealId, creatorId, field, value }: { dealId: string; cre
 }
 
 // ─── Deal Row ───────────────────────────────────────────
-function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }) {
+function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; showInactive: boolean; otherDeals: DealV2[]; onDone: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [editDeal, setEditDeal] = useState(false);
   const [addCreator, setAddCreator] = useState(false);
@@ -454,10 +453,11 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
   const visibleCreators = showInactive ? deal.creators : deal.creators.filter(c => c.dealStatus === "Active");
   const handovers = getHandoversByDeal(deal.id);
 
-  const toggleContentStudio = (e: React.MouseEvent) => {
+  const toggleContentStudio = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    updateDeal(deal.id, { isContentStudio: !deal.isContentStudio });
+    await dbUpdateDeal(deal.id, { isContentStudio: !deal.isContentStudio });
     toast.success(deal.isContentStudio ? "Removed from Content Studio" : "Added to Content Studio");
+    onDone();
   };
 
   return (
@@ -518,11 +518,11 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
                     <td className="py-2 font-mono text-muted-foreground pr-3">{formatCurrency(c.totalCost)}</td>
                     <td className="py-2 font-mono text-foreground pr-3">{formatCurrency(c.clientBilling)}</td>
                     <td className="py-2 font-mono text-success pr-3">{c.grossMarginPercent}%</td>
-                    <td className="py-2 pr-3"><RatingSelect dealId={deal.id} creatorId={c.id} field="capabilityLeadRating" value={c.capabilityLeadRating} /></td>
-                    <td className="py-2 pr-3"><RatingSelect dealId={deal.id} creatorId={c.id} field="bopmRating" value={c.bopmRating} /></td>
-                    <td className="py-2"><CreatorStatusSelect dealId={deal.id} creator={c} /></td>
+                    <td className="py-2 pr-3"><RatingSelect creatorId={c.id} field="capabilityLeadRating" value={c.capabilityLeadRating} onDone={onDone} /></td>
+                    <td className="py-2 pr-3"><RatingSelect creatorId={c.id} field="bopmRating" value={c.bopmRating} onDone={onDone} /></td>
+                    <td className="py-2"><CreatorStatusSelect creatorId={c.id} creator={c} onDone={onDone} /></td>
                     <td className="py-2">
-                      <button onClick={() => { removeCreatorFromDeal(deal.id, c.id); toast.success(`Removed ${c.creatorName}`); }} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove creator"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <button onClick={async () => { await dbRemoveCreator(c.id); toast.success(`Removed ${c.creatorName}`); onDone(); }} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove creator"><Trash2 className="h-3.5 w-3.5" /></button>
                     </td>
                   </tr>
                 ))}
@@ -555,15 +555,15 @@ function DealRow({ deal, showInactive }: { deal: DealV2; showInactive: boolean }
         </div>
       )}
 
-      <EditDealDialog deal={deal} open={editDeal} onClose={() => setEditDeal(false)} />
-      <BulkAddCreatorDialog dealId={deal.id} open={addCreator} onClose={() => setAddCreator(false)} />
-      {deal.creators.length > 0 && <TransferCreatorsDialog dealId={deal.id} creators={deal.creators} open={transferCreators} onClose={() => setTransferCreators(false)} />}
+      <EditDealDialog deal={deal} open={editDeal} onClose={() => setEditDeal(false)} onDone={onDone} />
+      <BulkAddCreatorDialog dealId={deal.id} open={addCreator} onClose={() => setAddCreator(false)} onDone={onDone} />
+      {deal.creators.length > 0 && <TransferCreatorsDialog dealId={deal.id} creators={deal.creators} otherDeals={otherDeals} open={transferCreators} onClose={() => setTransferCreators(false)} onDone={onDone} />}
     </div>
   );
 }
 
 // ─── Client Card ────────────────────────────────────────
-function ClientCard({ client, filterDeals }: { client: ClientV2; filterDeals?: DealV2[] }) {
+function ClientCard({ client, filterDeals, onDone }: { client: ClientV2; filterDeals?: DealV2[]; onDone: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [editClient, setEditClient] = useState(false);
   const [addDeal, setAddDeal] = useState(false);
@@ -613,19 +613,22 @@ function ClientCard({ client, filterDeals }: { client: ClientV2; filterDeals?: D
             <Button variant="outline" size="sm" onClick={() => setAddDeal(true)} className="h-7 text-xs gap-1 ml-auto"><Plus className="h-3 w-3" />Add Deal</Button>
           </div>
           <div className="space-y-3">
-            {visibleDeals.map(deal => <DealRow key={deal.id} deal={deal} showInactive={showInactiveCreators} />)}
+            {visibleDeals.map(deal => {
+              const otherDeals = client.deals.filter(d => d.id !== deal.id);
+              return <DealRow key={deal.id} deal={deal} showInactive={showInactiveCreators} otherDeals={otherDeals} onDone={onDone} />;
+            })}
             {visibleDeals.length === 0 && <p className="text-xs text-muted-foreground py-2">No active deals</p>}
           </div>
         </div>
       )}
-      <EditClientDialog client={client} open={editClient} onClose={() => setEditClient(false)} />
-      <AddDealDialog clientId={client.id} clientName={client.clientName} open={addDeal} onClose={() => setAddDeal(false)} />
+      <EditClientDialog client={client} open={editClient} onClose={() => setEditClient(false)} onDone={onDone} />
+      <AddDealDialog clientId={client.id} clientName={client.clientName} open={addDeal} onClose={() => setAddDeal(false)} onDone={onDone} />
     </div>
   );
 }
 
 // ─── CSV Import Dialog ──────────────────────────────────
-function CSVImportDialog({ selectedPod, open, onClose }: { selectedPod: string; open: boolean; onClose: () => void }) {
+function CSVImportDialog({ selectedPod, open, onClose, onDone }: { selectedPod: string; open: boolean; onClose: () => void; onDone: () => void }) {
   const [csvText, setCsvText] = useState("");
   const [targetPod, setTargetPod] = useState<PodName>(selectedPod !== "All" ? selectedPod as PodName : "Integrated");
 
@@ -638,18 +641,18 @@ function CSVImportDialog({ selectedPod, open, onClose }: { selectedPod: string; 
   };
 
   const downloadTemplate = () => {
-    const blob = new Blob([getClientCSVTemplate()], { type: "text/csv" });
+    const blob = new Blob([dbGetClientCSVTemplate()], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "client-deal-template.csv"; a.click();
     URL.revokeObjectURL(url);
   };
 
-  const importData = () => {
+  const importData = async () => {
     if (!csvText.trim()) { toast.error("No CSV data"); return; }
-    const result = parseClientCSV(csvText, targetPod);
+    const result = await dbParseClientCSV(csvText, targetPod);
     toast.success(`Imported ${result.added} creator(s) into ${targetPod}`);
     setCsvText("");
-    onClose();
+    onDone(); onClose();
   };
 
   return (
@@ -703,17 +706,16 @@ function SummaryCards({ clients }: { clients: ClientV2[] }) {
 }
 
 // ─── Unassigned Client Row ──────────────────────────────
-
-function UnassignedClientRow({ client, onAssign }: { client: ClientV2; onAssign: () => void }) {
+function UnassignedClientRow({ client, onDone }: { client: ClientV2; onDone: () => void }) {
   const [selectedPodTarget, setSelectedPodTarget] = useState<string>("");
   const [vsd, setVsd] = useState(client.vsdName);
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!selectedPodTarget) { toast.error("Select a pod"); return; }
-    if (vsd.trim()) updateClient(client.id, { vsdName: vsd.trim() });
-    moveClientToPod(client.id, selectedPodTarget as PodName);
+    if (vsd.trim()) await dbUpdateClient(client.id, { vsdName: vsd.trim() });
+    await dbMoveClientToPod(client.id, selectedPodTarget as PodName);
     toast.success(`"${client.clientName}" assigned to ${selectedPodTarget}`);
-    onAssign();
+    onDone();
   };
 
   const handleVsdChange = (v: string) => {
@@ -754,20 +756,30 @@ function UnassignedClientRow({ client, onAssign }: { client: ClientV2; onAssign:
 
 // ─── Main Page ──────────────────────────────────────────
 const DealMargins = () => {
-  const [_, setTick] = useState(0);
-  const refresh = () => setTick(t => t + 1);
+  const { data: pods, isLoading } = usePods();
+  const refresh = useRefreshPods();
   const [selectedPod, setSelectedPod] = useState<string>("All");
   const [addClient, setAddClient] = useState(false);
   const [csvImport, setCsvImport] = useState(false);
 
-  const pods = getPods();
+  if (isLoading || !pods) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div><h1 className="text-2xl font-semibold text-foreground">Talent X Client View</h1><div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" /></div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
+        </div>
+        <Skeleton className="h-10 w-full" />
+        {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+      </div>
+    );
+  }
+
   const allClientsRaw = pods.flatMap(p => p.clients);
-  // Deduplicate clients (same client can be in multiple pods)
   const clientMap = new Map<string, ClientV2>();
   allClientsRaw.forEach(c => clientMap.set(c.id, c));
   const allClients = Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName));
 
-  // Derive pod-filtered views from deal-level VSD
   const getClientsForPod = (podName: string): { client: ClientV2; deals: DealV2[] }[] => {
     const vsdNames = Object.entries(VSD_POD_MAP).filter(([, pod]) => pod === podName).map(([vsd]) => vsd);
     const results: { client: ClientV2; deals: DealV2[] }[] = [];
@@ -778,22 +790,20 @@ const DealMargins = () => {
     return results.sort((a, b) => a.client.clientName.localeCompare(b.client.clientName));
   };
 
-  // Unassigned: deals with no VSD or VSD not in the map
   const unassignedEntries = allClients.filter(c => c.deals.some(d => !d.vsdName || !VSD_POD_MAP[d.vsdName])).map(c => ({
     client: c,
     deals: c.deals.filter(d => !d.vsdName || !VSD_POD_MAP[d.vsdName]),
   }));
 
-  const visibleClients = useMemo(() => {
+  const visibleClients = (() => {
     if (selectedPod === "All") return allClients;
     if (selectedPod === "Unassigned") return unassignedEntries.map(e => e.client);
     const podClients = getClientsForPod(selectedPod);
-    // Build filtered client objects showing only pod-relevant deals
     return podClients.map(({ client, deals }) => ({ ...client, deals }));
-  }, [selectedPod, allClients, unassignedEntries]);
+  })();
 
   const handleExportCSV = () => {
-    const csv = exportAllDataAsCSV();
+    const csv = exportPodsAsCSV(pods);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "talent-client-data.csv"; a.click();
@@ -802,7 +812,7 @@ const DealMargins = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in" onClick={() => refresh()}>
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Talent X Client View</h1>
@@ -831,7 +841,7 @@ const DealMargins = () => {
           )}
         </TabsList>
         <TabsContent value="All" className="space-y-4 mt-4">
-          {allClients.map(client => <ClientCard key={client.id} client={client} />)}
+          {allClients.map(client => <ClientCard key={client.id} client={client} onDone={refresh} />)}
         </TabsContent>
         {POD_NAMES.map(podName => {
           const podClients = getClientsForPod(podName);
@@ -841,7 +851,7 @@ const DealMargins = () => {
                 <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {podName}</Button>
               </div>
               {podClients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
-              {podClients.map(({ client, deals }) => <ClientCard key={`${client.id}-${podName}`} client={client} filterDeals={deals} />)}
+              {podClients.map(({ client, deals }) => <ClientCard key={`${client.id}-${podName}`} client={client} filterDeals={deals} onDone={refresh} />)}
             </TabsContent>
           );
         })}
@@ -852,7 +862,7 @@ const DealMargins = () => {
               <p className="text-xs text-muted-foreground mb-4">These deals need a VSD assigned. Edit each deal to set a VSD, which will automatically map it to the correct pod.</p>
               <div className="space-y-3">
                 {unassignedEntries.map(({ client, deals }) => (
-                  <ClientCard key={`${client.id}-unassigned`} client={client} filterDeals={deals} />
+                  <ClientCard key={`${client.id}-unassigned`} client={client} filterDeals={deals} onDone={refresh} />
                 ))}
               </div>
             </div>
@@ -861,9 +871,9 @@ const DealMargins = () => {
       </Tabs>
 
       {selectedPod !== "All" && selectedPod !== "Unassigned" && (
-        <AddClientDialog podName={selectedPod as PodName} open={addClient} onClose={() => setAddClient(false)} />
+        <AddClientDialog podName={selectedPod as PodName} open={addClient} onClose={() => setAddClient(false)} onDone={refresh} />
       )}
-      <CSVImportDialog selectedPod={selectedPod} open={csvImport} onClose={() => setCsvImport(false)} />
+      <CSVImportDialog selectedPod={selectedPod} open={csvImport} onClose={() => setCsvImport(false)} onDone={refresh} />
     </div>
   );
 };
