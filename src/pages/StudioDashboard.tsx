@@ -1,5 +1,8 @@
 import { useState, useMemo } from "react";
-import { getPods, type DealV2, type ClientV2, type DeployedCreatorV2, addHRBPConnect, updateCreatorInDeal, POD_NAMES } from "@/lib/talent-client-store";
+import type { DealV2, ClientV2, DeployedCreatorV2 } from "@/lib/talent-client-types";
+import { POD_NAMES } from "@/lib/talent-client-types";
+import { dbAddHRBPConnect, dbUpdateCreator } from "@/lib/db-store";
+import { usePods, useRefreshPods } from "@/lib/use-pods";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { DollarSign, TrendingUp, Users, Upload, FileText, ChevronDown, ChevronRight, Plus, MessageSquare } from "lucide-react";
@@ -34,8 +37,7 @@ const VSD_POD_MAP: Record<string, string> = {
   "Sumit Shekhawat": "India B2B",
 };
 
-function getAllStudioData() {
-  const pods = getPods();
+function getAllStudioData(pods: import("@/lib/talent-client-types").PodV2[]) {
   const results: { podName: string; clientName: string; client: ClientV2; deal: DealV2 }[] = [];
   for (const pod of pods) {
     for (const client of pod.clients) {
@@ -57,9 +59,9 @@ function HRBPConnectDialog({ dealId, creatorId, creatorName, connects, open, onC
   const [summary, setSummary] = useState("");
   const [outcome, setOutcome] = useState("");
   const [hrbpName, setHrbpName] = useState("");
-  const add = () => {
+  const add = async () => {
     if (!summary.trim()) { toast.error("Summary required"); return; }
-    addHRBPConnect(dealId, creatorId, { date: new Date().toISOString().split("T")[0], summary: summary.trim(), outcome: outcome.trim(), hrbpName: hrbpName.trim() });
+    await dbAddHRBPConnect(creatorId, { date: new Date().toISOString().split("T")[0], summary: summary.trim(), outcome: outcome.trim(), hrbpName: hrbpName.trim() });
     toast.success("Connect logged");
     setSummary(""); setOutcome(""); setHrbpName("");
     onClose();
@@ -214,15 +216,15 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
 
 // ─── Main Page ──────────────────────────────────────────
 const StudioDashboard = () => {
-  const [_, setTick] = useState(0);
-  const refresh = () => setTick(t => t + 1);
+  const { data: pods = [], isLoading } = usePods();
+  const refreshPods = useRefreshPods();
   const [showActive, setShowActive] = useState(true);
   const [selectedPod, setSelectedPod] = useState("All");
   const [viewMode, setViewMode] = useState<"deals" | "geography">("deals");
   const { currentRole } = useAuth();
   const hideFinancials = currentRole === "pod_lead_recruiter";
 
-  const studioData = useMemo(() => getAllStudioData(), [_]);
+  const studioData = useMemo(() => getAllStudioData(pods), [pods]);
 
   const podFiltered = selectedPod === "All" ? studioData : studioData.filter(d => d.podName === selectedPod);
   const displayData = showActive ? podFiltered.filter(d => d.deal.status === "Active") : podFiltered;
@@ -262,7 +264,7 @@ const StudioDashboard = () => {
   const [showMoM, setShowMoM] = useState(false);
 
   return (
-    <div className="space-y-6 animate-fade-in" onClick={() => refresh()}>
+    <div className="space-y-6 animate-fade-in" onClick={() => refreshPods()}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Studio Dashboard</h1>

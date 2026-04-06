@@ -20,7 +20,7 @@ import {
   createEmptyLineItem, getCurrencySymbol,
   type RequisitionFlow, type VSDLineItem, type CurrencyCode,
 } from "@/lib/requisition-types";
-import { POD_NAMES as TALENT_POD_NAMES } from "@/lib/talent-client-store";
+import { POD_NAMES as TALENT_POD_NAMES } from "@/lib/talent-client-types";
 
 const NewRequisition = () => {
   const navigate = useNavigate();

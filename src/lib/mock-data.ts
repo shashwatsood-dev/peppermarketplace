@@ -150,51 +150,10 @@ export const baseCreators: Creator[] = [
   { id: "CRE-009", name: "Priya Translator", email: "priya.t@email.com", phone: "+91 98765 43218", city: "Delhi", platformId: "PL-1009", linkedIn: "linkedin.com/in/priyat", category: "Translator", domains: ["Fintech", "Legal"], language: "English, Hindi, Gujarati", standardRate: 3, negotiatedRate: 2.5, payModel: "Per Word", rating: 4.2, feedbackScore: 87, onTimePercent: 93, lastActive: "2026-02-19", revenueGenerated: 95000, marginContribution: 38000, status: "Active" },
 ];
 
-// Dynamic creator list: base creators + auto-synced from deals
-import { getPods } from "@/lib/talent-client-store";
-
+// getCreators is now handled in CreatorDatabase.tsx using usePods hook
+// This export is kept for backward compatibility but only returns base creators
 export function getCreators(): Creator[] {
-  const seen = new Set<string>();
-  const result: Creator[] = [...baseCreators];
-  baseCreators.forEach(c => seen.add(c.name.toLowerCase()));
-
-  // Pull all creators deployed on deals
-  const pods = getPods();
-  for (const pod of pods) {
-    for (const client of pod.clients) {
-      for (const deal of client.deals) {
-        for (const dc of deal.creators) {
-          const key = dc.creatorName.toLowerCase();
-          if (!seen.has(key)) {
-            seen.add(key);
-            result.push({
-              id: `CRE-AUTO-${dc.id}`,
-              name: dc.creatorName,
-              email: "",
-              phone: "",
-              city: dc.city || "",
-              platformId: "",
-              linkedIn: dc.linkedinId || "",
-              category: dc.role as RoleType,
-              domains: [],
-              language: "English",
-              standardRate: dc.payRate,
-              negotiatedRate: dc.payRate,
-              payModel: dc.payModel,
-              rating: 0,
-              feedbackScore: 0,
-              onTimePercent: 0,
-              lastActive: dc.startDate || "",
-              revenueGenerated: dc.clientBilling,
-              marginContribution: dc.grossMargin,
-              status: dc.dealStatus === "Active" ? "Active" : "Inactive",
-            });
-          }
-        }
-      }
-    }
-  }
-  return result;
+  return [...baseCreators];
 }
 
 // Keep backward-compat export (computed on access)

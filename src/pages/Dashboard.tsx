@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { StatCard } from "@/components/StatCard";
 import { advancedRequisitions } from "@/lib/requisition-mock-data";
-import { getPods } from "@/lib/talent-client-store";
+import { usePods } from "@/lib/use-pods";
 import { taMetrics } from "@/lib/mock-data";
 import { getPipelineAnalytics, getAllPipelineCandidates, getCandidates } from "@/lib/ats-store";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -25,7 +25,7 @@ const Dashboard = () => {
   const [drilldownReqs, setDrilldownReqs] = useState<AdvancedRequisition[]>([]);
 
   const reqs = advancedRequisitions;
-  const pods = getPods();
+  const { data: pods = [] } = usePods();
   const allCreators = pods.flatMap(p => p.clients.flatMap(c => c.deals.flatMap(d => d.creators)));
 
   // Time filter

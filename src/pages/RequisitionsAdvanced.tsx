@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { POD_NAMES } from "@/lib/talent-client-store";
+import { POD_NAMES } from "@/lib/talent-client-types";
 import { useAuth } from "@/lib/auth-context";
 
 const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
