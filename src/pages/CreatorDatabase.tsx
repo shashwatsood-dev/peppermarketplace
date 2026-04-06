@@ -1,19 +1,60 @@
 import { useState, useMemo } from "react";
-import { getCreators } from "@/lib/mock-data";
+import { baseCreators } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Star, Plus, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getPods } from "@/lib/talent-client-store";
-import type { Creator } from "@/lib/mock-data";
+import { usePods } from "@/lib/use-pods";
+import type { Creator, RoleType } from "@/lib/mock-data";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formatCurrency = (n: number) => "₹" + (n / 1000).toFixed(0) + "K";
 
-// Find projects a creator has been part of by matching name
-function getCreatorProjects(creatorName: string) {
-  const pods = getPods();
+function getCreatorsFromPods(pods: import("@/lib/talent-client-types").PodV2[]): Creator[] {
+  const seen = new Set<string>();
+  const result: Creator[] = [...baseCreators];
+  baseCreators.forEach(c => seen.add(c.name.toLowerCase()));
+
+  for (const pod of pods) {
+    for (const client of pod.clients) {
+      for (const deal of client.deals) {
+        for (const dc of deal.creators) {
+          const key = dc.creatorName.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            result.push({
+              id: `CRE-AUTO-${dc.id}`,
+              name: dc.creatorName,
+              email: "",
+              phone: "",
+              city: dc.city || "",
+              platformId: "",
+              linkedIn: dc.linkedinId || "",
+              category: dc.role as RoleType,
+              domains: [],
+              language: "English",
+              standardRate: dc.payRate,
+              negotiatedRate: dc.payRate,
+              payModel: dc.payModel,
+              rating: 0,
+              feedbackScore: 0,
+              onTimePercent: 0,
+              lastActive: dc.startDate || "",
+              revenueGenerated: dc.clientBilling,
+              marginContribution: dc.grossMargin,
+              status: dc.dealStatus === "Active" ? "Active" : "Inactive",
+            });
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
+function getCreatorProjects(creatorName: string, pods: import("@/lib/talent-client-types").PodV2[]) {
   const projects: { dealName: string; clientName: string; role: string; status: string; podName: string }[] = [];
   for (const pod of pods) {
     for (const client of pod.clients) {
@@ -29,8 +70,8 @@ function getCreatorProjects(creatorName: string) {
   return projects;
 }
 
-function CreatorDetailDialog({ creator, open, onClose }: { creator: Creator; open: boolean; onClose: () => void }) {
-  const projects = getCreatorProjects(creator.name);
+function CreatorDetailDialog({ creator, pods, open, onClose }: { creator: Creator; pods: import("@/lib/talent-client-types").PodV2[]; open: boolean; onClose: () => void }) {
+  const projects = getCreatorProjects(creator.name, pods);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -99,7 +140,18 @@ const CreatorDatabase = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
-  const creators = useMemo(() => getCreators(), []);
+  const { data: pods, isLoading } = usePods();
+  const creators = useMemo(() => pods ? getCreatorsFromPods(pods) : baseCreators, [pods]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div><h1 className="text-2xl font-semibold text-foreground">Creator Database</h1></div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
+        <Skeleton className="h-64" />
+      </div>
+    );
+  }
 
   const filtered = creators.filter((c) => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -124,16 +176,13 @@ const CreatorDatabase = () => {
         </Button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search by name, domain, city..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card border-border" />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-40 bg-card border-border">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
+          <SelectTrigger className="w-40 bg-card border-border"><SelectValue placeholder="Category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
             <SelectItem value="Writer">Writer</SelectItem>
@@ -144,9 +193,7 @@ const CreatorDatabase = () => {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40 bg-card border-border">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
+          <SelectTrigger className="w-40 bg-card border-border"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="Active">Active</SelectItem>
@@ -157,13 +204,12 @@ const CreatorDatabase = () => {
         </Select>
       </div>
 
-      {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Total", value: creators.length },
           { label: "Active", value: creators.filter(c => c.status === "Active").length },
           { label: "Preferred", value: creators.filter(c => c.status === "Preferred").length },
-          { label: "Avg Rating", value: (creators.reduce((s, c) => s + c.rating, 0) / creators.length).toFixed(1) },
+          { label: "Avg Rating", value: (creators.filter(c => c.rating > 0).reduce((s, c) => s + c.rating, 0) / (creators.filter(c => c.rating > 0).length || 1)).toFixed(1) },
         ].map(s => (
           <div key={s.label} className="stat-card text-center">
             <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{s.label}</p>
@@ -172,7 +218,6 @@ const CreatorDatabase = () => {
         ))}
       </div>
 
-      {/* Table */}
       <div className="stat-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -199,14 +244,10 @@ const CreatorDatabase = () => {
                     </a>
                   ) : <span className="text-xs text-muted-foreground">—</span>}
                 </td>
-                <td className="py-3 pr-4">
-                  <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{c.category}</span>
-                </td>
+                <td className="py-3 pr-4"><span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{c.category}</span></td>
                 <td className="py-3 pr-4">
                   <div className="flex gap-1 flex-wrap">
-                    {c.domains.map(d => (
-                      <span key={d} className="text-xs bg-secondary px-1.5 py-0.5 rounded text-secondary-foreground">{d}</span>
-                    ))}
+                    {c.domains.map(d => (<span key={d} className="text-xs bg-secondary px-1.5 py-0.5 rounded text-secondary-foreground">{d}</span>))}
                   </div>
                 </td>
                 <td className="py-3 text-muted-foreground pr-4">{c.city}</td>
@@ -233,8 +274,8 @@ const CreatorDatabase = () => {
         )}
       </div>
 
-      {selectedCreator && (
-        <CreatorDetailDialog creator={selectedCreator} open={!!selectedCreator} onClose={() => setSelectedCreator(null)} />
+      {selectedCreator && pods && (
+        <CreatorDetailDialog creator={selectedCreator} pods={pods} open={!!selectedCreator} onClose={() => setSelectedCreator(null)} />
       )}
     </div>
   );

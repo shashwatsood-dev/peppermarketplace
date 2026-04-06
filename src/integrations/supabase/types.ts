@@ -14,7 +14,251 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          client_name: string
+          created_at: string
+          id: string
+          junior_bopm: string
+          pod_name: string
+          principal_bopm: string
+          senior_bopm: string
+          vsd_name: string
+        }
+        Insert: {
+          client_name: string
+          created_at?: string
+          id: string
+          junior_bopm?: string
+          pod_name?: string
+          principal_bopm?: string
+          senior_bopm?: string
+          vsd_name?: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          id?: string
+          junior_bopm?: string
+          pod_name?: string
+          principal_bopm?: string
+          senior_bopm?: string
+          vsd_name?: string
+        }
+        Relationships: []
+      }
+      deals: {
+        Row: {
+          client_id: string
+          created_at: string
+          currency: string
+          deal_name: string
+          deal_type: string
+          geography: string
+          id: string
+          is_content_studio: boolean
+          signing_entity: string
+          status: string
+          total_contract_value: number
+          total_creator_cost: number
+          vsd_name: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          currency?: string
+          deal_name: string
+          deal_type?: string
+          geography?: string
+          id: string
+          is_content_studio?: boolean
+          signing_entity?: string
+          status?: string
+          total_contract_value?: number
+          total_creator_cost?: number
+          vsd_name?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          currency?: string
+          deal_name?: string
+          deal_type?: string
+          geography?: string
+          id?: string
+          is_content_studio?: boolean
+          signing_entity?: string
+          status?: string
+          total_contract_value?: number
+          total_creator_cost?: number
+          vsd_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deployed_creators: {
+        Row: {
+          bopm_rating: string
+          bopm_rating_reason: string
+          capability_lead_rating: string
+          capability_rating_reason: string
+          city: string
+          client_billing: number
+          created_at: string
+          creator_name: string
+          currency: string
+          deal_id: string
+          deal_status: string
+          expected_volume: number
+          hrbp_name: string
+          id: string
+          linkedin_id: string
+          ops_link: string
+          pay_model: string
+          pay_rate: number
+          role: string
+          source: string
+          start_date: string
+          total_cost: number
+        }
+        Insert: {
+          bopm_rating?: string
+          bopm_rating_reason?: string
+          capability_lead_rating?: string
+          capability_rating_reason?: string
+          city?: string
+          client_billing?: number
+          created_at?: string
+          creator_name: string
+          currency?: string
+          deal_id: string
+          deal_status?: string
+          expected_volume?: number
+          hrbp_name?: string
+          id: string
+          linkedin_id?: string
+          ops_link?: string
+          pay_model?: string
+          pay_rate?: number
+          role?: string
+          source?: string
+          start_date?: string
+          total_cost?: number
+        }
+        Update: {
+          bopm_rating?: string
+          bopm_rating_reason?: string
+          capability_lead_rating?: string
+          capability_rating_reason?: string
+          city?: string
+          client_billing?: number
+          created_at?: string
+          creator_name?: string
+          currency?: string
+          deal_id?: string
+          deal_status?: string
+          expected_volume?: number
+          hrbp_name?: string
+          id?: string
+          linkedin_id?: string
+          ops_link?: string
+          pay_model?: string
+          pay_rate?: number
+          role?: string
+          source?: string
+          start_date?: string
+          total_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deployed_creators_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hrbp_connects: {
+        Row: {
+          created_at: string
+          creator_id: string
+          date: string
+          hrbp_name: string
+          id: string
+          outcome: string
+          summary: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          date: string
+          hrbp_name?: string
+          id: string
+          outcome?: string
+          summary?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          date?: string
+          hrbp_name?: string
+          id?: string
+          outcome?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hrbp_connects_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "deployed_creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          creator_id: string
+          id: string
+          month: string
+          paid: boolean
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          creator_id: string
+          id: string
+          month: string
+          paid?: boolean
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          creator_id?: string
+          id?: string
+          month?: string
+          paid?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_payments_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "deployed_creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
