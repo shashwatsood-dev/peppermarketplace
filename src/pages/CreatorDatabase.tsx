@@ -99,6 +99,7 @@ const CreatorDatabase = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
+  const creators = useMemo(() => getCreators(), []);
 
   const filtered = creators.filter((c) => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
