@@ -1,5 +1,9 @@
 import { useState, useMemo } from "react";
-import { getPods, type DealV2, type ClientV2, type DeployedCreatorV2, addHRBPConnect, updateCreatorInDeal, POD_NAMES } from "@/lib/talent-client-store";
+import { useState, useMemo } from "react";
+import type { DealV2, ClientV2, DeployedCreatorV2 } from "@/lib/talent-client-types";
+import { POD_NAMES } from "@/lib/talent-client-types";
+import { dbAddHRBPConnect, dbUpdateCreator } from "@/lib/db-store";
+import { usePods, useRefreshPods } from "@/lib/use-pods";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { DollarSign, TrendingUp, Users, Upload, FileText, ChevronDown, ChevronRight, Plus, MessageSquare } from "lucide-react";
