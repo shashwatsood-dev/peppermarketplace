@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { useState, useMemo } from "react";
 import type { DealV2, ClientV2, DeployedCreatorV2 } from "@/lib/talent-client-types";
 import { POD_NAMES } from "@/lib/talent-client-types";
 import { dbAddHRBPConnect, dbUpdateCreator } from "@/lib/db-store";
