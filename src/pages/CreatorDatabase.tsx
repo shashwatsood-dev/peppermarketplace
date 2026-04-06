@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { creators } from "@/lib/mock-data";
+import { useState, useMemo } from "react";
+import { getCreators } from "@/lib/mock-data";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
