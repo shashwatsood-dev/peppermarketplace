@@ -25,7 +25,7 @@ const Dashboard = () => {
   const [drilldownReqs, setDrilldownReqs] = useState<AdvancedRequisition[]>([]);
 
   const reqs = advancedRequisitions;
-  const pods = getPods();
+  const { data: pods = [] } = usePods();
   const allCreators = pods.flatMap(p => p.clients.flatMap(c => c.deals.flatMap(d => d.creators)));
 
   // Time filter
