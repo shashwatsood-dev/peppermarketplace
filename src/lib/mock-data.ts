@@ -155,24 +155,6 @@ export const baseCreators: Creator[] = [
 export function getCreators(): Creator[] {
   return [...baseCreators];
 }
-              standardRate: dc.payRate,
-              negotiatedRate: dc.payRate,
-              payModel: dc.payModel,
-              rating: 0,
-              feedbackScore: 0,
-              onTimePercent: 0,
-              lastActive: dc.startDate || "",
-              revenueGenerated: dc.clientBilling,
-              marginContribution: dc.grossMargin,
-              status: dc.dealStatus === "Active" ? "Active" : "Inactive",
-            });
-          }
-        }
-      }
-    }
-  }
-  return result;
-}
 
 // Keep backward-compat export (computed on access)
 export const creators: Creator[] = baseCreators;
