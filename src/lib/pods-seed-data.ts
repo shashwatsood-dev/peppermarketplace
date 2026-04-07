@@ -25,7 +25,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0002",
             dealName: "Website Project - End to End",
@@ -39,7 +39,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0003",
             dealName: "SNPL | Performance and Influencer",
@@ -53,7 +53,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0005",
             dealName: "SNPL - ITC Nepal Monthly AMC",
@@ -67,7 +67,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -91,7 +91,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -115,7 +115,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0015",
             dealName: "Creatives for perf: Pepper x Share.Market",
@@ -129,7 +129,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0023",
             dealName: "Graphic Designer - Renewal 25-26",
@@ -143,7 +143,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0024",
             dealName: "Indus App Store - SEO/GEO + Content Mandate",
@@ -157,7 +157,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0025",
             dealName: "SEO/GEO + Content Mandate",
@@ -171,7 +171,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0026",
             dealName: "Payment Gateway- Technical SEO Services",
@@ -185,7 +185,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0027",
             dealName: "30 Adapts - Lending",
@@ -199,7 +199,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0028",
             dealName: "motor adapts 48",
@@ -213,7 +213,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0029",
             dealName: "47 Adapts- Share.market",
@@ -227,7 +227,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0030",
             dealName: "60 Masters",
@@ -241,7 +241,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -265,7 +265,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0032",
             dealName: "PB Blogs",
@@ -279,7 +279,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0033",
             dealName: "Policybazaar B2B",
@@ -293,7 +293,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -317,7 +317,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -341,7 +341,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0038",
             dealName: "Royal Sundaram | Retainer JFM",
@@ -355,7 +355,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -379,7 +379,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -403,7 +403,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -427,7 +427,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -451,7 +451,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -475,7 +475,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -499,7 +499,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -523,7 +523,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0049",
             dealName: "Sharechat SOW 4 Overage",
@@ -537,7 +537,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -561,7 +561,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0051",
             dealName: "Contestant + Influencer (INR 24 L)",
@@ -575,7 +575,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0052",
             dealName: "ORM + Content Studio + Content Mandate",
@@ -589,7 +589,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -613,7 +613,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -637,7 +637,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -661,7 +661,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0060",
             dealName: "SEO Blogs",
@@ -675,7 +675,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0061",
             dealName: "GHBY Flipbook",
@@ -689,7 +689,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -713,7 +713,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -737,7 +737,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -761,7 +761,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -785,7 +785,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -809,7 +809,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -833,7 +833,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0130",
             dealName: "Subscription Cost",
@@ -847,7 +847,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -871,7 +871,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -895,7 +895,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aamir Khan",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
     ],
@@ -924,7 +924,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -948,7 +948,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0141",
             dealName: "Paid Backlinking (Jan 2026 - June 2026)",
@@ -962,7 +962,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -986,7 +986,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1010,7 +1010,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0144",
             dealName: "Eurogrip Paid Backlinking",
@@ -1024,7 +1024,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0145",
             dealName: "Eurogrip GMC + Wiki",
@@ -1038,7 +1038,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1062,7 +1062,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1086,7 +1086,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0151",
             dealName: "Retainer for Content Marketing 26-27",
@@ -1100,7 +1100,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1124,7 +1124,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0155",
             dealName: "Persistent Podcasts- SOW 3 FY 25-26",
@@ -1138,7 +1138,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1162,7 +1162,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1186,7 +1186,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1210,7 +1210,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1234,7 +1234,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0164",
             dealName: "Endowus Singapore - SEO + GEO Mandate",
@@ -1248,7 +1248,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1272,7 +1272,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1296,7 +1296,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1320,7 +1320,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1344,7 +1344,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1368,7 +1368,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1392,7 +1392,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0178",
             dealName: "Content Studio - 3 Months",
@@ -1406,7 +1406,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1430,7 +1430,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1454,7 +1454,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0194",
             dealName: "Mahindra Blogs",
@@ -1468,7 +1468,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0195",
             dealName: "New Opportunity",
@@ -1482,7 +1482,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1506,7 +1506,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1530,7 +1530,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1554,7 +1554,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0201",
             dealName: "ITC - Dark Fantasy",
@@ -1568,7 +1568,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0202",
             dealName: "ITC - Farmlite",
@@ -1582,7 +1582,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0203",
             dealName: "Sunfeast & Bingo - Wikipedia Content Creation",
@@ -1596,7 +1596,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0204",
             dealName: "ITC Bingo Pack Adapts 1x1",
@@ -1610,7 +1610,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1634,7 +1634,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1658,7 +1658,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0207",
             dealName: "ITC Engage",
@@ -1672,7 +1672,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1696,7 +1696,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1720,7 +1720,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1744,7 +1744,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1768,7 +1768,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
     ],
@@ -1797,7 +1797,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1821,7 +1821,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1845,7 +1845,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1869,7 +1869,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1893,7 +1893,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1917,7 +1917,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1941,7 +1941,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1965,7 +1965,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -1989,7 +1989,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2013,7 +2013,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2037,7 +2037,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0233",
             dealName: "New Opportunity deal",
@@ -2051,7 +2051,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2075,7 +2075,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0237",
             dealName: "SEO/GEO + Content Mandate",
@@ -2089,7 +2089,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2113,7 +2113,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2137,7 +2137,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2161,7 +2161,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2185,7 +2185,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2209,7 +2209,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2233,7 +2233,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2257,7 +2257,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2281,7 +2281,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2305,7 +2305,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2329,7 +2329,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2353,7 +2353,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2377,7 +2377,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2401,7 +2401,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2425,7 +2425,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2449,7 +2449,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2473,7 +2473,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2497,7 +2497,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2521,7 +2521,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2545,7 +2545,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2569,7 +2569,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2593,7 +2593,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2617,7 +2617,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2641,7 +2641,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Neema Jayadas",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
     ],
@@ -2670,7 +2670,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2694,7 +2694,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2718,7 +2718,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2742,7 +2742,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2766,7 +2766,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0303",
             dealName: "Videos in Chennai & Mumbai",
@@ -2780,7 +2780,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2804,7 +2804,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2828,7 +2828,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2852,7 +2852,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0312",
             dealName: "ITC Alchemy (Oct to Nove\'25 projects)",
@@ -2866,7 +2866,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0333",
             dealName: "ITC- Aashirvaad Milk and 1 paneer creative",
@@ -2880,7 +2880,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0334",
             dealName: "ITC Alchemy - Content Floor",
@@ -2894,7 +2894,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0335",
             dealName: "ITC Foods Sunfeast Fantastik Social Media",
@@ -2908,7 +2908,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0337",
             dealName: "TVC- fiber mat bhulna global rights and edits",
@@ -2922,7 +2922,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2946,7 +2946,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2970,7 +2970,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -2994,7 +2994,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3018,7 +3018,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0348",
             dealName: "Flipkart Laptops GEO",
@@ -3032,7 +3032,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3056,7 +3056,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0361",
             dealName: "C85x launch",
@@ -3070,7 +3070,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3094,7 +3094,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
     ],
@@ -3123,7 +3123,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0374",
             dealName: "BAGIC - Content Studio",
@@ -3137,7 +3137,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3161,7 +3161,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0376",
             dealName: "BALIC Video Editors -Mumbai x 1",
@@ -3175,7 +3175,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0377",
             dealName: "BALIC Content Studio-Renewal-25-26",
@@ -3189,7 +3189,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3213,7 +3213,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0380",
             dealName: "NPCI - Video Podcasts",
@@ -3227,7 +3227,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0381",
             dealName: "NPCI Backlinking and blogs",
@@ -3241,7 +3241,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3265,7 +3265,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3289,7 +3289,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3313,7 +3313,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0386",
             dealName: "HDFC MME Annual Retainer",
@@ -3327,7 +3327,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0387",
             dealName: "HDFC TV",
@@ -3341,7 +3341,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0390",
             dealName: "OBDX NetBanking",
@@ -3355,7 +3355,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3379,7 +3379,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3403,7 +3403,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3427,7 +3427,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0396",
             dealName: "Retainer for Content Marketing 25-26",
@@ -3441,7 +3441,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3465,7 +3465,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3489,7 +3489,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3513,7 +3513,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3537,7 +3537,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3561,7 +3561,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
     ],
@@ -3590,7 +3590,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Not Applicable",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0086",
             dealName: "Lux Bodywash",
@@ -3604,7 +3604,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Not Applicable",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3628,7 +3628,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Yet to be assigned",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3652,7 +3652,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Yet to be assigned",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3676,7 +3676,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Yet to be assigned",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3700,7 +3700,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Yet to be assigned",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3724,7 +3724,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sumit Shekhawat",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3748,7 +3748,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0269",
             dealName: "Digital - Social Retainer Knorr",
@@ -3762,7 +3762,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0270",
             dealName: "Lakme SEO- Retainer",
@@ -3776,7 +3776,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0272",
             dealName: "Upsell- Indulekha",
@@ -3790,7 +3790,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0273",
             dealName: "Dove GEO",
@@ -3804,7 +3804,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0274",
             dealName: "Indulekha X Cricbuzz Activation",
@@ -3818,7 +3818,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0289",
             dealName: "PR Articles Dove GEO",
@@ -3832,7 +3832,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0290",
             dealName: "Tresseme GEO",
@@ -3846,7 +3846,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0292",
             dealName: "Sunsilk - Social Media Retainer Pilot",
@@ -3860,7 +3860,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0293",
             dealName: "SEO/GEO + Content Mandate",
@@ -3874,7 +3874,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0296",
             dealName: "Dove Bar Association",
@@ -3888,7 +3888,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
           {
             id: "D-0298",
             dealName: "Dove - Ashish Sakhya",
@@ -3902,7 +3902,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3926,7 +3926,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Sneha Iyer",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
       {
@@ -3950,7 +3950,7 @@ export const initialPods: PodV2[] = [
             currency: "INR",
             signingEntity: "",
             geography: "", isContentStudio: false, vsdName: "Aditya Shaw",
-          },
+           mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",},
         ],
       },
     ],
