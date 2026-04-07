@@ -1,8 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, HRBPConnect, DealStatus, PodName, CreatorDealStatus, HealthColor } from "./talent-client-types";
+import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, HRBPConnect, DealStatus, PodName, CreatorDealStatus, HealthColor, DealCapability } from "./talent-client-types";
 import type { CurrencyCode } from "./requisition-types";
 import type { PayModel, RoleType } from "./mock-data";
 import type { ResourceSource } from "./talent-client-types";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 
 // ── Fetch all data as PodV2[] ──────────────────────────────
 export async function fetchPods(): Promise<PodV2[]> {
@@ -94,6 +95,12 @@ export async function fetchPods(): Promise<PodV2[]> {
       geography: d.geography,
       isContentStudio: d.is_content_studio,
       vsdName: d.vsd_name,
+      mrr: Number(d.mrr),
+      contractDuration: d.contract_duration,
+      contractStartDate: d.contract_start_date,
+      contractEndDate: d.contract_end_date,
+      capabilities: (d.capabilities || []) as DealCapability[],
+      capabilityLeader: d.capability_leader,
     });
     dealsByClient.set(d.client_id, arr);
   }
@@ -121,7 +128,6 @@ export async function fetchPods(): Promise<PodV2[]> {
     result.push({ name, clients: podMap.get(name) || [] });
     podMap.delete(name);
   }
-  // Any remaining pods
   for (const [name, clients] of podMap) {
     result.push({ name: name as PodName, clients });
   }
@@ -142,7 +148,7 @@ export async function dbAddClientToPod(podName: PodName, client: { clientName: s
 }
 
 export async function dbUpdateClient(clientId: string, updates: Partial<{ vsdName: string; principalBOPM: string; seniorBOPM: string; juniorBOPM: string }>) {
-  const mapped: Record<string, string> = {};
+  const mapped: TablesUpdate<"clients"> = {};
   if (updates.vsdName !== undefined) mapped.vsd_name = updates.vsdName;
   if (updates.principalBOPM !== undefined) mapped.principal_bopm = updates.principalBOPM;
   if (updates.seniorBOPM !== undefined) mapped.senior_bopm = updates.seniorBOPM;
@@ -156,19 +162,32 @@ export async function dbMoveClientToPod(clientId: string, targetPod: PodName) {
   if (error) throw error;
 }
 
-export async function dbAddDealToClient(clientId: string, deal: { dealName: string; dealType: string; status: DealStatus; currency: CurrencyCode; signingEntity: string; geography: string; isContentStudio?: boolean; vsdName?: string }) {
+export async function dbAddDealToClient(clientId: string, deal: {
+  dealName: string; dealType: string; status: DealStatus; currency: CurrencyCode;
+  signingEntity: string; geography: string; isContentStudio?: boolean; vsdName?: string;
+  mrr?: number; contractDuration?: string; contractStartDate?: string; contractEndDate?: string;
+  capabilities?: string[]; capabilityLeader?: string;
+}) {
   const id = `D-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const { error } = await supabase.from("deals").insert({
     id, client_id: clientId, deal_name: deal.dealName, deal_type: deal.dealType, status: deal.status,
     currency: deal.currency, signing_entity: deal.signingEntity, geography: deal.geography,
     is_content_studio: deal.isContentStudio ?? false, vsd_name: deal.vsdName ?? "",
+    mrr: deal.mrr ?? 0, contract_duration: deal.contractDuration ?? "",
+    contract_start_date: deal.contractStartDate ?? "", contract_end_date: deal.contractEndDate ?? "",
+    capabilities: deal.capabilities ?? [], capability_leader: deal.capabilityLeader ?? "",
   });
   if (error) throw error;
   return id;
 }
 
-export async function dbUpdateDeal(dealId: string, updates: Partial<{ dealName: string; dealType: string; status: DealStatus; isContentStudio: boolean; vsdName: string; totalContractValue: number; totalCreatorCost: number; currency: CurrencyCode; signingEntity: string; geography: string }>) {
-  const mapped: Record<string, unknown> = {};
+export async function dbUpdateDeal(dealId: string, updates: Partial<{
+  dealName: string; dealType: string; status: DealStatus; isContentStudio: boolean; vsdName: string;
+  totalContractValue: number; totalCreatorCost: number; currency: CurrencyCode; signingEntity: string; geography: string;
+  mrr: number; contractDuration: string; contractStartDate: string; contractEndDate: string;
+  capabilities: string[]; capabilityLeader: string;
+}>) {
+  const mapped: TablesUpdate<"deals"> = {};
   if (updates.dealName !== undefined) mapped.deal_name = updates.dealName;
   if (updates.dealType !== undefined) mapped.deal_type = updates.dealType;
   if (updates.status !== undefined) mapped.status = updates.status;
@@ -179,6 +198,12 @@ export async function dbUpdateDeal(dealId: string, updates: Partial<{ dealName: 
   if (updates.currency !== undefined) mapped.currency = updates.currency;
   if (updates.signingEntity !== undefined) mapped.signing_entity = updates.signingEntity;
   if (updates.geography !== undefined) mapped.geography = updates.geography;
+  if (updates.mrr !== undefined) mapped.mrr = updates.mrr;
+  if (updates.contractDuration !== undefined) mapped.contract_duration = updates.contractDuration;
+  if (updates.contractStartDate !== undefined) mapped.contract_start_date = updates.contractStartDate;
+  if (updates.contractEndDate !== undefined) mapped.contract_end_date = updates.contractEndDate;
+  if (updates.capabilities !== undefined) mapped.capabilities = updates.capabilities;
+  if (updates.capabilityLeader !== undefined) mapped.capability_leader = updates.capabilityLeader;
   const { error } = await supabase.from("deals").update(mapped).eq("id", dealId);
   if (error) throw error;
 }
@@ -204,7 +229,7 @@ export async function dbAddCreatorToDeal(dealId: string, creator: {
 }
 
 export async function dbUpdateCreator(creatorId: string, updates: Partial<DeployedCreatorV2>) {
-  const mapped: Record<string, unknown> = {};
+  const mapped: TablesUpdate<"deployed_creators"> = {};
   if (updates.creatorName !== undefined) mapped.creator_name = updates.creatorName;
   if (updates.role !== undefined) mapped.role = updates.role;
   if (updates.source !== undefined) mapped.source = updates.source;
@@ -234,12 +259,10 @@ export async function dbRemoveCreator(creatorId: string) {
 }
 
 export async function dbCopyCreatorsToDeal(sourceDealId: string, targetDealId: string, creatorIds: string[], removeFromSource: boolean) {
-  // Fetch source creators
   const { data: creators, error } = await supabase.from("deployed_creators").select("*").in("id", creatorIds);
   if (error) throw error;
   if (!creators || creators.length === 0) return;
 
-  // Insert copies
   const copies = creators.map(cr => ({
     id: `DC-CPY-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     deal_id: targetDealId, creator_name: cr.creator_name, role: cr.role, source: cr.source,
