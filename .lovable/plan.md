@@ -1,48 +1,38 @@
 
 
-## Why Data Isn't Saved
+## Plan: Talent X Client View Enhancements
 
-All data lives in a local JavaScript variable (`let pods: PodV2[]`). On every page refresh, it reinitializes from seed data. No database tables exist yet.
+### 1. Edit Creator Dialog
+Add an "Edit" button (pencil icon) next to each creator's status column in the deal table. Clicking opens an `EditCreatorDialog` with all fields pre-populated: name, role, source, pay model, currency, pay rate, cost, billing, ops link, LinkedIn, city, expected volume. Uses `dbUpdateCreator` to persist. Layout: 2-column grid for a clean summary view.
 
-## Plan: Persist Data to Lovable Cloud
+**Files:** `DealMargins.tsx` — new `EditCreatorDialog` component + edit button in creator table row.
 
-### Step 1: Create Database Tables
+### 2. Show All Three BOPM Names in Collapsed Client View
+Update the collapsed `ClientCard` subtitle (line 585) from showing only `principalBOPM` to showing all three: Principal, Senior, and Junior BOPM names inline.
 
-Create migrations for the following tables:
+**Files:** `DealMargins.tsx` — `ClientCard` collapsed view.
 
-```text
-pods         (id, name)
-clients      (id, pod_id, client_name, vsd_name, principal_bopm, senior_bopm, junior_bopm)
-deals        (id, client_id, deal_name, deal_type, status, currency, signing_entity, geography, is_content_studio, vsd_name)
-creators     (id, deal_id, creator_name, role, source, pay_model, pay_rate, expected_volume, total_cost, client_billing, deal_status, capability_lead_rating, bopm_rating, capability_rating_reason, bopm_rating_reason, hrbp_name, start_date, city, ops_link, linkedin_id, currency)
-hrbp_connects (id, creator_id, date, summary, outcome, hrbp_name)
-monthly_payments (id, creator_id, month, amount, paid)
-```
+### 3. Enhanced Deal Creation Form
+Add new fields to the `AddDealDialog` and `EditDealDialog`: Deal ID (auto-generated, shown read-only), MRR, contract duration, contract start date, contract end date. Requires a database migration to add columns: `mrr`, `contract_duration`, `contract_start_date`, `contract_end_date` to the `deals` table. Update `db-store.ts` for the new fields, and `DealV2` type in `talent-client-types.ts`.
 
-Enable RLS on all tables. Since auth exists, policies will allow authenticated users full CRUD.
+**Files:** `talent-client-types.ts`, `DealMargins.tsx`, `db-store.ts` + DB migration.
 
-### Step 2: Seed Initial Data
+### 4. Capability Tagging on Deals
+Add a multi-select for capabilities (SEO, Content, Creative) and a text field for capability leader on each deal. Requires DB migration to add `capabilities` (text array) and `capability_leader` (text) columns to the `deals` table. Show capability tags as badges on the deal row header. Update types, store, and both Add/Edit deal dialogs.
 
-Write a one-time seed migration that inserts the current pod/client/deal/creator data from `pods-seed-data.ts` and `csv-creator-import.ts` into the new tables.
+**Files:** `talent-client-types.ts`, `DealMargins.tsx`, `db-store.ts` + DB migration.
 
-### Step 3: Refactor Store to Use Supabase
+### 5. Improved Creator Add Form Layout
+Redesign `BulkAddCreatorDialog` from a single cramped row to a 2-3 row card-based layout per creator. Rename "Unit Rate" → "Creator Unit Rate", "Billing" → "Client Unit Price". Conditionally hide "City" when source is "Freelancer". Larger input fields for readability.
 
-Replace the in-memory `talent-client-store.ts` with functions that read/write from the database using the Supabase client. Each mutation function (`addClientToPod`, `updateDeal`, `addCreatorToDeal`, etc.) becomes an async function calling `supabase.from('table').insert/update/delete`.
+**Files:** `DealMargins.tsx` — `BulkAddCreatorDialog` layout refactor.
 
-### Step 4: Update UI Components
-
-- `DealMargins.tsx` — fetch pods/clients/deals via `useQuery` hooks instead of calling `getPods()`
-- `CreatorDatabase.tsx` — query creators table directly
-- `StudioDashboard.tsx` — same pattern
-- Add loading states and error handling
-
-### Step 5: Creator Database Auto-Sync
-
-Add a database trigger or application-level logic so that inserting a creator into a deal also upserts them into a central `creator_profiles` table (the unified creator database).
-
-### Technical Notes
-
-- Computed fields (grossMargin, grossMarginPercent) will be calculated client-side or via database generated columns
-- The CSV import functions will be updated to insert into the database instead of merging into the in-memory array
-- All existing functionality (transfer/copy creators, move clients between pods, CSV export) will be preserved but backed by database operations
+### Database Migration
+Single migration adding to `deals` table:
+- `mrr numeric NOT NULL DEFAULT 0`
+- `contract_duration text NOT NULL DEFAULT ''`
+- `contract_start_date text NOT NULL DEFAULT ''`
+- `contract_end_date text NOT NULL DEFAULT ''`
+- `capabilities text[] NOT NULL DEFAULT '{}'`
+- `capability_leader text NOT NULL DEFAULT ''`
 
