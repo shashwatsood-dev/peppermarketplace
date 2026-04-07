@@ -4,12 +4,12 @@ import {
   dbMoveClientToPod, dbCopyCreatorsToDeal, dbRemoveCreator, dbParseClientCSV, dbGetClientCSVTemplate, exportPodsAsCSV,
 } from "@/lib/db-store";
 import { usePods, useRefreshPods } from "@/lib/use-pods";
-import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName } from "@/lib/talent-client-types";
-import { POD_NAMES, ALL_POD_NAMES } from "@/lib/talent-client-types";
+import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName, DealCapability } from "@/lib/talent-client-types";
+import { POD_NAMES, ALL_POD_NAMES, DEAL_CAPABILITIES } from "@/lib/talent-client-types";
 import { type RoleType, type PayModel } from "@/lib/mock-data";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User, Mail, Download, Upload, Trash2, ArrowRightLeft, Copy } from "lucide-react";
+import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User, Mail, Download, Upload, Trash2, ArrowRightLeft, Copy, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { getHandoversByDeal } from "@/lib/handover-store";
 import type { CurrencyCode } from "@/lib/requisition-types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 const formatCurrency = (n: number) => "₹" + (n / 100000).toFixed(1) + "L";
 
@@ -134,22 +135,46 @@ const VSD_POD_MAP: Record<string, PodName> = {
   "Sumit Shekhawat": "India B2B",
 };
 
+// ─── Capability Multi-Select ────────────────────────────
+function CapabilitySelect({ value, onChange }: { value: DealCapability[]; onChange: (v: DealCapability[]) => void }) {
+  const toggle = (cap: DealCapability) => {
+    onChange(value.includes(cap) ? value.filter(c => c !== cap) : [...value, cap]);
+  };
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {DEAL_CAPABILITIES.map(cap => (
+        <button key={cap} type="button" onClick={() => toggle(cap)}
+          className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${value.includes(cap) ? "bg-primary/15 border-primary text-primary" : "bg-muted border-border text-muted-foreground hover:bg-accent"}`}>
+          {cap}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ─── Add Deal Dialog ────────────────────────────────────
 function AddDealDialog({ clientId, clientName, open, onClose, onDone }: { clientId: string; clientName: string; open: boolean; onClose: () => void; onDone: () => void }) {
-  const [form, setForm] = useState({ dealName: "", dealType: "Retainer", status: "Active" as DealStatus, currency: "INR" as CurrencyCode, signingEntity: "", geography: "", vsdName: "" });
+  const [form, setForm] = useState({
+    dealName: "", dealType: "Retainer", status: "Active" as DealStatus, currency: "INR" as CurrencyCode,
+    signingEntity: "", geography: "", vsdName: "", mrr: 0, contractDuration: "",
+    contractStartDate: "", contractEndDate: "", capabilities: [] as DealCapability[], capabilityLeader: "",
+  });
+  const dealId = useMemo(() => `D-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, [open]);
+
   const save = async () => {
     if (!form.dealName.trim()) { toast.error("Deal name required"); return; }
     await dbAddDealToClient(clientId, form);
     toast.success(`Deal "${form.dealName}" added`);
-    setForm({ dealName: "", dealType: "Retainer", status: "Active", currency: "INR", signingEntity: "", geography: "", vsdName: "" });
+    setForm({ dealName: "", dealType: "Retainer", status: "Active", currency: "INR", signingEntity: "", geography: "", vsdName: "", mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "" });
     onDone(); onClose();
   };
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Add Deal to {clientName}</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2"><Label className="text-xs">Deal Name *</Label><Input value={form.dealName} onChange={e => setForm(p => ({ ...p, dealName: e.target.value }))} placeholder="e.g. Content Retainer" /></div>
+          <div><Label className="text-xs">Deal ID (auto)</Label><Input value={dealId} disabled className="font-mono text-xs bg-muted/50" /></div>
+          <div><Label className="text-xs">Deal Name *</Label><Input value={form.dealName} onChange={e => setForm(p => ({ ...p, dealName: e.target.value }))} placeholder="e.g. Content Retainer" /></div>
           <div><Label className="text-xs">VSD</Label>
             <Select value={form.vsdName || "none"} onValueChange={v => setForm(p => ({ ...p, vsdName: v === "none" ? "" : v }))}>
               <SelectTrigger><SelectValue placeholder="Select VSD" /></SelectTrigger>
@@ -173,7 +198,17 @@ function AddDealDialog({ clientId, clientName, open, onClose, onDone }: { client
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="INR">INR</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
             </Select></div>
+          <div><Label className="text-xs">MRR (Monthly Recurring Revenue)</Label>
+            <Input type="number" value={form.mrr || ""} onChange={e => setForm(p => ({ ...p, mrr: +e.target.value }))} placeholder="e.g. 500000" className="font-mono" /></div>
+          <div><Label className="text-xs">Contract Duration</Label>
+            <Input value={form.contractDuration} onChange={e => setForm(p => ({ ...p, contractDuration: e.target.value }))} placeholder="e.g. 12 months" /></div>
+          <div><Label className="text-xs">Contract Start Date</Label>
+            <Input type="date" value={form.contractStartDate} onChange={e => setForm(p => ({ ...p, contractStartDate: e.target.value }))} /></div>
+          <div><Label className="text-xs">Contract End Date</Label>
+            <Input type="date" value={form.contractEndDate} onChange={e => setForm(p => ({ ...p, contractEndDate: e.target.value }))} /></div>
           <div><Label className="text-xs">Geography</Label><Input value={form.geography} onChange={e => setForm(p => ({ ...p, geography: e.target.value }))} placeholder="e.g. India" /></div>
+          <div><Label className="text-xs">Capability Leader</Label><Input value={form.capabilityLeader} onChange={e => setForm(p => ({ ...p, capabilityLeader: e.target.value }))} placeholder="e.g. John Doe" /></div>
+          <div className="col-span-2"><Label className="text-xs">Capabilities</Label><CapabilitySelect value={form.capabilities} onChange={v => setForm(p => ({ ...p, capabilities: v }))} /></div>
           <div className="col-span-2"><Label className="text-xs">Signing Entity</Label><Input value={form.signingEntity} onChange={e => setForm(p => ({ ...p, signingEntity: e.target.value }))} placeholder="e.g. Pepper Content Pvt Ltd" /></div>
         </div>
         <DialogFooter><Button onClick={save}>Add Deal</Button></DialogFooter>
@@ -184,13 +219,19 @@ function AddDealDialog({ clientId, clientName, open, onClose, onDone }: { client
 
 // ─── Edit Deal Dialog ───────────────────────────────────
 function EditDealDialog({ deal, open, onClose, onDone }: { deal: DealV2; open: boolean; onClose: () => void; onDone: () => void }) {
-  const [form, setForm] = useState({ dealName: deal.dealName, dealType: deal.dealType, status: deal.status as DealStatus, vsdName: deal.vsdName || "" });
+  const [form, setForm] = useState({
+    dealName: deal.dealName, dealType: deal.dealType, status: deal.status as DealStatus, vsdName: deal.vsdName || "",
+    mrr: deal.mrr || 0, contractDuration: deal.contractDuration || "", contractStartDate: deal.contractStartDate || "",
+    contractEndDate: deal.contractEndDate || "", capabilities: (deal.capabilities || []) as DealCapability[],
+    capabilityLeader: deal.capabilityLeader || "", currency: deal.currency, signingEntity: deal.signingEntity || "", geography: deal.geography || "",
+  });
   const save = async () => { await dbUpdateDeal(deal.id, form); toast.success("Deal updated"); onDone(); onClose(); };
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Edit Deal</DialogTitle></DialogHeader>
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label className="text-xs">Deal ID</Label><Input value={deal.id} disabled className="font-mono text-xs bg-muted/50" /></div>
           <div><Label className="text-xs">Deal Name</Label><Input value={form.dealName} onChange={e => setForm(p => ({ ...p, dealName: e.target.value }))} /></div>
           <div><Label className="text-xs">VSD</Label>
             <Select value={form.vsdName || "none"} onValueChange={v => setForm(p => ({ ...p, vsdName: v === "none" ? "" : v }))}>
@@ -199,15 +240,34 @@ function EditDealDialog({ deal, open, onClose, onDone }: { deal: DealV2; open: b
                 <SelectItem value="none">— None —</SelectItem>
                 {Object.keys(VSD_POD_MAP).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
               </SelectContent>
-            </Select>
-          </div>
-          <div><Label className="text-xs">Deal Type</Label><Input value={form.dealType} onChange={e => setForm(p => ({ ...p, dealType: e.target.value }))} /></div>
+            </Select></div>
+          <div><Label className="text-xs">Deal Type</Label>
+            <Select value={form.dealType} onValueChange={v => setForm(p => ({ ...p, dealType: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="Retainer">Retainer</SelectItem><SelectItem value="Project">Project</SelectItem></SelectContent>
+            </Select></div>
           <div><Label className="text-xs">Status</Label>
             <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v as DealStatus }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{(["Active", "Completed", "On Hold", "Disputed", "New Deal in SLA/PO"] as DealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
+            </Select></div>
+          <div><Label className="text-xs">Currency</Label>
+            <Select value={form.currency} onValueChange={v => setForm(p => ({ ...p, currency: v as CurrencyCode }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="INR">INR</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
+            </Select></div>
+          <div><Label className="text-xs">MRR</Label>
+            <Input type="number" value={form.mrr || ""} onChange={e => setForm(p => ({ ...p, mrr: +e.target.value }))} className="font-mono" /></div>
+          <div><Label className="text-xs">Contract Duration</Label>
+            <Input value={form.contractDuration} onChange={e => setForm(p => ({ ...p, contractDuration: e.target.value }))} placeholder="e.g. 12 months" /></div>
+          <div><Label className="text-xs">Contract Start Date</Label>
+            <Input type="date" value={form.contractStartDate} onChange={e => setForm(p => ({ ...p, contractStartDate: e.target.value }))} /></div>
+          <div><Label className="text-xs">Contract End Date</Label>
+            <Input type="date" value={form.contractEndDate} onChange={e => setForm(p => ({ ...p, contractEndDate: e.target.value }))} /></div>
+          <div><Label className="text-xs">Geography</Label><Input value={form.geography} onChange={e => setForm(p => ({ ...p, geography: e.target.value }))} /></div>
+          <div><Label className="text-xs">Capability Leader</Label><Input value={form.capabilityLeader} onChange={e => setForm(p => ({ ...p, capabilityLeader: e.target.value }))} /></div>
+          <div className="col-span-2"><Label className="text-xs">Capabilities</Label><CapabilitySelect value={form.capabilities} onChange={v => setForm(p => ({ ...p, capabilities: v }))} /></div>
+          <div className="col-span-2"><Label className="text-xs">Signing Entity</Label><Input value={form.signingEntity} onChange={e => setForm(p => ({ ...p, signingEntity: e.target.value }))} /></div>
         </div>
         <DialogFooter><Button onClick={save}>Save</Button></DialogFooter>
       </DialogContent>
@@ -215,7 +275,64 @@ function EditDealDialog({ deal, open, onClose, onDone }: { deal: DealV2; open: b
   );
 }
 
-// ─── Bulk Add Creator (Line-Item Form) ──────────────────
+// ─── Edit Creator Dialog ────────────────────────────────
+function EditCreatorDialog({ creator, open, onClose, onDone }: { creator: DeployedCreatorV2; open: boolean; onClose: () => void; onDone: () => void }) {
+  const [form, setForm] = useState({
+    creatorName: creator.creatorName, role: creator.role, source: creator.source as ResourceSource,
+    payModel: creator.payModel, payRate: creator.payRate, expectedVolume: creator.expectedVolume,
+    totalCost: creator.totalCost, clientBilling: creator.clientBilling, city: creator.city,
+    opsLink: creator.opsLink, linkedinId: creator.linkedinId, currency: creator.currency as CurrencyCode,
+  });
+
+  const save = async () => {
+    await dbUpdateCreator(creator.id, form);
+    toast.success("Creator updated");
+    onDone(); onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Edit Creator — {creator.creatorName}</DialogTitle></DialogHeader>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2"><Label className="text-xs">Creator Name</Label><Input value={form.creatorName} onChange={e => setForm(p => ({ ...p, creatorName: e.target.value }))} /></div>
+          <div><Label className="text-xs">Role</Label>
+            <Select value={form.role} onValueChange={v => setForm(p => ({ ...p, role: v as RoleType }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{(["Writer", "Editor", "Designer", "Video", "Translator", "Other"] as RoleType[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+            </Select></div>
+          <div><Label className="text-xs">Source</Label>
+            <Select value={form.source} onValueChange={v => setForm(p => ({ ...p, source: v as ResourceSource }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="Freelancer">Freelancer</SelectItem><SelectItem value="In-house">In-house</SelectItem></SelectContent>
+            </Select></div>
+          <div><Label className="text-xs">Pay Model</Label>
+            <Select value={form.payModel} onValueChange={v => setForm(p => ({ ...p, payModel: v as PayModel }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{(["Per Word", "Per Assignment", "Retainer", "Hourly"] as PayModel[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+            </Select></div>
+          <div><Label className="text-xs">Currency</Label>
+            <Select value={form.currency} onValueChange={v => setForm(p => ({ ...p, currency: v as CurrencyCode }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="INR">INR</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
+            </Select></div>
+          <div><Label className="text-xs">Creator Unit Rate</Label><Input type="number" className="font-mono" value={form.payRate || ""} onChange={e => setForm(p => ({ ...p, payRate: +e.target.value }))} /></div>
+          <div><Label className="text-xs">Expected Volume</Label><Input type="number" className="font-mono" value={form.expectedVolume || ""} onChange={e => setForm(p => ({ ...p, expectedVolume: +e.target.value }))} /></div>
+          <div><Label className="text-xs">Total Cost</Label><Input type="number" className="font-mono" value={form.totalCost || ""} onChange={e => setForm(p => ({ ...p, totalCost: +e.target.value }))} /></div>
+          <div><Label className="text-xs">Client Unit Price</Label><Input type="number" className="font-mono" value={form.clientBilling || ""} onChange={e => setForm(p => ({ ...p, clientBilling: +e.target.value }))} /></div>
+          {form.source !== "Freelancer" && (
+            <div><Label className="text-xs">City</Label><Input value={form.city} onChange={e => setForm(p => ({ ...p, city: e.target.value }))} /></div>
+          )}
+          <div className={form.source !== "Freelancer" ? "" : "col-span-2"}><Label className="text-xs">Ops Link</Label><Input value={form.opsLink} onChange={e => setForm(p => ({ ...p, opsLink: e.target.value }))} placeholder="https://..." /></div>
+          <div className="col-span-2"><Label className="text-xs">LinkedIn</Label><Input value={form.linkedinId} onChange={e => setForm(p => ({ ...p, linkedinId: e.target.value }))} placeholder="https://linkedin.com/in/..." /></div>
+        </div>
+        <DialogFooter><Button onClick={save}>Save Changes</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Bulk Add Creator (Card Layout) ─────────────────────
 interface CreatorLineItem {
   id: string;
   creatorName: string;
@@ -263,41 +380,56 @@ function BulkAddCreatorDialog({ dealId, open, onClose, onDone }: { dealId: strin
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Add Creators to Deal</DialogTitle></DialogHeader>
-        <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_90px_90px_90px_70px_80px_80px_70px_120px_120px_70px_32px] gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-1">
-            <span>Name</span><span>Role</span><span>Source</span><span>Pay Model</span><span>Currency</span><span>Unit Rate</span><span>Cost</span><span>Billing</span><span>Ops Link</span><span>LinkedIn</span><span>City</span><span></span>
-          </div>
-          {rows.map((r) => (
-            <div key={r.id} className="grid grid-cols-[1fr_90px_90px_90px_70px_80px_80px_70px_120px_120px_70px_32px] gap-1.5 items-center">
-              <Input className="h-8 text-xs" placeholder="Name" value={r.creatorName} onChange={e => updateRow(r.id, { creatorName: e.target.value })} />
-              <Select value={r.role} onValueChange={v => updateRow(r.id, { role: v as RoleType })}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>{(["Writer", "Editor", "Designer", "Video", "Translator", "Other"] as RoleType[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={r.source} onValueChange={v => updateRow(r.id, { source: v as ResourceSource })}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="Freelancer">Freelancer</SelectItem><SelectItem value="In-house">In-house</SelectItem></SelectContent>
-              </Select>
-              <Select value={r.payModel} onValueChange={v => updateRow(r.id, { payModel: v as PayModel })}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>{(["Per Word", "Per Assignment", "Retainer", "Hourly"] as PayModel[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={r.currency} onValueChange={v => updateRow(r.id, { currency: v as CurrencyCode })}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="INR">INR</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
-              </Select>
-              <Input className="h-8 text-xs font-mono" type="number" placeholder="Rate" value={r.payRate || ""} onChange={e => updateRow(r.id, { payRate: +e.target.value })} />
-              <Input className="h-8 text-xs font-mono" type="number" placeholder="Cost" value={r.totalCost || ""} onChange={e => updateRow(r.id, { totalCost: +e.target.value })} />
-              <Input className="h-8 text-xs font-mono" type="number" placeholder="Billing" value={r.clientBilling || ""} onChange={e => updateRow(r.id, { clientBilling: +e.target.value })} />
-              <Input className="h-8 text-xs" placeholder="Ops link" value={r.opsLink} onChange={e => updateRow(r.id, { opsLink: e.target.value })} />
-              <Input className="h-8 text-xs" placeholder="LinkedIn URL" value={r.linkedinId} onChange={e => updateRow(r.id, { linkedinId: e.target.value })} />
-              <Input className="h-8 text-xs" placeholder="City" value={r.city} onChange={e => updateRow(r.id, { city: e.target.value })} />
-              <button onClick={() => removeRow(r.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+        <div className="space-y-4">
+          {rows.map((r, idx) => (
+            <div key={r.id} className="border border-border rounded-lg p-4 bg-card/50 space-y-3 relative">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono text-muted-foreground">Creator #{idx + 1}</span>
+                <button onClick={() => removeRow(r.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+              </div>
+              {/* Row 1: Name, Role, Source */}
+              <div className="grid grid-cols-3 gap-3">
+                <div><Label className="text-xs">Creator Name *</Label><Input placeholder="Name" value={r.creatorName} onChange={e => updateRow(r.id, { creatorName: e.target.value })} /></div>
+                <div><Label className="text-xs">Role</Label>
+                  <Select value={r.role} onValueChange={v => updateRow(r.id, { role: v as RoleType })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{(["Writer", "Editor", "Designer", "Video", "Translator", "Other"] as RoleType[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+                  </Select></div>
+                <div><Label className="text-xs">Source</Label>
+                  <Select value={r.source} onValueChange={v => updateRow(r.id, { source: v as ResourceSource })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="Freelancer">Freelancer</SelectItem><SelectItem value="In-house">In-house</SelectItem></SelectContent>
+                  </Select></div>
+              </div>
+              {/* Row 2: Pay Model, Currency, Unit Rate, Cost, Client Unit Price */}
+              <div className="grid grid-cols-5 gap-3">
+                <div><Label className="text-xs">Pay Model</Label>
+                  <Select value={r.payModel} onValueChange={v => updateRow(r.id, { payModel: v as PayModel })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{(["Per Word", "Per Assignment", "Retainer", "Hourly"] as PayModel[]).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+                  </Select></div>
+                <div><Label className="text-xs">Currency</Label>
+                  <Select value={r.currency} onValueChange={v => updateRow(r.id, { currency: v as CurrencyCode })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="INR">INR</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
+                  </Select></div>
+                <div><Label className="text-xs">Creator Unit Rate</Label><Input type="number" className="font-mono" placeholder="Rate" value={r.payRate || ""} onChange={e => updateRow(r.id, { payRate: +e.target.value })} /></div>
+                <div><Label className="text-xs">Cost</Label><Input type="number" className="font-mono" placeholder="Cost" value={r.totalCost || ""} onChange={e => updateRow(r.id, { totalCost: +e.target.value })} /></div>
+                <div><Label className="text-xs">Client Unit Price</Label><Input type="number" className="font-mono" placeholder="Billing" value={r.clientBilling || ""} onChange={e => updateRow(r.id, { clientBilling: +e.target.value })} /></div>
+              </div>
+              {/* Row 3: Ops Link, LinkedIn, City (conditional) */}
+              <div className={`grid gap-3 ${r.source !== "Freelancer" ? "grid-cols-3" : "grid-cols-2"}`}>
+                <div><Label className="text-xs">Ops Link</Label><Input placeholder="https://..." value={r.opsLink} onChange={e => updateRow(r.id, { opsLink: e.target.value })} /></div>
+                <div><Label className="text-xs">LinkedIn</Label><Input placeholder="https://linkedin.com/in/..." value={r.linkedinId} onChange={e => updateRow(r.id, { linkedinId: e.target.value })} /></div>
+                {r.source !== "Freelancer" && (
+                  <div><Label className="text-xs">City</Label><Input placeholder="City" value={r.city} onChange={e => updateRow(r.id, { city: e.target.value })} /></div>
+                )}
+              </div>
             </div>
           ))}
-          <Button variant="outline" size="sm" onClick={addRow} className="gap-1 text-xs"><Plus className="h-3 w-3" /> Add Row</Button>
+          <Button variant="outline" size="sm" onClick={addRow} className="gap-1 text-xs"><Plus className="h-3 w-3" /> Add Another Creator</Button>
         </div>
         <DialogFooter><Button onClick={save}>Add {rows.filter(r => r.creatorName.trim()).length} Creator(s)</Button></DialogFooter>
       </DialogContent>
@@ -449,6 +581,7 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
   const [editDeal, setEditDeal] = useState(false);
   const [addCreator, setAddCreator] = useState(false);
   const [transferCreators, setTransferCreators] = useState(false);
+  const [editingCreator, setEditingCreator] = useState<DeployedCreatorV2 | null>(null);
 
   const visibleCreators = showInactive ? deal.creators : deal.creators.filter(c => c.dealStatus === "Active");
   const handovers = getHandoversByDeal(deal.id);
@@ -465,12 +598,15 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
       <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-3">
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-          <div>
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-medium text-sm text-foreground">{deal.dealName}</span>
-            <span className="ml-1.5 text-xs font-mono text-muted-foreground">({deal.id})</span>
-            <span className="ml-2 text-xs text-muted-foreground">{deal.dealType}</span>
-            {deal.vsdName && <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{deal.vsdName}</span>}
-            {deal.isContentStudio && <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">Studio</span>}
+            <span className="text-xs font-mono text-muted-foreground">({deal.id})</span>
+            <span className="text-xs text-muted-foreground">{deal.dealType}</span>
+            {deal.vsdName && <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{deal.vsdName}</span>}
+            {deal.isContentStudio && <span className="text-xs px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">Studio</span>}
+            {(deal.capabilities || []).map(cap => (
+              <Badge key={cap} variant="outline" className="text-[10px] px-1.5 py-0">{cap}</Badge>
+            ))}
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -500,7 +636,7 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
             <table className="w-full text-sm">
               <thead>
                <tr className="border-b border-border text-left">
-                  {["Creator", "Ops Link", "LinkedIn", "Role", "Pay Model", "Currency", "Unit Rate", "Cost", "Billing", "Margin%", "Cap Lead", "BOPM", "Status", ""].map(h => (
+                  {["Creator", "Ops Link", "LinkedIn", "Role", "Pay Model", "Currency", "Creator Unit Rate", "Cost", "Client Unit Price", "Margin%", "Cap Lead", "BOPM", "Status", ""].map(h => (
                     <th key={h} className="pb-2 text-xs font-mono uppercase tracking-wider text-muted-foreground pr-3">{h}</th>
                   ))}
                 </tr>
@@ -520,9 +656,12 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
                     <td className="py-2 font-mono text-success pr-3">{c.grossMarginPercent}%</td>
                     <td className="py-2 pr-3"><RatingSelect creatorId={c.id} field="capabilityLeadRating" value={c.capabilityLeadRating} onDone={onDone} /></td>
                     <td className="py-2 pr-3"><RatingSelect creatorId={c.id} field="bopmRating" value={c.bopmRating} onDone={onDone} /></td>
-                    <td className="py-2"><CreatorStatusSelect creatorId={c.id} creator={c} onDone={onDone} /></td>
+                    <td className="py-2 pr-1"><CreatorStatusSelect creatorId={c.id} creator={c} onDone={onDone} /></td>
                     <td className="py-2">
-                      <button onClick={async () => { await dbRemoveCreator(c.id); toast.success(`Removed ${c.creatorName}`); onDone(); }} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove creator"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => setEditingCreator(c)} className="p-1 rounded hover:bg-muted" title="Edit creator"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                        <button onClick={async () => { await dbRemoveCreator(c.id); toast.success(`Removed ${c.creatorName}`); onDone(); }} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove creator"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -558,6 +697,7 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
       <EditDealDialog deal={deal} open={editDeal} onClose={() => setEditDeal(false)} onDone={onDone} />
       <BulkAddCreatorDialog dealId={deal.id} open={addCreator} onClose={() => setAddCreator(false)} onDone={onDone} />
       {deal.creators.length > 0 && <TransferCreatorsDialog dealId={deal.id} creators={deal.creators} otherDeals={otherDeals} open={transferCreators} onClose={() => setTransferCreators(false)} onDone={onDone} />}
+      {editingCreator && <EditCreatorDialog creator={editingCreator} open={!!editingCreator} onClose={() => setEditingCreator(null)} onDone={onDone} />}
     </div>
   );
 }
@@ -575,6 +715,13 @@ function ClientCard({ client, filterDeals, onDone }: { client: ClientV2; filterD
   const totalRev = deals.reduce((s, d) => s + d.totalContractValue, 0);
   const totalCost = deals.reduce((s, d) => s + d.totalCreatorCost, 0);
 
+  // Build BOPM subtitle showing all three names
+  const bopmParts: string[] = [];
+  if (client.principalBOPM) bopmParts.push(`P: ${client.principalBOPM}`);
+  if (client.seniorBOPM) bopmParts.push(`S: ${client.seniorBOPM}`);
+  if (client.juniorBOPM) bopmParts.push(`J: ${client.juniorBOPM}`);
+  const bopmLine = bopmParts.length > 0 ? bopmParts.join(" · ") : "—";
+
   return (
     <div className="stat-card">
       <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
@@ -582,20 +729,19 @@ function ClientCard({ client, filterDeals, onDone }: { client: ClientV2; filterD
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
           <div>
             <p className="font-semibold text-foreground">{client.clientName}</p>
-            <p className="text-xs text-muted-foreground">BOPM: {client.principalBOPM || "—"}</p>
+            <p className="text-xs text-muted-foreground">BOPM: {bopmLine}</p>
           </div>
         </div>
         <div className="flex items-center gap-5">
           <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Revenue</p><p className="font-mono text-foreground">{formatCurrency(totalRev)}</p></div>
-          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Cost</p><p className="font-mono text-muted-foreground">{formatCurrency(totalCost)}</p></div>
-          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Margin</p><p className="font-mono text-success">{totalRev ? ((totalRev - totalCost) / totalRev * 100).toFixed(1) : 0}%</p></div>
-          <span className="text-xs text-muted-foreground">{deals.length} deal{deals.length !== 1 ? "s" : ""}</span>
-          <button onClick={e => { e.stopPropagation(); setEditClient(true); }} className="p-1 rounded hover:bg-muted"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
+          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Cost</p><p className="font-mono text-foreground">{formatCurrency(totalCost)}</p></div>
+          <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Margin</p><p className="font-mono text-success">{totalRev ? Math.round((totalRev - totalCost) / totalRev * 1000) / 10 : 0}%</p></div>
+          <button onClick={e => { e.stopPropagation(); setEditClient(true); }} className="p-1.5 rounded-md hover:bg-muted"><Pencil className="h-4 w-4 text-muted-foreground" /></button>
         </div>
       </div>
 
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-border space-y-4 animate-fade-in">
+        <div className="mt-4 space-y-4 animate-fade-in">
           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span><strong>Principal BOPM:</strong> {client.principalBOPM || "—"}</span>
             <span><strong>Senior BOPM:</strong> {client.seniorBOPM || "—"}</span>
