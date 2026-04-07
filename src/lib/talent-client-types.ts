@@ -51,6 +51,9 @@ export interface DeployedCreatorV2 {
   currency: CurrencyCode;
 }
 
+export const DEAL_CAPABILITIES = ["SEO", "Content", "Creative"] as const;
+export type DealCapability = typeof DEAL_CAPABILITIES[number];
+
 export interface DealV2 {
   id: string;
   dealName: string;
@@ -66,6 +69,12 @@ export interface DealV2 {
   geography: string;
   isContentStudio: boolean;
   vsdName: string;
+  mrr: number;
+  contractDuration: string;
+  contractStartDate: string;
+  contractEndDate: string;
+  capabilities: DealCapability[];
+  capabilityLeader: string;
 }
 
 export interface ClientV2 {
