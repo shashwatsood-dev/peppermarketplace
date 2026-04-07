@@ -49,7 +49,12 @@ export type Database = {
       }
       deals: {
         Row: {
+          capabilities: string[]
+          capability_leader: string
           client_id: string
+          contract_duration: string
+          contract_end_date: string
+          contract_start_date: string
           created_at: string
           currency: string
           deal_name: string
@@ -57,6 +62,7 @@ export type Database = {
           geography: string
           id: string
           is_content_studio: boolean
+          mrr: number
           signing_entity: string
           status: string
           total_contract_value: number
@@ -64,7 +70,12 @@ export type Database = {
           vsd_name: string
         }
         Insert: {
+          capabilities?: string[]
+          capability_leader?: string
           client_id: string
+          contract_duration?: string
+          contract_end_date?: string
+          contract_start_date?: string
           created_at?: string
           currency?: string
           deal_name: string
@@ -72,6 +83,7 @@ export type Database = {
           geography?: string
           id: string
           is_content_studio?: boolean
+          mrr?: number
           signing_entity?: string
           status?: string
           total_contract_value?: number
@@ -79,7 +91,12 @@ export type Database = {
           vsd_name?: string
         }
         Update: {
+          capabilities?: string[]
+          capability_leader?: string
           client_id?: string
+          contract_duration?: string
+          contract_end_date?: string
+          contract_start_date?: string
           created_at?: string
           currency?: string
           deal_name?: string
@@ -87,6 +104,7 @@ export type Database = {
           geography?: string
           id?: string
           is_content_studio?: boolean
+          mrr?: number
           signing_entity?: string
           status?: string
           total_contract_value?: number

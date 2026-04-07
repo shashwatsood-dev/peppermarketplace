@@ -38,6 +38,7 @@ function makeDeal(id: string, name: string, type: string, status: DealStatus, cr
     totalContractValue: rev, totalCreatorCost: cost,
     grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
     currency: "INR", signingEntity: entity, geography: geo, isContentStudio: false, vsdName: vsd,
+    mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",
   };
 }
 
@@ -79,6 +80,7 @@ function mergeImportedData(basePods: PodV2[]): PodV2[] {
             creators: nd.creators, totalContractValue: rev, totalCreatorCost: cost,
             grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
             currency: "INR", signingEntity: "", geography: "", isContentStudio: false, vsdName: "",
+            mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",
           };
           return { ...c, deals: [...c.deals, newDeal] };
         }
@@ -97,6 +99,7 @@ function mergeImportedData(basePods: PodV2[]): PodV2[] {
           creators: nd.creators, totalContractValue: rev, totalCreatorCost: cost,
           grossMargin: rev - cost, grossMarginPercent: rev ? Math.round((rev - cost) / rev * 100 * 10) / 10 : 0,
           currency: "INR", signingEntity: "", geography: "", isContentStudio: false, vsdName: "",
+          mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",
         }],
       };
       result = result.map((p, i) => i === unassignedPodIdx ? { ...p, clients: [...p.clients, newClient] } : p);
@@ -131,6 +134,7 @@ export function addDealToClient(clientId: string, deal: { dealName: string; deal
     totalCreatorCost: 0,
     grossMargin: 0,
     grossMarginPercent: 0,
+    mrr: 0, contractDuration: "", contractStartDate: "", contractEndDate: "", capabilities: [], capabilityLeader: "",
   };
   pods = pods.map(p => ({
     ...p, clients: p.clients.map(c => c.id === clientId ? { ...c, deals: [...c.deals, newDeal] } : c),
