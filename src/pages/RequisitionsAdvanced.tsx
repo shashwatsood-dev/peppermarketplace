@@ -89,7 +89,31 @@ const RequisitionsAdvanced = () => {
   const [duBlockers, setDuBlockers] = useState("");
   const [duNotes, setDuNotes] = useState("");
 
-  const getClientName = (r: AdvancedRequisition) =>
+  // Sync from DB
+  useEffect(() => { if (dbReqs.length > 0 || !isLoading) setReqs(dbReqs); }, [dbReqs, isLoading]);
+
+  const refreshReqs = () => queryClient.invalidateQueries({ queryKey: ["requisitions"] });
+
+  const persistReq = async (reqId: string, updatedReq: AdvancedRequisition) => {
+    try {
+      await dbUpdateRequisition(reqId, {}, updatedReq);
+    } catch (err: any) {
+      toast.error("Failed to save: " + err.message);
+    }
+  };
+
+  const handleDeleteReq = async (reqId: string) => {
+    if (!confirm("Delete this requisition permanently?")) return;
+    try {
+      await dbDeleteRequisition(reqId);
+      setReqs(prev => prev.filter(r => r.id !== reqId));
+      toast.success("Requisition deleted");
+      refreshReqs();
+    } catch (err: any) {
+      toast.error("Failed to delete: " + err.message);
+    }
+  };
+
     r.flow === "sales" ? r.salesData?.clientName || "" : r.hiringData?.clientName || "";
 
   const getDealId = (r: AdvancedRequisition) =>
