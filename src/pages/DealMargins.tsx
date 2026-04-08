@@ -228,12 +228,17 @@ function EditDealDialog({ deal, open, onClose, onDone }: { deal: DealV2; open: b
   });
   const [newDealId, setNewDealId] = useState(deal.id);
   const save = async () => {
-    if (newDealId && newDealId !== deal.id) {
-      await dbRenameDealId(deal.id, newDealId);
+    try {
+      if (newDealId && newDealId !== deal.id) {
+        await dbRenameDealId(deal.id, newDealId);
+      }
+      await dbUpdateDeal(newDealId || deal.id, form);
+      toast.success("Deal updated");
+      onDone(); onClose();
+    } catch (err: any) {
+      console.error("Failed to save deal:", err);
+      toast.error(err?.message || "Failed to save deal");
     }
-    await dbUpdateDeal(newDealId || deal.id, form);
-    toast.success("Deal updated");
-    onDone(); onClose();
   };
   return (
     <Dialog open={open} onOpenChange={onClose}>
