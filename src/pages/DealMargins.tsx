@@ -1015,13 +1015,14 @@ const DealMargins = () => {
         </TabsContent>
         {POD_NAMES.map(podName => {
           const podClients = getClientsForPod(podName);
+          const filtered = showClosedClients ? podClients : podClients.filter(({ client }) => !isClientAllClosed(client));
           return (
             <TabsContent key={podName} value={podName} className="space-y-4 mt-4">
               <div className="flex justify-end">
                 <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {podName}</Button>
               </div>
-              {podClients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
-              {podClients.map(({ client, deals }) => <ClientCard key={`${client.id}-${podName}`} client={client} filterDeals={deals} onDone={refresh} />)}
+              {filtered.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
+              {filtered.map(({ client, deals }) => <ClientCard key={`${client.id}-${podName}`} client={client} filterDeals={deals} onDone={refresh} />)}
             </TabsContent>
           );
         })}
