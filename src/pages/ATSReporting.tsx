@@ -31,6 +31,11 @@ const ATSReporting = () => {
   const analytics = getPipelineAnalytics();
   const allPipeline = getAllPipelineCandidates();
   const allCandidates = getCandidates();
+  const [dbReqs, setDbReqs] = useState<AdvancedRequisition[]>([]);
+
+  useEffect(() => {
+    fetchRequisitions().then(setDbReqs).catch(console.error);
+  }, []);
 
   // Funnel data
   const funnelData = [
@@ -42,7 +47,7 @@ const ATSReporting = () => {
   ];
 
   // Per-requisition breakdown
-  const reqBreakdown = advancedRequisitions.map(req => {
+  const reqBreakdown = dbReqs.map(req => {
     const pcs = allPipeline.filter(pc => pc.requisitionId === req.id);
     const clientName = req.flow === "sales" ? req.salesData?.clientName : req.hiringData?.clientName;
     return {

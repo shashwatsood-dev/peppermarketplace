@@ -29,6 +29,11 @@ const RATE_MODELS = ["Per Word", "Hourly", "Monthly", "Per Assignment"];
 const CandidateDatabase = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dbReqs, setDbReqs] = useState<AdvancedRequisition[]>([]);
+
+  useEffect(() => {
+    fetchRequisitions().then(setDbReqs).catch(console.error);
+  }, []);
   const [candidates, setCandidates] = useState(getCandidates());
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
