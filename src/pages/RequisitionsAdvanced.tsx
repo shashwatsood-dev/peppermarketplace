@@ -114,6 +114,7 @@ const RequisitionsAdvanced = () => {
     }
   };
 
+  const getClientName = (r: AdvancedRequisition) =>
     r.flow === "sales" ? r.salesData?.clientName || "" : r.hiringData?.clientName || "";
 
   const getDealId = (r: AdvancedRequisition) =>
