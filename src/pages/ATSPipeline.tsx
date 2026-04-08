@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
+import { fetchRequisitions } from "@/lib/requisition-db-store";
 import { getStagesForFlow } from "@/lib/ats-types";
 import type { PipelineCandidate, Candidate } from "@/lib/ats-types";
 import {
@@ -32,7 +32,15 @@ const AVAILABILITY_OPTIONS = ["Immediate", "1 week", "2 weeks", "1 month", "Not 
 const ATSPipeline = () => {
   const { reqId } = useParams<{ reqId: string }>();
   const navigate = useNavigate();
-  const req = advancedRequisitions.find(r => r.id === reqId);
+  const [req, setReq] = useState<import("@/lib/requisition-types").AdvancedRequisition | null>(null);
+  const [reqLoading, setReqLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRequisitions().then(all => {
+      setReq(all.find(r => r.id === reqId) || null);
+      setReqLoading(false);
+    }).catch(() => setReqLoading(false));
+  }, [reqId]);
 
   const [pipeline, setPipeline] = useState(() => getPipelineCandidates(reqId || ""));
   const [addDialogOpen, setAddDialogOpen] = useState(false);
