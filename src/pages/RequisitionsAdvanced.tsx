@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchRequisitions, dbUpdateRequisition, dbDeleteRequisition } from "@/lib/requisition-db-store";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, AlertTriangle, Flag, ExternalLink, Pencil, CheckCircle, XCircle, Kanban } from "lucide-react";
+import { Search, Plus, AlertTriangle, Flag, ExternalLink, Pencil, CheckCircle, XCircle, Kanban, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
