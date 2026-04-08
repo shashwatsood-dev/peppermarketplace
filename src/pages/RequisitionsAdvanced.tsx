@@ -551,14 +551,14 @@ const RequisitionsAdvanced = () => {
       {podGroups.map(group => (
         <div key={group.name} className="space-y-2">
           <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">{group.name} ({group.reqs.length})</h3>
-          <ReqTable reqs={group.reqs} getClientName={getClientName} getDealId={getDealId} getFlowLabel={getFlowLabel} getCreatorTypes={getCreatorTypes} getUrgencyDisplay={getUrgencyDisplay} getStage={getStage} daysOpen={daysOpen} openEdit={openEdit} openReview={openReview} openAssign={openAssign} openUpdate={openUpdate} handleInlineStatusChange={handleInlineStatusChange} handleInlineStageChange={handleInlineStageChange} allStatuses={allStatuses} setSelectedReq={setSelectedReq} setUpdateDialogOpen={setUpdateDialogOpen} setReviewDialogOpen={setReviewDialogOpen} setAssignDialogOpen={setAssignDialogOpen} />
+          <ReqTable reqs={group.reqs} getClientName={getClientName} getDealId={getDealId} getFlowLabel={getFlowLabel} getCreatorTypes={getCreatorTypes} getUrgencyDisplay={getUrgencyDisplay} getStage={getStage} daysOpen={daysOpen} openEdit={openEdit} openReview={openReview} openAssign={openAssign} openUpdate={openUpdate} handleInlineStatusChange={handleInlineStatusChange} handleInlineStageChange={handleInlineStageChange} handleDeleteReq={handleDeleteReq} allStatuses={allStatuses} setSelectedReq={setSelectedReq} setUpdateDialogOpen={setUpdateDialogOpen} setReviewDialogOpen={setReviewDialogOpen} setAssignDialogOpen={setAssignDialogOpen} />
         </div>
       ))}
 
       {ungroupedReqs.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">Unassigned / Sales ({ungroupedReqs.length})</h3>
-          <ReqTable reqs={ungroupedReqs} getClientName={getClientName} getDealId={getDealId} getFlowLabel={getFlowLabel} getCreatorTypes={getCreatorTypes} getUrgencyDisplay={getUrgencyDisplay} getStage={getStage} daysOpen={daysOpen} openEdit={openEdit} openReview={openReview} openAssign={openAssign} openUpdate={openUpdate} handleInlineStatusChange={handleInlineStatusChange} handleInlineStageChange={handleInlineStageChange} allStatuses={allStatuses} setSelectedReq={setSelectedReq} setUpdateDialogOpen={setUpdateDialogOpen} setReviewDialogOpen={setReviewDialogOpen} setAssignDialogOpen={setAssignDialogOpen} />
+          <ReqTable reqs={ungroupedReqs} getClientName={getClientName} getDealId={getDealId} getFlowLabel={getFlowLabel} getCreatorTypes={getCreatorTypes} getUrgencyDisplay={getUrgencyDisplay} getStage={getStage} daysOpen={daysOpen} openEdit={openEdit} openReview={openReview} openAssign={openAssign} openUpdate={openUpdate} handleInlineStatusChange={handleInlineStatusChange} handleInlineStageChange={handleInlineStageChange} handleDeleteReq={handleDeleteReq} allStatuses={allStatuses} setSelectedReq={setSelectedReq} setUpdateDialogOpen={setUpdateDialogOpen} setReviewDialogOpen={setReviewDialogOpen} setAssignDialogOpen={setAssignDialogOpen} />
         </div>
       )}
 
@@ -949,6 +949,7 @@ function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorType
                     {req.status === "RMG approval Pending" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openReview(req)}>Review</Button>}
                     {req.status === "Approved but not assigned" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openAssign(req)}>Assign</Button>}
                     {req.status === "In progress" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openUpdate(req)}>Update</Button>}
+                    <Button variant="ghost" size="sm" className="text-xs h-7 text-destructive hover:text-destructive" onClick={() => handleDeleteReq(req.id)}><Trash2 className="h-3 w-3" /></Button>
                   </div>
                 </td>
               </tr>
