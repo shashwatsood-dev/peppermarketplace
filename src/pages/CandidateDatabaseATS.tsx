@@ -145,7 +145,7 @@ const CandidateDatabase = () => {
   const getOpenRequisitions = (candidateId: string) => {
     const pipelines = allPipeline.filter(pc => pc.candidateId === candidateId);
     return pipelines.map(pc => {
-      const req = advancedRequisitions.find(r => r.id === pc.requisitionId);
+      const req = dbReqs.find(r => r.id === pc.requisitionId);
       const clientName = req?.flow === "sales" ? req.salesData?.clientName : req?.hiringData?.clientName;
       return { ...pc, clientName: clientName || "Unknown", reqId: pc.requisitionId };
     });
