@@ -277,6 +277,42 @@ export type Database = {
           },
         ]
       }
+      requisitions: {
+        Row: {
+          client_name: string
+          created_at: string
+          deal_id: string
+          flow: string
+          id: string
+          payload: Json
+          pod_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_name?: string
+          created_at?: string
+          deal_id?: string
+          flow: string
+          id: string
+          payload?: Json
+          pod_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          deal_id?: string
+          flow?: string
+          id?: string
+          payload?: Json
+          pod_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
