@@ -281,7 +281,7 @@ const RequisitionsAdvanced = () => {
     setEditDialogOpen(true);
   };
 
-  const handleEditSave = () => {
+  const handleEditSave = async () => {
     if (!selectedReq) return;
     const changes: { field: string; old: string; new: string }[] = [];
     if (editStatus !== selectedReq.status) changes.push({ field: "status", old: selectedReq.status, new: editStatus });
@@ -297,43 +297,38 @@ const RequisitionsAdvanced = () => {
       id: crypto.randomUUID(), fieldChanged: c.field, oldValue: c.old, newValue: c.new, editedBy, timestamp: new Date().toISOString(),
     }));
 
-    // If TA edits deal/financial/creator details, flag for approval
     const taFlag = editByTA && changes.some(c => ["totalClientRevenue", "totalCreatorCost", "opportunityStage"].includes(c.field));
-
     const grossMargin = editRevenue - editCost;
     const grossMarginPercent = editRevenue ? Math.round(grossMargin / editRevenue * 1000) / 10 : 0;
 
-    setReqs(prev => prev.map(r => {
-      if (r.id !== selectedReq.id) return r;
-      const updated: AdvancedRequisition = {
-        ...r,
-        status: taFlag ? "RMG approval Pending" : editStatus as any,
-        podLeadAssigned: editPodLead,
-        recruiterAssigned: editRecruiter,
-        targetClosureDate: editTargetDate,
-        rmgNotes: editRmgNotes,
-        totalClientRevenue: editRevenue,
-        totalCreatorCost: editCost,
-        grossMargin,
-        grossMarginPercent,
-        updatedAt: new Date().toISOString(),
-        auditLog: [...r.auditLog, ...newAuditEntries],
-        taEditedPendingApproval: taFlag || r.taEditedPendingApproval,
-      };
-      // Update stage
-      if (editStage !== getStage(r)) {
-        if (r.flow === "sales" && r.salesData) {
-          updated.salesData = { ...r.salesData, opportunityStage: editStage as any };
-        } else if (r.hiringData) {
-          updated.hiringData = { ...r.hiringData, opportunityStage: editStage as any };
-        }
+    const updated: AdvancedRequisition = {
+      ...selectedReq,
+      status: taFlag ? "RMG approval Pending" : editStatus,
+      podLeadAssigned: editPodLead,
+      recruiterAssigned: editRecruiter,
+      targetClosureDate: editTargetDate,
+      rmgNotes: editRmgNotes,
+      totalClientRevenue: editRevenue,
+      totalCreatorCost: editCost,
+      grossMargin,
+      grossMarginPercent,
+      updatedAt: new Date().toISOString(),
+      auditLog: [...selectedReq.auditLog, ...newAuditEntries],
+      taEditedPendingApproval: taFlag || selectedReq.taEditedPendingApproval,
+    };
+    if (editStage !== getStage(selectedReq)) {
+      if (selectedReq.flow === "sales" && selectedReq.salesData) {
+        updated.salesData = { ...selectedReq.salesData, opportunityStage: editStage as any };
+      } else if (selectedReq.hiringData) {
+        updated.hiringData = { ...selectedReq.hiringData, opportunityStage: editStage as any };
       }
-      // Update dealId
-      if (r.hiringData && editDealId !== (r.hiringData.dealId || "")) {
-        updated.hiringData = { ...(updated.hiringData || r.hiringData), dealId: editDealId };
-      }
-      return updated;
-    }));
+    }
+    if (selectedReq.hiringData && editDealId !== (selectedReq.hiringData.dealId || "")) {
+      updated.hiringData = { ...(updated.hiringData || selectedReq.hiringData), dealId: editDealId };
+    }
+
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success(taFlag ? "Changes sent for RMG approval" : "Requisition updated");
     setEditDialogOpen(false);
   };
