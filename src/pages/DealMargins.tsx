@@ -738,6 +738,15 @@ function ClientCard({ client, filterDeals, onDone }: { client: ClientV2; filterD
           <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Cost</p><p className="font-mono text-foreground">{formatCurrency(totalCost)}</p></div>
           <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Margin</p><p className="font-mono text-success">{totalRev ? Math.round((totalRev - totalCost) / totalRev * 1000) / 10 : 0}%</p></div>
           <button onClick={e => { e.stopPropagation(); setEditClient(true); }} className="p-1.5 rounded-md hover:bg-muted"><Pencil className="h-4 w-4 text-muted-foreground" /></button>
+          <button onClick={async (e) => {
+            e.stopPropagation();
+            if (!confirm(`Delete client "${client.clientName}" and all its deals?`)) return;
+            try {
+              await dbDeleteClient(client.id);
+              toast.success(`"${client.clientName}" deleted`);
+              onDone();
+            } catch (err: any) { toast.error("Failed: " + err.message); }
+          }} className="p-1.5 rounded-md hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></button>
         </div>
       </div>
 
