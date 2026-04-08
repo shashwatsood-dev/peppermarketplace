@@ -165,11 +165,14 @@ const RequisitionsAdvanced = () => {
   const daysOpen = (createdAt: string) => Math.round((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24));
 
   // Inline status change
-  const handleInlineStatusChange = (reqId: string, newStatus: string) => {
-    setReqs(prev => prev.map(r => r.id === reqId ? {
+  const handleInlineStatusChange = async (reqId: string, newStatus: string) => {
+    const updated = reqs.map(r => r.id === reqId ? {
       ...r, status: newStatus,
       auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: newStatus, editedBy: "User", timestamp: new Date().toISOString() }]
-    } : r));
+    } : r);
+    setReqs(updated);
+    const req = updated.find(r => r.id === reqId);
+    if (req) await persistReq(reqId, req);
     toast.success("Status updated");
   };
 
