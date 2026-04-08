@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getPipelineAnalytics, getAllPipelineCandidates, getCandidates } from "@/lib/ats-store";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
+import { fetchRequisitions } from "@/lib/requisition-db-store";
+import type { AdvancedRequisition } from "@/lib/requisition-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +31,11 @@ const ATSReporting = () => {
   const analytics = getPipelineAnalytics();
   const allPipeline = getAllPipelineCandidates();
   const allCandidates = getCandidates();
+  const [dbReqs, setDbReqs] = useState<AdvancedRequisition[]>([]);
+
+  useEffect(() => {
+    fetchRequisitions().then(setDbReqs).catch(console.error);
+  }, []);
 
   // Funnel data
   const funnelData = [
@@ -41,7 +47,7 @@ const ATSReporting = () => {
   ];
 
   // Per-requisition breakdown
-  const reqBreakdown = advancedRequisitions.map(req => {
+  const reqBreakdown = dbReqs.map(req => {
     const pcs = allPipeline.filter(pc => pc.requisitionId === req.id);
     const clientName = req.flow === "sales" ? req.salesData?.clientName : req.hiringData?.clientName;
     return {

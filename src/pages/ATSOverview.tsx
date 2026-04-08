@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
+import { fetchRequisitions } from "@/lib/requisition-db-store";
 import { getPipelineCandidates } from "@/lib/ats-store";
+import type { AdvancedRequisition } from "@/lib/requisition-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -14,8 +15,13 @@ import ATSReporting from "./ATSReporting";
 const PipelineTab = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [dbReqs, setDbReqs] = useState<AdvancedRequisition[]>([]);
 
-  const reqs = advancedRequisitions.map(req => {
+  useEffect(() => {
+    fetchRequisitions().then(setDbReqs).catch(console.error);
+  }, []);
+
+  const reqs = dbReqs.map(req => {
     const pipeline = getPipelineCandidates(req.id);
     const clientName = req.flow === "sales" ? req.salesData?.clientName : req.hiringData?.clientName;
     const flowLabel = req.flow === "sales" ? "Sample Profile" : req.flow === "studio" ? "Content Studio" : "Freelancer";

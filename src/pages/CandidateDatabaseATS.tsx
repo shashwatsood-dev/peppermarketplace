@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCandidates, addCandidate, updateCandidate, getAllPipelineCandidates, bulkAddCandidates, getCSVTemplate, parseCandidateCSV } from "@/lib/ats-store";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
+import { fetchRequisitions } from "@/lib/requisition-db-store";
+import type { AdvancedRequisition } from "@/lib/requisition-types";
 import { getPipelineCandidates } from "@/lib/ats-store";
 import type { Candidate } from "@/lib/ats-types";
 import { RESOURCE_SPECIFIC_TYPES } from "@/lib/requisition-types";
@@ -28,6 +29,11 @@ const RATE_MODELS = ["Per Word", "Hourly", "Monthly", "Per Assignment"];
 const CandidateDatabase = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dbReqs, setDbReqs] = useState<AdvancedRequisition[]>([]);
+
+  useEffect(() => {
+    fetchRequisitions().then(setDbReqs).catch(console.error);
+  }, []);
   const [candidates, setCandidates] = useState(getCandidates());
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -139,7 +145,7 @@ const CandidateDatabase = () => {
   const getOpenRequisitions = (candidateId: string) => {
     const pipelines = allPipeline.filter(pc => pc.candidateId === candidateId);
     return pipelines.map(pc => {
-      const req = advancedRequisitions.find(r => r.id === pc.requisitionId);
+      const req = dbReqs.find(r => r.id === pc.requisitionId);
       const clientName = req?.flow === "sales" ? req.salesData?.clientName : req?.hiringData?.clientName;
       return { ...pc, clientName: clientName || "Unknown", reqId: pc.requisitionId };
     });
