@@ -40,7 +40,7 @@ export async function dbUpdateRequisition(reqId: string, updates: Partial<Advanc
     client_name: merged.flow === "sales" ? merged.salesData?.clientName || "" : merged.hiringData?.clientName || "",
     deal_id: merged.flow !== "sales" ? merged.hiringData?.dealId || "" : "",
     pod_name: merged.flow !== "sales" ? merged.hiringData?.pod || "" : "",
-    payload: merged as unknown as Record<string, unknown>,
+    payload: JSON.parse(JSON.stringify(merged)) as Json,
   }).eq("id", reqId);
   if (error) throw error;
 }
