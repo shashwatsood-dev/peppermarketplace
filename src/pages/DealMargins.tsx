@@ -1011,7 +1011,7 @@ const DealMargins = () => {
           )}
         </TabsList>
         <TabsContent value="All" className="space-y-4 mt-4">
-          {allClients.map(client => <ClientCard key={client.id} client={client} onDone={refresh} />)}
+          {filterClosed(allClients).map(client => <ClientCard key={client.id} client={client} onDone={refresh} />)}
         </TabsContent>
         {POD_NAMES.map(podName => {
           const podClients = getClientsForPod(podName);
