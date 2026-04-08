@@ -220,26 +220,28 @@ const RequisitionsAdvanced = () => {
     setReviewDialogOpen(false);
   };
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!selectedReq || !assignPodLead) { toast.error("POD Lead required"); return; }
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? {
-      ...r, status: "In progress" as const, podLeadAssigned: assignPodLead, recruiterAssigned: assignRecruiter,
+    const updated: AdvancedRequisition = {
+      ...selectedReq, status: "In progress", podLeadAssigned: assignPodLead, recruiterAssigned: assignRecruiter,
       targetClosureDate: assignTargetDate,
-      auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "In progress", editedBy: "RMG", timestamp: new Date().toISOString() }]
-    } : r));
+      auditLog: [...selectedReq.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: selectedReq.status, newValue: "In progress", editedBy: "RMG", timestamp: new Date().toISOString() }]
+    };
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success("Assigned to POD Lead");
     setAssignDialogOpen(false);
   };
 
-  const handleSaveLinks = () => {
+  const handleSaveLinks = async () => {
     if (!selectedReq) return;
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? {
-      ...r, linkedInRecruiterLink: updateLinkedIn, atsSheetLink: updateAtsLink,
-    } : r));
+    const updated = { ...selectedReq, linkedInRecruiterLink: updateLinkedIn, atsSheetLink: updateAtsLink };
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success("Links updated");
   };
 
-  const handleFunnelUpdate = () => {
+  const handleFunnelUpdate = async () => {
     if (!selectedReq) return;
     const prev = getCumulativeMetrics(selectedReq);
     const delta = {
@@ -257,7 +259,9 @@ const RequisitionsAdvanced = () => {
       recruiterName: selectedReq.recruiterAssigned || "Unknown",
       ...delta, blockers: duBlockers, notes: duNotes,
     };
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? { ...r, dailyUpdates: [...r.dailyUpdates, update] } : r));
+    const updated = { ...selectedReq, dailyUpdates: [...selectedReq.dailyUpdates, update] };
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success("Funnel updated — daily log auto-generated");
     setDuBlockers(""); setDuNotes("");
   };
