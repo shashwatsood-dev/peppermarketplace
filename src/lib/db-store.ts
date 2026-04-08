@@ -265,6 +265,33 @@ export async function dbDeleteClient(clientId: string) {
   if (error) throw error;
 }
 
+export async function dbRenameDealId(oldId: string, newId: string) {
+  // 1. Get current deal
+  const { data: deal, error: fErr } = await supabase.from("deals").select("*").eq("id", oldId).single();
+  if (fErr) throw fErr;
+
+  // 2. Get all creators for this deal
+  const { data: creators } = await supabase.from("deployed_creators").select("*").eq("deal_id", oldId);
+
+  // 3. Insert deal with new ID
+  const { id: _, ...rest } = deal;
+  const { error: insErr } = await supabase.from("deals").insert({ ...rest, id: newId });
+  if (insErr) throw insErr;
+
+  // 4. Update creators to point to new deal ID
+  if (creators && creators.length > 0) {
+    const { error: upErr } = await supabase.from("deployed_creators").update({ deal_id: newId }).eq("deal_id", oldId);
+    if (upErr) throw upErr;
+  }
+
+  // 5. Update requisitions referencing old deal_id
+  await supabase.from("requisitions").update({ deal_id: newId }).eq("deal_id", oldId);
+
+  // 6. Delete old deal
+  const { error: delErr } = await supabase.from("deals").delete().eq("id", oldId);
+  if (delErr) throw delErr;
+}
+
 export async function dbRemoveCreator(creatorId: string) {
   const { error } = await supabase.from("deployed_creators").delete().eq("id", creatorId);
   if (error) throw error;
