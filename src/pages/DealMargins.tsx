@@ -917,6 +917,7 @@ const DealMargins = () => {
   const [selectedPod, setSelectedPod] = useState<string>("All");
   const [addClient, setAddClient] = useState(false);
   const [csvImport, setCsvImport] = useState(false);
+  const [showClosedClients, setShowClosedClients] = useState(false);
 
   if (isLoading || !pods) {
     return (
