@@ -444,20 +444,22 @@ const RequisitionsAdvanced = () => {
                     <span className="text-xs text-muted-foreground font-mono">₹{r.totalClientRevenue.toLocaleString("en-IN")}</span>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" className="h-7 text-xs gap-1" onClick={() => {
-                      setReqs(prev => prev.map(req => req.id === r.id ? {
-                        ...req, status: "Approved but not assigned", taEditedPendingApproval: false,
-                        auditLog: [...req.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: req.status, newValue: "Approved but not assigned", editedBy: "Admin", timestamp: new Date().toISOString() }]
-                      } : req));
+                    <Button size="sm" className="h-7 text-xs gap-1" onClick={async () => {
+                      const updated = { ...r, status: "Approved but not assigned", taEditedPendingApproval: false,
+                        auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "Approved but not assigned", editedBy: "Admin", timestamp: new Date().toISOString() }]
+                      } as AdvancedRequisition;
+                      setReqs(prev => prev.map(req => req.id === r.id ? updated : req));
+                      await persistReq(r.id, updated);
                       toast.success(`${r.id} approved`);
                     }}>
                       <CheckCircle className="h-3 w-3" /> Approve
                     </Button>
-                    <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => {
-                      setReqs(prev => prev.map(req => req.id === r.id ? {
-                        ...req, status: "Scrapped", taEditedPendingApproval: false,
-                        auditLog: [...req.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: req.status, newValue: "Scrapped", editedBy: "Admin", timestamp: new Date().toISOString() }]
-                      } : req));
+                    <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={async () => {
+                      const updated = { ...r, status: "Scrapped", taEditedPendingApproval: false,
+                        auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "Scrapped", editedBy: "Admin", timestamp: new Date().toISOString() }]
+                      } as AdvancedRequisition;
+                      setReqs(prev => prev.map(req => req.id === r.id ? updated : req));
+                      await persistReq(r.id, updated);
                       toast.success(`${r.id} rejected`);
                     }}>
                       <XCircle className="h-3 w-3" /> Reject
