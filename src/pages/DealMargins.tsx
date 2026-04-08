@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import {
   dbUpdateClient, dbUpdateDeal, dbUpdateCreator, dbAddCreatorToDeal, dbAddClientToPod, dbAddDealToClient,
   dbMoveClientToPod, dbCopyCreatorsToDeal, dbRemoveCreator, dbParseClientCSV, dbGetClientCSVTemplate, exportPodsAsCSV,
-  dbDeleteClient,
+  dbDeleteClient, dbRenameDealId,
 } from "@/lib/db-store";
 import { usePods, useRefreshPods } from "@/lib/use-pods";
 import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName, DealCapability } from "@/lib/talent-client-types";
@@ -226,13 +226,21 @@ function EditDealDialog({ deal, open, onClose, onDone }: { deal: DealV2; open: b
     contractEndDate: deal.contractEndDate || "", capabilities: (deal.capabilities || []) as DealCapability[],
     capabilityLeader: deal.capabilityLeader || "", currency: deal.currency, signingEntity: deal.signingEntity || "", geography: deal.geography || "",
   });
-  const save = async () => { await dbUpdateDeal(deal.id, form); toast.success("Deal updated"); onDone(); onClose(); };
+  const [newDealId, setNewDealId] = useState(deal.id);
+  const save = async () => {
+    if (newDealId && newDealId !== deal.id) {
+      await dbRenameDealId(deal.id, newDealId);
+    }
+    await dbUpdateDeal(newDealId || deal.id, form);
+    toast.success("Deal updated");
+    onDone(); onClose();
+  };
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Edit Deal</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
-          <div><Label className="text-xs">Deal ID</Label><Input value={deal.id} disabled className="font-mono text-xs bg-muted/50" /></div>
+          <div><Label className="text-xs">Deal ID</Label><Input value={newDealId} onChange={e => setNewDealId(e.target.value)} className="font-mono text-xs" /></div>
           <div><Label className="text-xs">Deal Name</Label><Input value={form.dealName} onChange={e => setForm(p => ({ ...p, dealName: e.target.value }))} /></div>
           <div><Label className="text-xs">VSD</Label>
             <Select value={form.vsdName || "none"} onValueChange={v => setForm(p => ({ ...p, vsdName: v === "none" ? "" : v }))}>
