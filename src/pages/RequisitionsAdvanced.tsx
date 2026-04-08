@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchRequisitions, dbUpdateRequisition, dbDeleteRequisition } from "@/lib/requisition-db-store";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, AlertTriangle, Flag, ExternalLink, Pencil, CheckCircle, XCircle, Kanban } from "lucide-react";
+import { Search, Plus, AlertTriangle, Flag, ExternalLink, Pencil, CheckCircle, XCircle, Kanban, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -22,16 +23,20 @@ const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
 const INITIAL_POD_LEADS = ["Neha Gupta", "Ravi Kumar", "Anita Desai"];
 const INITIAL_RECRUITERS = ["Neha Gupta", "Ravi Kumar", "Pooja Shah", "Sanjay Verma"];
 
+const HIDDEN_STATUSES = ["Scrapped", "On hold", "Closed – allotted"];
+
 const RequisitionsAdvanced = () => {
   const navigate = useNavigate();
   const { currentRole } = useAuth();
   const isAdmin = currentRole === "admin";
+  const queryClient = useQueryClient();
+  const { data: dbReqs = [], isLoading } = useQuery({ queryKey: ["requisitions"], queryFn: fetchRequisitions });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [flowFilter, setFlowFilter] = useState("all");
   const [podFilter, setPodFilter] = useState("All");
   const [showApprovalQueue, setShowApprovalQueue] = useState(false);
-  const [reqs, setReqs] = useState(advancedRequisitions);
+  const [reqs, setReqs] = useState<AdvancedRequisition[]>([]);
   const [selectedReq, setSelectedReq] = useState<AdvancedRequisition | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -84,6 +89,31 @@ const RequisitionsAdvanced = () => {
   const [duBlockers, setDuBlockers] = useState("");
   const [duNotes, setDuNotes] = useState("");
 
+  // Sync from DB
+  useEffect(() => { if (dbReqs.length > 0 || !isLoading) setReqs(dbReqs); }, [dbReqs, isLoading]);
+
+  const refreshReqs = () => queryClient.invalidateQueries({ queryKey: ["requisitions"] });
+
+  const persistReq = async (reqId: string, updatedReq: AdvancedRequisition) => {
+    try {
+      await dbUpdateRequisition(reqId, {}, updatedReq);
+    } catch (err: any) {
+      toast.error("Failed to save: " + err.message);
+    }
+  };
+
+  const handleDeleteReq = async (reqId: string) => {
+    if (!confirm("Delete this requisition permanently?")) return;
+    try {
+      await dbDeleteRequisition(reqId);
+      setReqs(prev => prev.filter(r => r.id !== reqId));
+      toast.success("Requisition deleted");
+      refreshReqs();
+    } catch (err: any) {
+      toast.error("Failed to delete: " + err.message);
+    }
+  };
+
   const getClientName = (r: AdvancedRequisition) =>
     r.flow === "sales" ? r.salesData?.clientName || "" : r.hiringData?.clientName || "";
 
@@ -121,7 +151,7 @@ const RequisitionsAdvanced = () => {
   const filtered = reqs.filter((r) => {
     const client = getClientName(r).toLowerCase();
     const matchSearch = client.includes(search.toLowerCase()) || r.id.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "all" || r.status === statusFilter;
+    const matchStatus = statusFilter === "all" ? !HIDDEN_STATUSES.includes(r.status) : r.status === statusFilter;
     const matchFlow = flowFilter === "all" || r.flow === flowFilter;
     const matchPod = podFilter === "All" || getPod(r) === podFilter;
     return matchSearch && matchStatus && matchFlow && matchPod;
@@ -135,71 +165,83 @@ const RequisitionsAdvanced = () => {
   const daysOpen = (createdAt: string) => Math.round((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24));
 
   // Inline status change
-  const handleInlineStatusChange = (reqId: string, newStatus: string) => {
-    setReqs(prev => prev.map(r => r.id === reqId ? {
+  const handleInlineStatusChange = async (reqId: string, newStatus: string) => {
+    const updated = reqs.map(r => r.id === reqId ? {
       ...r, status: newStatus,
       auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: newStatus, editedBy: "User", timestamp: new Date().toISOString() }]
-    } : r));
+    } : r);
+    setReqs(updated);
+    const req = updated.find(r => r.id === reqId);
+    if (req) await persistReq(reqId, req);
     toast.success("Status updated");
   };
 
   // Inline stage change
-  const handleInlineStageChange = (reqId: string, newStage: string) => {
-    setReqs(prev => prev.map(r => {
+  const handleInlineStageChange = async (reqId: string, newStage: string) => {
+    const updated = reqs.map(r => {
       if (r.id !== reqId) return r;
-      const updated = { ...r };
+      const u = { ...r };
       const oldStage = getStage(r);
       if (r.flow === "sales" && r.salesData) {
-        updated.salesData = { ...r.salesData, opportunityStage: newStage as any };
+        u.salesData = { ...r.salesData, opportunityStage: newStage as any };
       } else if (r.hiringData) {
-        updated.hiringData = { ...r.hiringData, opportunityStage: newStage as any };
+        u.hiringData = { ...r.hiringData, opportunityStage: newStage as any };
       }
-      updated.auditLog = [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "opportunityStage", oldValue: oldStage, newValue: newStage, editedBy: "User", timestamp: new Date().toISOString() }];
-      return updated;
-    }));
+      u.auditLog = [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "opportunityStage", oldValue: oldStage, newValue: newStage, editedBy: "User", timestamp: new Date().toISOString() }];
+      return u;
+    });
+    setReqs(updated);
+    const req = updated.find(r => r.id === reqId);
+    if (req) await persistReq(reqId, req);
     toast.success("Stage updated");
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!selectedReq) return;
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? {
-      ...r, status: "Approved but not assigned" as const, rmgNotes: reviewNotes, taEditedPendingApproval: false,
-      auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "Approved but not assigned", editedBy: "RMG", timestamp: new Date().toISOString() }]
-    } : r));
+    const updated = {
+      ...selectedReq, status: "Approved but not assigned", rmgNotes: reviewNotes, taEditedPendingApproval: false,
+      auditLog: [...selectedReq.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: selectedReq.status, newValue: "Approved but not assigned", editedBy: "RMG", timestamp: new Date().toISOString() }]
+    } as AdvancedRequisition;
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success("Requisition approved");
     setReviewDialogOpen(false);
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!selectedReq || !rejectionReason) { toast.error("Rejection reason required"); return; }
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? {
-      ...r, status: "Scrapped" as const, rejectionReason, rmgNotes: reviewNotes, taEditedPendingApproval: false,
-      auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "Scrapped", editedBy: "RMG", timestamp: new Date().toISOString() }]
-    } : r));
+    const updated = {
+      ...selectedReq, status: "Scrapped", rejectionReason, rmgNotes: reviewNotes, taEditedPendingApproval: false,
+      auditLog: [...selectedReq.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: selectedReq.status, newValue: "Scrapped", editedBy: "RMG", timestamp: new Date().toISOString() }]
+    } as AdvancedRequisition;
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success("Requisition scrapped");
     setReviewDialogOpen(false);
   };
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!selectedReq || !assignPodLead) { toast.error("POD Lead required"); return; }
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? {
-      ...r, status: "In progress" as const, podLeadAssigned: assignPodLead, recruiterAssigned: assignRecruiter,
+    const updated: AdvancedRequisition = {
+      ...selectedReq, status: "In progress", podLeadAssigned: assignPodLead, recruiterAssigned: assignRecruiter,
       targetClosureDate: assignTargetDate,
-      auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "In progress", editedBy: "RMG", timestamp: new Date().toISOString() }]
-    } : r));
+      auditLog: [...selectedReq.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: selectedReq.status, newValue: "In progress", editedBy: "RMG", timestamp: new Date().toISOString() }]
+    };
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success("Assigned to POD Lead");
     setAssignDialogOpen(false);
   };
 
-  const handleSaveLinks = () => {
+  const handleSaveLinks = async () => {
     if (!selectedReq) return;
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? {
-      ...r, linkedInRecruiterLink: updateLinkedIn, atsSheetLink: updateAtsLink,
-    } : r));
+    const updated = { ...selectedReq, linkedInRecruiterLink: updateLinkedIn, atsSheetLink: updateAtsLink };
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success("Links updated");
   };
 
-  const handleFunnelUpdate = () => {
+  const handleFunnelUpdate = async () => {
     if (!selectedReq) return;
     const prev = getCumulativeMetrics(selectedReq);
     const delta = {
@@ -217,7 +259,9 @@ const RequisitionsAdvanced = () => {
       recruiterName: selectedReq.recruiterAssigned || "Unknown",
       ...delta, blockers: duBlockers, notes: duNotes,
     };
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? { ...r, dailyUpdates: [...r.dailyUpdates, update] } : r));
+    const updated = { ...selectedReq, dailyUpdates: [...selectedReq.dailyUpdates, update] };
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success("Funnel updated — daily log auto-generated");
     setDuBlockers(""); setDuNotes("");
   };
@@ -237,7 +281,7 @@ const RequisitionsAdvanced = () => {
     setEditDialogOpen(true);
   };
 
-  const handleEditSave = () => {
+  const handleEditSave = async () => {
     if (!selectedReq) return;
     const changes: { field: string; old: string; new: string }[] = [];
     if (editStatus !== selectedReq.status) changes.push({ field: "status", old: selectedReq.status, new: editStatus });
@@ -253,43 +297,38 @@ const RequisitionsAdvanced = () => {
       id: crypto.randomUUID(), fieldChanged: c.field, oldValue: c.old, newValue: c.new, editedBy, timestamp: new Date().toISOString(),
     }));
 
-    // If TA edits deal/financial/creator details, flag for approval
     const taFlag = editByTA && changes.some(c => ["totalClientRevenue", "totalCreatorCost", "opportunityStage"].includes(c.field));
-
     const grossMargin = editRevenue - editCost;
     const grossMarginPercent = editRevenue ? Math.round(grossMargin / editRevenue * 1000) / 10 : 0;
 
-    setReqs(prev => prev.map(r => {
-      if (r.id !== selectedReq.id) return r;
-      const updated: AdvancedRequisition = {
-        ...r,
-        status: taFlag ? "RMG approval Pending" : editStatus as any,
-        podLeadAssigned: editPodLead,
-        recruiterAssigned: editRecruiter,
-        targetClosureDate: editTargetDate,
-        rmgNotes: editRmgNotes,
-        totalClientRevenue: editRevenue,
-        totalCreatorCost: editCost,
-        grossMargin,
-        grossMarginPercent,
-        updatedAt: new Date().toISOString(),
-        auditLog: [...r.auditLog, ...newAuditEntries],
-        taEditedPendingApproval: taFlag || r.taEditedPendingApproval,
-      };
-      // Update stage
-      if (editStage !== getStage(r)) {
-        if (r.flow === "sales" && r.salesData) {
-          updated.salesData = { ...r.salesData, opportunityStage: editStage as any };
-        } else if (r.hiringData) {
-          updated.hiringData = { ...r.hiringData, opportunityStage: editStage as any };
-        }
+    const updated: AdvancedRequisition = {
+      ...selectedReq,
+      status: taFlag ? "RMG approval Pending" : editStatus,
+      podLeadAssigned: editPodLead,
+      recruiterAssigned: editRecruiter,
+      targetClosureDate: editTargetDate,
+      rmgNotes: editRmgNotes,
+      totalClientRevenue: editRevenue,
+      totalCreatorCost: editCost,
+      grossMargin,
+      grossMarginPercent,
+      updatedAt: new Date().toISOString(),
+      auditLog: [...selectedReq.auditLog, ...newAuditEntries],
+      taEditedPendingApproval: taFlag || selectedReq.taEditedPendingApproval,
+    };
+    if (editStage !== getStage(selectedReq)) {
+      if (selectedReq.flow === "sales" && selectedReq.salesData) {
+        updated.salesData = { ...selectedReq.salesData, opportunityStage: editStage as any };
+      } else if (selectedReq.hiringData) {
+        updated.hiringData = { ...selectedReq.hiringData, opportunityStage: editStage as any };
       }
-      // Update dealId
-      if (r.hiringData && editDealId !== (r.hiringData.dealId || "")) {
-        updated.hiringData = { ...(updated.hiringData || r.hiringData), dealId: editDealId };
-      }
-      return updated;
-    }));
+    }
+    if (selectedReq.hiringData && editDealId !== (selectedReq.hiringData.dealId || "")) {
+      updated.hiringData = { ...(updated.hiringData || selectedReq.hiringData), dealId: editDealId };
+    }
+
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success(taFlag ? "Changes sent for RMG approval" : "Requisition updated");
     setEditDialogOpen(false);
   };
@@ -405,20 +444,22 @@ const RequisitionsAdvanced = () => {
                     <span className="text-xs text-muted-foreground font-mono">₹{r.totalClientRevenue.toLocaleString("en-IN")}</span>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" className="h-7 text-xs gap-1" onClick={() => {
-                      setReqs(prev => prev.map(req => req.id === r.id ? {
-                        ...req, status: "Approved but not assigned", taEditedPendingApproval: false,
-                        auditLog: [...req.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: req.status, newValue: "Approved but not assigned", editedBy: "Admin", timestamp: new Date().toISOString() }]
-                      } : req));
+                    <Button size="sm" className="h-7 text-xs gap-1" onClick={async () => {
+                      const updated = { ...r, status: "Approved but not assigned", taEditedPendingApproval: false,
+                        auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "Approved but not assigned", editedBy: "Admin", timestamp: new Date().toISOString() }]
+                      } as AdvancedRequisition;
+                      setReqs(prev => prev.map(req => req.id === r.id ? updated : req));
+                      await persistReq(r.id, updated);
                       toast.success(`${r.id} approved`);
                     }}>
                       <CheckCircle className="h-3 w-3" /> Approve
                     </Button>
-                    <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => {
-                      setReqs(prev => prev.map(req => req.id === r.id ? {
-                        ...req, status: "Scrapped", taEditedPendingApproval: false,
-                        auditLog: [...req.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: req.status, newValue: "Scrapped", editedBy: "Admin", timestamp: new Date().toISOString() }]
-                      } : req));
+                    <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={async () => {
+                      const updated = { ...r, status: "Scrapped", taEditedPendingApproval: false,
+                        auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "Scrapped", editedBy: "Admin", timestamp: new Date().toISOString() }]
+                      } as AdvancedRequisition;
+                      setReqs(prev => prev.map(req => req.id === r.id ? updated : req));
+                      await persistReq(r.id, updated);
                       toast.success(`${r.id} rejected`);
                     }}>
                       <XCircle className="h-3 w-3" /> Reject
@@ -510,14 +551,14 @@ const RequisitionsAdvanced = () => {
       {podGroups.map(group => (
         <div key={group.name} className="space-y-2">
           <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">{group.name} ({group.reqs.length})</h3>
-          <ReqTable reqs={group.reqs} getClientName={getClientName} getDealId={getDealId} getFlowLabel={getFlowLabel} getCreatorTypes={getCreatorTypes} getUrgencyDisplay={getUrgencyDisplay} getStage={getStage} daysOpen={daysOpen} openEdit={openEdit} openReview={openReview} openAssign={openAssign} openUpdate={openUpdate} handleInlineStatusChange={handleInlineStatusChange} handleInlineStageChange={handleInlineStageChange} allStatuses={allStatuses} setSelectedReq={setSelectedReq} setUpdateDialogOpen={setUpdateDialogOpen} setReviewDialogOpen={setReviewDialogOpen} setAssignDialogOpen={setAssignDialogOpen} />
+          <ReqTable reqs={group.reqs} getClientName={getClientName} getDealId={getDealId} getFlowLabel={getFlowLabel} getCreatorTypes={getCreatorTypes} getUrgencyDisplay={getUrgencyDisplay} getStage={getStage} daysOpen={daysOpen} openEdit={openEdit} openReview={openReview} openAssign={openAssign} openUpdate={openUpdate} handleInlineStatusChange={handleInlineStatusChange} handleInlineStageChange={handleInlineStageChange} handleDeleteReq={handleDeleteReq} allStatuses={allStatuses} setSelectedReq={setSelectedReq} setUpdateDialogOpen={setUpdateDialogOpen} setReviewDialogOpen={setReviewDialogOpen} setAssignDialogOpen={setAssignDialogOpen} />
         </div>
       ))}
 
       {ungroupedReqs.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">Unassigned / Sales ({ungroupedReqs.length})</h3>
-          <ReqTable reqs={ungroupedReqs} getClientName={getClientName} getDealId={getDealId} getFlowLabel={getFlowLabel} getCreatorTypes={getCreatorTypes} getUrgencyDisplay={getUrgencyDisplay} getStage={getStage} daysOpen={daysOpen} openEdit={openEdit} openReview={openReview} openAssign={openAssign} openUpdate={openUpdate} handleInlineStatusChange={handleInlineStatusChange} handleInlineStageChange={handleInlineStageChange} allStatuses={allStatuses} setSelectedReq={setSelectedReq} setUpdateDialogOpen={setUpdateDialogOpen} setReviewDialogOpen={setReviewDialogOpen} setAssignDialogOpen={setAssignDialogOpen} />
+          <ReqTable reqs={ungroupedReqs} getClientName={getClientName} getDealId={getDealId} getFlowLabel={getFlowLabel} getCreatorTypes={getCreatorTypes} getUrgencyDisplay={getUrgencyDisplay} getStage={getStage} daysOpen={daysOpen} openEdit={openEdit} openReview={openReview} openAssign={openAssign} openUpdate={openUpdate} handleInlineStatusChange={handleInlineStatusChange} handleInlineStageChange={handleInlineStageChange} handleDeleteReq={handleDeleteReq} allStatuses={allStatuses} setSelectedReq={setSelectedReq} setUpdateDialogOpen={setUpdateDialogOpen} setReviewDialogOpen={setReviewDialogOpen} setAssignDialogOpen={setAssignDialogOpen} />
         </div>
       )}
 
@@ -846,7 +887,7 @@ const RequisitionsAdvanced = () => {
 };
 
 // ─── Req Table Component ────────────────────────────────
-function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorTypes, getUrgencyDisplay, getStage, daysOpen, openEdit, openReview, openAssign, openUpdate, handleInlineStatusChange, handleInlineStageChange, allStatuses, setSelectedReq, setUpdateDialogOpen, setReviewDialogOpen, setAssignDialogOpen }: any) {
+function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorTypes, getUrgencyDisplay, getStage, daysOpen, openEdit, openReview, openAssign, openUpdate, handleInlineStatusChange, handleInlineStageChange, handleDeleteReq, allStatuses, setSelectedReq, setUpdateDialogOpen, setReviewDialogOpen, setAssignDialogOpen }: any) {
   const navigate = useNavigate();
   const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
   return (
@@ -908,6 +949,7 @@ function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorType
                     {req.status === "RMG approval Pending" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openReview(req)}>Review</Button>}
                     {req.status === "Approved but not assigned" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openAssign(req)}>Assign</Button>}
                     {req.status === "In progress" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openUpdate(req)}>Update</Button>}
+                    <Button variant="ghost" size="sm" className="text-xs h-7 text-destructive hover:text-destructive" onClick={() => handleDeleteReq(req.id)}><Trash2 className="h-3 w-3" /></Button>
                   </div>
                 </td>
               </tr>

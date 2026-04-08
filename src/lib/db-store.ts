@@ -253,6 +253,18 @@ export async function dbUpdateCreator(creatorId: string, updates: Partial<Deploy
   if (error) throw error;
 }
 
+export async function dbDeleteClient(clientId: string) {
+  // Delete all creators for all deals of this client
+  const { data: deals } = await supabase.from("deals").select("id").eq("client_id", clientId);
+  if (deals && deals.length > 0) {
+    const dealIds = deals.map(d => d.id);
+    await supabase.from("deployed_creators").delete().in("deal_id", dealIds);
+    await supabase.from("deals").delete().eq("client_id", clientId);
+  }
+  const { error } = await supabase.from("clients").delete().eq("id", clientId);
+  if (error) throw error;
+}
+
 export async function dbRemoveCreator(creatorId: string) {
   const { error } = await supabase.from("deployed_creators").delete().eq("id", creatorId);
   if (error) throw error;

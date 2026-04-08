@@ -74,13 +74,100 @@ const NewRequisition = () => {
     setSalesSpecificTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!raisedByName || !raisedByPhone || !flow) {
       toast.error("Please fill in all required fields");
       return;
     }
-    toast.success("Requisition submitted for RMG review");
-    navigate("/requisitions");
+
+    const { generateReqId } = await import("@/lib/requisition-types");
+    const { dbCreateRequisition } = await import("@/lib/requisition-db-store");
+
+    const reqId = generateReqId(flow);
+    const now = new Date().toISOString();
+
+    let totalClientRevenue = 0;
+    let totalCreatorCost = 0;
+
+    if (flow === "sales") {
+      totalClientRevenue = Number(salesClientBilling) || 0;
+      totalCreatorCost = Number(salesCreatorPay) || 0;
+    } else {
+      totalClientRevenue = hiringLineItems.reduce((s, li) => s + li.clientUnitPrice * li.numberOfCreators, 0);
+      totalCreatorCost = hiringLineItems.reduce((s, li) => s + li.supplyUnitPay * li.numberOfCreators, 0);
+    }
+
+    const grossMargin = totalClientRevenue - totalCreatorCost;
+    const grossMarginPercent = totalClientRevenue ? Math.round(grossMargin / totalClientRevenue * 1000) / 10 : 0;
+    const targetMarginPercent = flow === "sales" ? salesMargin : hiringTargetMargin;
+
+    const req: import("@/lib/requisition-types").AdvancedRequisition = {
+      id: reqId,
+      raisedByName,
+      raisedByPhone,
+      flow,
+      salesData: flow === "sales" ? {
+        clientName: salesClientName,
+        opportunityName: salesOpportunityName,
+        dealType: salesDealType,
+        resourceType: salesResourceType,
+        specificResourceTypes: salesSpecificTypes,
+        otherResourceTypeSpec: salesOtherSpec,
+        expectedCreatorPay: salesCreatorPay,
+        expectedClientBilling: salesClientBilling,
+        expectedMarginPercent: salesMargin,
+        opportunityStage: salesStage as any,
+        urgency: salesUrgency as any,
+        currency: salesCurrency,
+      } : undefined,
+      hiringData: (flow === "studio" || flow === "freelancer") ? {
+        clientName: hiringClientName,
+        dealId: hiringDealId,
+        dealType: hiringDealType,
+        studioType: hiringStudioType,
+        geography: hiringGeography,
+        signingEntity: hiringSigningEntity,
+        talentType: hiringTalentType,
+        opportunityStage: hiringStage as any,
+        clientDetails: hiringClientDetails,
+        currency: hiringCurrency,
+        mrr: hiringMrr,
+        contractDuration: hiringContractDuration,
+        targetMarginPercent: hiringTargetMargin,
+        lineItems: hiringLineItems,
+        urgencyScale: hiringUrgencyScale,
+        isReplacementHiring: hiringIsReplacement,
+        replacementOf: hiringReplacementOf,
+        pod: hiringPod,
+      } : undefined,
+      status: "RMG approval Pending",
+      rmgNotes: "",
+      rejectionReason: "",
+      podLeadAssigned: "",
+      recruiterAssigned: "",
+      targetClosureDate: "",
+      linkedInRecruiterLink: "",
+      atsSheetLink: "",
+      createdAt: now,
+      updatedAt: now,
+      totalClientRevenue,
+      totalCreatorCost,
+      grossMargin,
+      grossMarginPercent,
+      targetMarginPercent,
+      currency: flow === "sales" ? salesCurrency : hiringCurrency,
+      dailyUpdates: [],
+      auditLog: [],
+      taEditedPendingApproval: false,
+    };
+
+    try {
+      await dbCreateRequisition(req);
+      toast.success("Requisition submitted for RMG review");
+      navigate("/requisitions");
+    } catch (err: any) {
+      toast.error("Failed to save requisition: " + err.message);
+    }
   };
 
   const sym = getCurrencySymbol(flow === "sales" ? salesCurrency : hiringCurrency);

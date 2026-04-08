@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import {
   dbUpdateClient, dbUpdateDeal, dbUpdateCreator, dbAddCreatorToDeal, dbAddClientToPod, dbAddDealToClient,
   dbMoveClientToPod, dbCopyCreatorsToDeal, dbRemoveCreator, dbParseClientCSV, dbGetClientCSVTemplate, exportPodsAsCSV,
+  dbDeleteClient,
 } from "@/lib/db-store";
 import { usePods, useRefreshPods } from "@/lib/use-pods";
 import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName, DealCapability } from "@/lib/talent-client-types";
@@ -737,6 +738,15 @@ function ClientCard({ client, filterDeals, onDone }: { client: ClientV2; filterD
           <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Cost</p><p className="font-mono text-foreground">{formatCurrency(totalCost)}</p></div>
           <div className="text-right"><p className="text-xs font-mono uppercase text-muted-foreground">Margin</p><p className="font-mono text-success">{totalRev ? Math.round((totalRev - totalCost) / totalRev * 1000) / 10 : 0}%</p></div>
           <button onClick={e => { e.stopPropagation(); setEditClient(true); }} className="p-1.5 rounded-md hover:bg-muted"><Pencil className="h-4 w-4 text-muted-foreground" /></button>
+          <button onClick={async (e) => {
+            e.stopPropagation();
+            if (!confirm(`Delete client "${client.clientName}" and all its deals?`)) return;
+            try {
+              await dbDeleteClient(client.id);
+              toast.success(`"${client.clientName}" deleted`);
+              onDone();
+            } catch (err: any) { toast.error("Failed: " + err.message); }
+          }} className="p-1.5 rounded-md hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></button>
         </div>
       </div>
 
@@ -907,6 +917,7 @@ const DealMargins = () => {
   const [selectedPod, setSelectedPod] = useState<string>("All");
   const [addClient, setAddClient] = useState(false);
   const [csvImport, setCsvImport] = useState(false);
+  const [showClosedClients, setShowClosedClients] = useState(false);
 
   if (isLoading || !pods) {
     return (
@@ -926,6 +937,9 @@ const DealMargins = () => {
   allClientsRaw.forEach(c => clientMap.set(c.id, c));
   const allClients = Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName));
 
+  const isClientAllClosed = (c: ClientV2) => c.deals.length > 0 && c.deals.every(d => d.status === "Completed" || (d.status as string) === "Closed");
+  const filterClosed = (clients: ClientV2[]) => showClosedClients ? clients : clients.filter(c => !isClientAllClosed(c));
+
   const getClientsForPod = (podName: string): { client: ClientV2; deals: DealV2[] }[] => {
     const vsdNames = Object.entries(VSD_POD_MAP).filter(([, pod]) => pod === podName).map(([vsd]) => vsd);
     const results: { client: ClientV2; deals: DealV2[] }[] = [];
@@ -941,11 +955,14 @@ const DealMargins = () => {
     deals: c.deals.filter(d => !d.vsdName || !VSD_POD_MAP[d.vsdName]),
   }));
 
+  const closedClientCount = allClients.filter(isClientAllClosed).length;
+
   const visibleClients = (() => {
-    if (selectedPod === "All") return allClients;
-    if (selectedPod === "Unassigned") return unassignedEntries.map(e => e.client);
+    if (selectedPod === "All") return filterClosed(allClients);
+    if (selectedPod === "Unassigned") return filterClosed(unassignedEntries.map(e => e.client));
     const podClients = getClientsForPod(selectedPod);
-    return podClients.map(({ client, deals }) => ({ ...client, deals }));
+    const mapped = podClients.map(({ client, deals }) => ({ ...client, deals }));
+    return filterClosed(mapped);
   })();
 
   const handleExportCSV = () => {
@@ -976,6 +993,13 @@ const DealMargins = () => {
 
       <SummaryCards clients={visibleClients} />
 
+      <div className="flex items-center gap-4">
+        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+          <input type="checkbox" checked={showClosedClients} onChange={e => setShowClosedClients(e.target.checked)} className="rounded border-border" />
+          Show closed clients ({closedClientCount})
+        </label>
+      </div>
+
       <Tabs value={selectedPod} onValueChange={setSelectedPod}>
         <TabsList className="bg-muted border border-border">
           <TabsTrigger value="All" className="text-xs font-mono">All</TabsTrigger>
@@ -987,17 +1011,18 @@ const DealMargins = () => {
           )}
         </TabsList>
         <TabsContent value="All" className="space-y-4 mt-4">
-          {allClients.map(client => <ClientCard key={client.id} client={client} onDone={refresh} />)}
+          {filterClosed(allClients).map(client => <ClientCard key={client.id} client={client} onDone={refresh} />)}
         </TabsContent>
         {POD_NAMES.map(podName => {
           const podClients = getClientsForPod(podName);
+          const filtered = showClosedClients ? podClients : podClients.filter(({ client }) => !isClientAllClosed(client));
           return (
             <TabsContent key={podName} value={podName} className="space-y-4 mt-4">
               <div className="flex justify-end">
                 <Button size="sm" onClick={() => setAddClient(true)} className="gap-1 text-xs"><Plus className="h-3 w-3" />Add Client to {podName}</Button>
               </div>
-              {podClients.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
-              {podClients.map(({ client, deals }) => <ClientCard key={`${client.id}-${podName}`} client={client} filterDeals={deals} onDone={refresh} />)}
+              {filtered.length === 0 && <p className="text-sm text-muted-foreground">No clients in this pod</p>}
+              {filtered.map(({ client, deals }) => <ClientCard key={`${client.id}-${podName}`} client={client} filterDeals={deals} onDone={refresh} />)}
             </TabsContent>
           );
         })}
