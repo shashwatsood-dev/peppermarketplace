@@ -18,15 +18,16 @@ export async function fetchRequisitions(): Promise<AdvancedRequisition[]> {
 
 // ── Create a new requisition ──────────────────────────────
 export async function dbCreateRequisition(req: AdvancedRequisition): Promise<string> {
-  const { error } = await supabase.from("requisitions").insert({
+  const row = {
     id: req.id,
     flow: req.flow,
     status: req.status,
     client_name: req.flow === "sales" ? req.salesData?.clientName || "" : req.hiringData?.clientName || "",
     deal_id: req.flow !== "sales" ? req.hiringData?.dealId || "" : "",
     pod_name: req.flow !== "sales" ? req.hiringData?.pod || "" : "",
-    payload: req as unknown as Record<string, unknown>,
-  });
+    payload: JSON.parse(JSON.stringify(req)) as Json,
+  };
+  const { error } = await supabase.from("requisitions").insert(row);
   if (error) throw error;
   return req.id;
 }
