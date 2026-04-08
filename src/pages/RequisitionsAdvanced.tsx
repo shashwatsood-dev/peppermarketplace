@@ -219,10 +219,6 @@ const RequisitionsAdvanced = () => {
     toast.success("Requisition scrapped");
     setReviewDialogOpen(false);
   };
-    } : r));
-    toast.success("Requisition scrapped");
-    setReviewDialogOpen(false);
-  };
 
   const handleAssign = () => {
     if (!selectedReq || !assignPodLead) { toast.error("POD Lead required"); return; }
