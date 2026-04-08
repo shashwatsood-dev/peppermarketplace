@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import {
   dbUpdateClient, dbUpdateDeal, dbUpdateCreator, dbAddCreatorToDeal, dbAddClientToPod, dbAddDealToClient,
   dbMoveClientToPod, dbCopyCreatorsToDeal, dbRemoveCreator, dbParseClientCSV, dbGetClientCSVTemplate, exportPodsAsCSV,
+  dbDeleteClient,
 } from "@/lib/db-store";
 import { usePods, useRefreshPods } from "@/lib/use-pods";
 import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName, DealCapability } from "@/lib/talent-client-types";
