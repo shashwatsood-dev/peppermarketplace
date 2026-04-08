@@ -887,7 +887,7 @@ const RequisitionsAdvanced = () => {
 };
 
 // ─── Req Table Component ────────────────────────────────
-function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorTypes, getUrgencyDisplay, getStage, daysOpen, openEdit, openReview, openAssign, openUpdate, handleInlineStatusChange, handleInlineStageChange, allStatuses, setSelectedReq, setUpdateDialogOpen, setReviewDialogOpen, setAssignDialogOpen }: any) {
+function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorTypes, getUrgencyDisplay, getStage, daysOpen, openEdit, openReview, openAssign, openUpdate, handleInlineStatusChange, handleInlineStageChange, handleDeleteReq, allStatuses, setSelectedReq, setUpdateDialogOpen, setReviewDialogOpen, setAssignDialogOpen }: any) {
   const navigate = useNavigate();
   const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
   return (
