@@ -101,6 +101,10 @@ const ATSPipeline = () => {
     return req.hiringData?.lineItems.map(li => li.creatorType === "Other" ? li.otherCreatorTypeSpec : li.creatorType).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i) || [];
   }, [req]);
 
+  if (reqLoading) {
+    return <p className="text-muted-foreground p-4">Loading requisition…</p>;
+  }
+
   if (!req) {
     return (
       <div className="space-y-4">

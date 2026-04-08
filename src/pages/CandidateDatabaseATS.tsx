@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCandidates, addCandidate, updateCandidate, getAllPipelineCandidates, bulkAddCandidates, getCSVTemplate, parseCandidateCSV } from "@/lib/ats-store";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
+import { fetchRequisitions } from "@/lib/requisition-db-store";
+import type { AdvancedRequisition } from "@/lib/requisition-types";
 import { getPipelineCandidates } from "@/lib/ats-store";
 import type { Candidate } from "@/lib/ats-types";
 import { RESOURCE_SPECIFIC_TYPES } from "@/lib/requisition-types";
