@@ -937,6 +937,9 @@ const DealMargins = () => {
   allClientsRaw.forEach(c => clientMap.set(c.id, c));
   const allClients = Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName));
 
+  const isClientAllClosed = (c: ClientV2) => c.deals.length > 0 && c.deals.every(d => d.status === "Completed" || d.status === "Closed");
+  const filterClosed = (clients: ClientV2[]) => showClosedClients ? clients : clients.filter(c => !isClientAllClosed(c));
+
   const getClientsForPod = (podName: string): { client: ClientV2; deals: DealV2[] }[] => {
     const vsdNames = Object.entries(VSD_POD_MAP).filter(([, pod]) => pod === podName).map(([vsd]) => vsd);
     const results: { client: ClientV2; deals: DealV2[] }[] = [];
@@ -952,11 +955,14 @@ const DealMargins = () => {
     deals: c.deals.filter(d => !d.vsdName || !VSD_POD_MAP[d.vsdName]),
   }));
 
+  const closedClientCount = allClients.filter(isClientAllClosed).length;
+
   const visibleClients = (() => {
-    if (selectedPod === "All") return allClients;
-    if (selectedPod === "Unassigned") return unassignedEntries.map(e => e.client);
+    if (selectedPod === "All") return filterClosed(allClients);
+    if (selectedPod === "Unassigned") return filterClosed(unassignedEntries.map(e => e.client));
     const podClients = getClientsForPod(selectedPod);
-    return podClients.map(({ client, deals }) => ({ ...client, deals }));
+    const mapped = podClients.map(({ client, deals }) => ({ ...client, deals }));
+    return filterClosed(mapped);
   })();
 
   const handleExportCSV = () => {
