@@ -269,9 +269,6 @@ export async function dbRemoveCreator(creatorId: string) {
   const { error } = await supabase.from("deployed_creators").delete().eq("id", creatorId);
   if (error) throw error;
 }
-  const { error } = await supabase.from("deployed_creators").delete().eq("id", creatorId);
-  if (error) throw error;
-}
 
 export async function dbCopyCreatorsToDeal(sourceDealId: string, targetDealId: string, creatorIds: string[], removeFromSource: boolean) {
   const { data: creators, error } = await supabase.from("deployed_creators").select("*").in("id", creatorIds);
