@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AdvancedRequisition } from "./requisition-types";
-import { generateReqId, type RequisitionFlow } from "./requisition-types";
+import type { Json } from "@/integrations/supabase/types";
 
 // ── Fetch all requisitions from Supabase ──────────────────
 export async function fetchRequisitions(): Promise<AdvancedRequisition[]> {
