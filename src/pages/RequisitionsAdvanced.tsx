@@ -177,37 +177,48 @@ const RequisitionsAdvanced = () => {
   };
 
   // Inline stage change
-  const handleInlineStageChange = (reqId: string, newStage: string) => {
-    setReqs(prev => prev.map(r => {
+  const handleInlineStageChange = async (reqId: string, newStage: string) => {
+    const updated = reqs.map(r => {
       if (r.id !== reqId) return r;
-      const updated = { ...r };
+      const u = { ...r };
       const oldStage = getStage(r);
       if (r.flow === "sales" && r.salesData) {
-        updated.salesData = { ...r.salesData, opportunityStage: newStage as any };
+        u.salesData = { ...r.salesData, opportunityStage: newStage as any };
       } else if (r.hiringData) {
-        updated.hiringData = { ...r.hiringData, opportunityStage: newStage as any };
+        u.hiringData = { ...r.hiringData, opportunityStage: newStage as any };
       }
-      updated.auditLog = [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "opportunityStage", oldValue: oldStage, newValue: newStage, editedBy: "User", timestamp: new Date().toISOString() }];
-      return updated;
-    }));
+      u.auditLog = [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "opportunityStage", oldValue: oldStage, newValue: newStage, editedBy: "User", timestamp: new Date().toISOString() }];
+      return u;
+    });
+    setReqs(updated);
+    const req = updated.find(r => r.id === reqId);
+    if (req) await persistReq(reqId, req);
     toast.success("Stage updated");
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!selectedReq) return;
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? {
-      ...r, status: "Approved but not assigned" as const, rmgNotes: reviewNotes, taEditedPendingApproval: false,
-      auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "Approved but not assigned", editedBy: "RMG", timestamp: new Date().toISOString() }]
-    } : r));
+    const updated = {
+      ...selectedReq, status: "Approved but not assigned", rmgNotes: reviewNotes, taEditedPendingApproval: false,
+      auditLog: [...selectedReq.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: selectedReq.status, newValue: "Approved but not assigned", editedBy: "RMG", timestamp: new Date().toISOString() }]
+    } as AdvancedRequisition;
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
     toast.success("Requisition approved");
     setReviewDialogOpen(false);
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!selectedReq || !rejectionReason) { toast.error("Rejection reason required"); return; }
-    setReqs(prev => prev.map(r => r.id === selectedReq.id ? {
-      ...r, status: "Scrapped" as const, rejectionReason, rmgNotes: reviewNotes, taEditedPendingApproval: false,
-      auditLog: [...r.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: r.status, newValue: "Scrapped", editedBy: "RMG", timestamp: new Date().toISOString() }]
+    const updated = {
+      ...selectedReq, status: "Scrapped", rejectionReason, rmgNotes: reviewNotes, taEditedPendingApproval: false,
+      auditLog: [...selectedReq.auditLog, { id: crypto.randomUUID(), fieldChanged: "status", oldValue: selectedReq.status, newValue: "Scrapped", editedBy: "RMG", timestamp: new Date().toISOString() }]
+    } as AdvancedRequisition;
+    setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
+    await persistReq(selectedReq.id, updated);
+    toast.success("Requisition scrapped");
+    setReviewDialogOpen(false);
+  };
     } : r));
     toast.success("Requisition scrapped");
     setReviewDialogOpen(false);
