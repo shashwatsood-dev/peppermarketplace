@@ -993,6 +993,13 @@ const DealMargins = () => {
 
       <SummaryCards clients={visibleClients} />
 
+      <div className="flex items-center gap-4">
+        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+          <input type="checkbox" checked={showClosedClients} onChange={e => setShowClosedClients(e.target.checked)} className="rounded border-border" />
+          Show closed clients ({closedClientCount})
+        </label>
+      </div>
+
       <Tabs value={selectedPod} onValueChange={setSelectedPod}>
         <TabsList className="bg-muted border border-border">
           <TabsTrigger value="All" className="text-xs font-mono">All</TabsTrigger>
