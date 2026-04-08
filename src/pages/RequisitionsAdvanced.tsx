@@ -151,7 +151,7 @@ const RequisitionsAdvanced = () => {
   const filtered = reqs.filter((r) => {
     const client = getClientName(r).toLowerCase();
     const matchSearch = client.includes(search.toLowerCase()) || r.id.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "all" || r.status === statusFilter;
+    const matchStatus = statusFilter === "all" ? !HIDDEN_STATUSES.includes(r.status) : r.status === statusFilter;
     const matchFlow = flowFilter === "all" || r.flow === flowFilter;
     const matchPod = podFilter === "All" || getPod(r) === podFilter;
     return matchSearch && matchStatus && matchFlow && matchPod;
