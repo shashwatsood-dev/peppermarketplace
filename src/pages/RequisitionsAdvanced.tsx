@@ -23,16 +23,20 @@ const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
 const INITIAL_POD_LEADS = ["Neha Gupta", "Ravi Kumar", "Anita Desai"];
 const INITIAL_RECRUITERS = ["Neha Gupta", "Ravi Kumar", "Pooja Shah", "Sanjay Verma"];
 
+const HIDDEN_STATUSES = ["Scrapped", "On hold", "Closed – allotted"];
+
 const RequisitionsAdvanced = () => {
   const navigate = useNavigate();
   const { currentRole } = useAuth();
   const isAdmin = currentRole === "admin";
+  const queryClient = useQueryClient();
+  const { data: dbReqs = [], isLoading } = useQuery({ queryKey: ["requisitions"], queryFn: fetchRequisitions });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [flowFilter, setFlowFilter] = useState("all");
   const [podFilter, setPodFilter] = useState("All");
   const [showApprovalQueue, setShowApprovalQueue] = useState(false);
-  const [reqs, setReqs] = useState(advancedRequisitions);
+  const [reqs, setReqs] = useState<AdvancedRequisition[]>([]);
   const [selectedReq, setSelectedReq] = useState<AdvancedRequisition | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
