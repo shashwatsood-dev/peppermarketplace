@@ -937,7 +937,7 @@ const DealMargins = () => {
   allClientsRaw.forEach(c => clientMap.set(c.id, c));
   const allClients = Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName));
 
-  const isClientAllClosed = (c: ClientV2) => c.deals.length > 0 && c.deals.every(d => d.status === "Completed" || d.status === "Closed");
+  const isClientAllClosed = (c: ClientV2) => c.deals.length > 0 && c.deals.every(d => d.status === "Completed" || (d.status as string) === "Closed");
   const filterClosed = (clients: ClientV2[]) => showClosedClients ? clients : clients.filter(c => !isClientAllClosed(c));
 
   const getClientsForPod = (podName: string): { client: ClientV2; deals: DealV2[] }[] => {
