@@ -80,6 +80,141 @@ function RatingReasonDialog({ open, onClose, onSave, rating }: { open: boolean; 
   );
 }
 
+// ─── Deal Notes Dialog ──────────────────────────────────
+function DealNotesDialog({ dealId, dealName, open, onClose }: { dealId: string; dealName: string; open: boolean; onClose: () => void }) {
+  const [notes, setNotes] = useState<DealNote[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (open) {
+      setLoading(true);
+      dbFetchDealNotes(dealId).then(n => { setNotes(n); setLoading(false); });
+    }
+  }, [open, dealId]);
+
+  const add = async () => {
+    if (!newNote.trim()) return;
+    await dbAddDealNote(dealId, newNote.trim(), user?.email || "Unknown");
+    setNewNote("");
+    const updated = await dbFetchDealNotes(dealId);
+    setNotes(updated);
+    toast.success("Note added");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Notes — {dealName}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Textarea value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Add a note..." rows={2} className="flex-1" />
+            <Button onClick={add} size="sm" className="self-end">Add</Button>
+          </div>
+          {loading ? <p className="text-xs text-muted-foreground">Loading...</p> : notes.length === 0 ? <p className="text-xs text-muted-foreground">No notes yet</p> : (
+            <div className="space-y-2">
+              {notes.map(n => (
+                <div key={n.id} className="p-2 rounded bg-muted/30 border border-border text-xs space-y-1">
+                  <div className="flex justify-between"><span className="font-mono text-muted-foreground">{new Date(n.createdAt).toLocaleDateString()}</span><span className="text-muted-foreground">{n.author}</span></div>
+                  <p className="text-foreground">{n.note}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Creator Engagement Notes Dialog ────────────────────
+function CreatorEngagementNotesDialog({ creatorId, creatorName, open, onClose }: { creatorId: string; creatorName: string; open: boolean; onClose: () => void }) {
+  const [notes, setNotes] = useState<CreatorEngagementNote[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [noteType, setNoteType] = useState("general");
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (open) {
+      setLoading(true);
+      dbFetchCreatorEngagementNotes(creatorId).then(n => { setNotes(n); setLoading(false); });
+    }
+  }, [open, creatorId]);
+
+  const add = async () => {
+    if (!newNote.trim()) return;
+    await dbAddCreatorEngagementNote(creatorId, newNote.trim(), user?.email || "Unknown", noteType);
+    setNewNote("");
+    const updated = await dbFetchCreatorEngagementNotes(creatorId);
+    setNotes(updated);
+    toast.success("Note added");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Engagement History — {creatorName}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Select value={noteType} onValueChange={setNoteType}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="capability_lead">Capability Lead</SelectItem>
+                <SelectItem value="bopm">BOPM</SelectItem>
+                <SelectItem value="feedback">Feedback</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-2">
+              <Textarea value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Add engagement note..." rows={2} className="flex-1" />
+              <Button onClick={add} size="sm" className="self-end">Add</Button>
+            </div>
+          </div>
+          {loading ? <p className="text-xs text-muted-foreground">Loading...</p> : notes.length === 0 ? <p className="text-xs text-muted-foreground">No notes yet</p> : (
+            <div className="space-y-2">
+              {notes.map(n => (
+                <div key={n.id} className="p-2 rounded bg-muted/30 border border-border text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="font-mono text-muted-foreground">{new Date(n.createdAt).toLocaleDateString()}</span>
+                    <div className="flex gap-2">
+                      <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">{n.noteType}</span>
+                      <span className="text-muted-foreground">{n.author}</span>
+                    </div>
+                  </div>
+                  <p className="text-foreground">{n.note}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Deal Health Status Selector ────────────────────────
+function DealHealthSelect({ dealId, value, onDone }: { dealId: string; value: HealthColor | ""; onDone: () => void }) {
+  return (
+    <Select value={value || "none"} onValueChange={async v => {
+      await dbUpdateDeal(dealId, { healthStatus: v === "none" ? "" : v as HealthColor });
+      toast.success("Deal health updated");
+      onDone();
+    }}>
+      <SelectTrigger className="h-7 w-24 text-xs">
+        <SelectValue>{value ? <span className="flex items-center gap-1">{healthDot(value)} {value}</span> : "—"}</SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="green"><span className="flex items-center gap-1">{healthDot("green")} Green</span></SelectItem>
+        <SelectItem value="yellow"><span className="flex items-center gap-1">{healthDot("yellow")} Yellow</span></SelectItem>
+        <SelectItem value="red"><span className="flex items-center gap-1">{healthDot("red")} Red</span></SelectItem>
+        <SelectItem value="none">None</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
 // ─── Edit Client Dialog ─────────────────────────────────
 function EditClientDialog({ client, open, onClose, onDone }: { client: ClientV2; open: boolean; onClose: () => void; onDone: () => void }) {
   const [form, setForm] = useState({ vsdName: client.vsdName, principalBOPM: client.principalBOPM, seniorBOPM: client.seniorBOPM, juniorBOPM: client.juniorBOPM });
