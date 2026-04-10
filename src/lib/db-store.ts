@@ -186,7 +186,7 @@ export async function dbUpdateDeal(dealId: string, updates: Partial<{
   dealName: string; dealType: string; status: DealStatus; isContentStudio: boolean; vsdName: string;
   totalContractValue: number; totalCreatorCost: number; currency: CurrencyCode; signingEntity: string; geography: string;
   mrr: number; contractDuration: string; contractStartDate: string; contractEndDate: string;
-  capabilities: string[]; capabilityLeader: string;
+  capabilities: string[]; capabilityLeader: string; healthStatus: HealthColor | "";
 }>) {
   const mapped: TablesUpdate<"deals"> = {};
   if (updates.dealName !== undefined) mapped.deal_name = updates.dealName;
