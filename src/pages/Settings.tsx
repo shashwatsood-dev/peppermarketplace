@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,21 +6,46 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAllStatuses, addCustomStatus, getCustomStatuses } from "@/lib/requisition-types";
 import { useAuth, getRoleLabel, type UserRole } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, UserPlus } from "lucide-react";
+import { Plus, UserPlus, Trash2, RotateCcw } from "lucide-react";
+
+interface ProfileRow {
+  id: string;
+  user_id: string;
+  email: string;
+  name: string;
+  created_at: string;
+  role: UserRole;
+}
 
 const Settings = () => {
-  const { currentUser, users, addUser } = useAuth();
+  const { currentUser } = useAuth();
   const [newStatus, setNewStatus] = useState("");
   const [, setTick] = useState(0);
-
-  // User management
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserName, setNewUserName] = useState("");
-  const [newUserRole, setNewUserRole] = useState<UserRole>("pod_lead_recruiter");
+  const [users, setUsers] = useState<ProfileRow[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
   const allStatuses = getAllStatuses();
   const customStatuses = getCustomStatuses();
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    const { data: profiles } = await supabase.from("profiles").select("*");
+    const { data: roles } = await supabase.from("user_roles").select("*");
+
+    const roleMap: Record<string, UserRole> = {};
+    roles?.forEach((r: any) => { roleMap[r.user_id] = r.role as UserRole; });
+
+    const merged: ProfileRow[] = (profiles || []).map((p: any) => ({
+      ...p,
+      role: roleMap[p.user_id] || "admin",
+    }));
+    setUsers(merged);
+    setLoadingUsers(false);
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
 
   const handleAddStatus = () => {
     if (!newStatus.trim()) return;
@@ -34,20 +59,46 @@ const Settings = () => {
     toast.success(`Status "${newStatus.trim()}" added`);
   };
 
-  const handleAddUser = () => {
-    if (!newUserEmail.trim() || !newUserName.trim()) {
-      toast.error("Email and name are required");
+  const handleDeleteUser = async (userId: string) => {
+    if (userId === currentUser?.id) {
+      toast.error("You cannot delete your own account");
       return;
     }
-    if (users.find(u => u.email.toLowerCase() === newUserEmail.toLowerCase())) {
-      toast.error("User with this email already exists");
+    // Delete profile (cascade will handle user_roles due to FK)
+    const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
+    if (error) {
+      toast.error("Failed to delete user");
       return;
     }
-    addUser(newUserEmail.trim(), newUserName.trim(), newUserRole);
-    toast.success(`User ${newUserName.trim()} added. They can set their password on first login.`);
-    setNewUserEmail("");
-    setNewUserName("");
-    setNewUserRole("pod_lead_recruiter");
+    toast.success("User removed");
+    fetchUsers();
+  };
+
+  const handleResetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    if (error) {
+      toast.error("Failed to send reset email");
+      return;
+    }
+    toast.success(`Password reset email sent to ${email}`);
+  };
+
+  const handleChangeRole = async (userId: string, newRole: UserRole) => {
+    // Delete existing role
+    await supabase.from("user_roles").delete().eq("user_id", userId);
+    // Insert new role
+    const { error } = await supabase.from("user_roles").insert({
+      user_id: userId,
+      role: newRole,
+    });
+    if (error) {
+      toast.error("Failed to update role");
+      return;
+    }
+    toast.success("Role updated");
+    fetchUsers();
   };
 
   return (
@@ -64,43 +115,53 @@ const Settings = () => {
           <CardTitle className="text-base flex items-center gap-2"><UserPlus className="h-4 w-4" /> User Management</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Add New User</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <Input value={newUserName} onChange={e => setNewUserName(e.target.value)}
-                placeholder="Full name" className="bg-background border-border" />
-              <Input value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)}
-                placeholder="Email address" className="bg-background border-border" />
-              <Select value={newUserRole} onValueChange={v => setNewUserRole(v as UserRole)}>
-                <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="pod_lead_recruiter">Pod Lead / Recruiter</SelectItem>
-                  <SelectItem value="capability_lead_am">Capability Lead / AM</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleAddUser} className="gap-1">
-              <Plus className="h-4 w-4" /> Add User
-            </Button>
-          </div>
-
           <div>
-            <Label className="text-xs text-muted-foreground">Existing Users</Label>
-            <div className="mt-2 space-y-2">
-              {users.map(u => (
-                <div key={u.id} className="flex items-center justify-between p-2 rounded bg-muted/30 border border-border text-sm">
-                  <div>
-                    <span className="font-medium text-foreground">{u.name}</span>
-                    <span className="text-muted-foreground ml-2">{u.email}</span>
+            <Label className="text-xs text-muted-foreground">Registered Users</Label>
+            {loadingUsers ? (
+              <p className="text-sm text-muted-foreground mt-2">Loading...</p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {users.map(u => (
+                  <div key={u.id} className="flex items-center justify-between p-2 rounded bg-muted/30 border border-border text-sm">
+                    <div>
+                      <span className="font-medium text-foreground">{u.name || "Unnamed"}</span>
+                      <span className="text-muted-foreground ml-2">{u.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={u.role}
+                        onValueChange={v => handleChangeRole(u.user_id, v as UserRole)}
+                        disabled={u.user_id === currentUser?.id}
+                      >
+                        <SelectTrigger className="h-7 text-xs w-44 bg-background border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="capability_lead_am">Capability Lead / AM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="ghost" size="icon" className="h-7 w-7"
+                        onClick={() => handleResetPassword(u.email)}
+                        title="Reset password"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </Button>
+                      {u.user_id !== currentUser?.id && (
+                        <Button
+                          variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                          onClick={() => handleDeleteUser(u.user_id)}
+                          title="Delete user"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="status-badge bg-primary/15 text-primary">{getRoleLabel(u.role)}</span>
-                    {!u.passwordSet && <span className="status-badge bg-warning/15 text-warning">Pending Setup</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -12,12 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 
 const allNavItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["admin", "pod_lead_recruiter"] },
-  { title: "Requisitions", url: "/requisitions", icon: FileText, roles: ["admin", "pod_lead_recruiter", "capability_lead_am"] },
-  { title: "ATS", url: "/ats", icon: Kanban, roles: ["admin", "pod_lead_recruiter"] },
-  { title: "Handover", url: "/handover", icon: UserCheck, roles: ["admin", "pod_lead_recruiter"] },
-  { title: "Talent X Client View", url: "/deals", icon: User, roles: ["admin", "pod_lead_recruiter", "capability_lead_am"] },
-  { title: "Studio Dashboard", url: "/studio", icon: BarChart3, roles: ["admin", "pod_lead_recruiter"] },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, roles: ["admin"] },
+  { title: "Requisitions", url: "/requisitions", icon: FileText, roles: ["admin", "capability_lead_am"] },
+  { title: "ATS", url: "/ats", icon: Kanban, roles: ["admin"] },
+  { title: "Handover", url: "/handover", icon: UserCheck, roles: ["admin"] },
+  { title: "Talent X Client View", url: "/deals", icon: User, roles: ["admin", "capability_lead_am"] },
+  { title: "Studio Dashboard", url: "/studio", icon: BarChart3, roles: ["admin"] },
   { title: "Creator Database", url: "/creators", icon: Database, roles: ["admin"] },
 ];
 
@@ -103,7 +103,6 @@ export function AppSidebar() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="pod_lead_recruiter">Pod Lead / Recruiter</SelectItem>
                   <SelectItem value="capability_lead_am">Capability Lead / AM</SelectItem>
                 </SelectContent>
               </Select>

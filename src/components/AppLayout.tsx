@@ -4,7 +4,15 @@ import { Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
 
 export function AppLayout() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground text-sm">Loading...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
