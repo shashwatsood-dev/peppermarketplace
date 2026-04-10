@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, HRBPConnect, DealStatus, PodName, CreatorDealStatus, HealthColor, DealCapability } from "./talent-client-types";
+import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, HRBPConnect, DealStatus, PodName, CreatorDealStatus, HealthColor, DealCapability, DealNote, CreatorEngagementNote } from "./talent-client-types";
 import type { CurrencyCode } from "./requisition-types";
 import type { PayModel, RoleType } from "./mock-data";
 import type { ResourceSource } from "./talent-client-types";
