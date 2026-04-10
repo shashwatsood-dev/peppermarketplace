@@ -855,6 +855,8 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
       <BulkAddCreatorDialog dealId={deal.id} open={addCreator} onClose={() => setAddCreator(false)} onDone={onDone} />
       {deal.creators.length > 0 && <TransferCreatorsDialog dealId={deal.id} creators={deal.creators} otherDeals={otherDeals} open={transferCreators} onClose={() => setTransferCreators(false)} onDone={onDone} />}
       {editingCreator && <EditCreatorDialog creator={editingCreator} open={!!editingCreator} onClose={() => setEditingCreator(null)} onDone={onDone} />}
+      <DealNotesDialog dealId={deal.id} dealName={deal.dealName} open={showDealNotes} onClose={() => setShowDealNotes(false)} />
+      {showCreatorNotes && <CreatorEngagementNotesDialog creatorId={showCreatorNotes.id} creatorName={showCreatorNotes.name} open={!!showCreatorNotes} onClose={() => setShowCreatorNotes(null)} />}
     </div>
   );
 }
