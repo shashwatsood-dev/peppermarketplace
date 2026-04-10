@@ -764,10 +764,12 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <div onClick={e => e.stopPropagation()}><DealHealthSelect dealId={deal.id} value={deal.healthStatus} onDone={onDone} /></div>
           <span className="text-xs font-mono text-muted-foreground">Rev {formatCurrency(deal.totalContractValue)}</span>
           <span className="text-xs font-mono text-muted-foreground">Cost {formatCurrency(deal.totalCreatorCost)}</span>
           <span className="text-xs font-mono text-success">{deal.grossMarginPercent}%</span>
           <StatusBadge status={deal.status} />
+          <button onClick={e => { e.stopPropagation(); setShowDealNotes(true); }} className="p-1 rounded hover:bg-muted" title="Deal notes"><MessageSquare className="h-3.5 w-3.5 text-muted-foreground" /></button>
           <button onClick={toggleContentStudio} className={`p-1 rounded text-xs border ${deal.isContentStudio ? "bg-primary/10 border-primary text-primary" : "border-border text-muted-foreground hover:bg-muted"}`} title={deal.isContentStudio ? "Remove from Studio" : "Mark as Content Studio"}>
             CS
           </button>
