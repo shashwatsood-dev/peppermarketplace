@@ -75,6 +75,24 @@ export interface DealV2 {
   contractEndDate: string;
   capabilities: DealCapability[];
   capabilityLeader: string;
+  healthStatus: HealthColor | "";
+}
+
+export interface DealNote {
+  id: string;
+  dealId: string;
+  note: string;
+  author: string;
+  createdAt: string;
+}
+
+export interface CreatorEngagementNote {
+  id: string;
+  creatorId: string;
+  note: string;
+  author: string;
+  noteType: string;
+  createdAt: string;
 }
 
 export interface ClientV2 {
