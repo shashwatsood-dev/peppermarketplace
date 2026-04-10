@@ -190,7 +190,7 @@ const ATSPipeline = () => {
       toast.error("Already in pipeline"); return;
     }
     try {
-      await addToPipelineDb(candidateId, reqId!, currentUser);
+      await addToPipelineDb(candidateId, reqId!, currentUserName);
       await refreshPipeline();
       toast.success("Candidate added");
       setAddDialogOpen(false);
@@ -215,7 +215,7 @@ const ATSPipeline = () => {
         source: newSource,
       });
       setCandidateCache(prev => ({ ...prev, [candidate.id]: candidate }));
-      await addToPipelineDb(candidate.id, reqId!, currentUser);
+      await addToPipelineDb(candidate.id, reqId!, currentUserName);
       await refreshPipeline();
       toast.success("New candidate created & added");
       setAddDialogOpen(false);
@@ -237,7 +237,7 @@ const ATSPipeline = () => {
       setHiredPC(pc); setFinalizedPay(pc.offer_amount || ""); setHiredPayDialogOpen(true); setDraggedPC(null); return;
     }
     try {
-      await movePipelineStageDb(pcId, stage, currentUser);
+      await movePipelineStageDb(pcId, stage, currentUserName);
       await refreshPipeline();
       toast.success(`Moved to ${stage}`);
     } catch (err: any) { toast.error(err.message); }
@@ -247,7 +247,7 @@ const ATSPipeline = () => {
   const handleConfirmHire = async () => {
     if (!hiredPC) return;
     try {
-      await movePipelineStageDb(hiredPC.id, "Hired", currentUser, `Finalized pay: ${finalizedPay}`);
+      await movePipelineStageDb(hiredPC.id, "Hired", currentUserName, `Finalized pay: ${finalizedPay}`);
       await updatePipelineCandidateDb(hiredPC.id, { offer_amount: finalizedPay, offer_status: "accepted" });
       await refreshPipeline();
       toast.success("Candidate hired!");
@@ -263,7 +263,7 @@ const ATSPipeline = () => {
       setHiredPC(selectedPC); setFinalizedPay(selectedPC.offer_amount || ""); setHiredPayDialogOpen(true); setMoveDialogOpen(false); return;
     }
     try {
-      await movePipelineStageDb(selectedPC.id, moveTarget, currentUser, moveNotes);
+      await movePipelineStageDb(selectedPC.id, moveTarget, currentUserName, moveNotes);
       await refreshPipeline();
       toast.success(`Moved to ${moveTarget}`);
     } catch (err: any) { toast.error(err.message); }
@@ -293,7 +293,7 @@ const ATSPipeline = () => {
   const handleAddNote = async () => {
     if (!selectedPC || !newNoteText.trim()) return;
     try {
-      const note = await addNoteDb(selectedPC.id, newNoteText, currentUser);
+      const note = await addNoteDb(selectedPC.id, newNoteText, currentUserName);
       setDetailNotes(prev => [note, ...prev]);
       setNewNoteText("");
       toast.success("Note added");
@@ -347,7 +347,7 @@ const ATSPipeline = () => {
 
   const handleReject = async (pc: DbPipelineCandidate, reason: string) => {
     try {
-      await movePipelineStageDb(pc.id, "Rejected", currentUser, reason);
+      await movePipelineStageDb(pc.id, "Rejected", currentUserName, reason);
       await updatePipelineCandidateDb(pc.id, { rejection_reason: reason });
       await refreshPipeline();
       toast.success("Candidate rejected");
@@ -366,7 +366,7 @@ const ATSPipeline = () => {
       currency: req.currency, handoverDate: new Date().toISOString().split("T")[0],
       sharedVia: ["email"], sharedTo: "",
       notes: `Auto-handover from ATS pipeline ${req.id}`,
-      recruiterName: req.recruiterAssigned || currentUser,
+      recruiterName: req.recruiterAssigned || currentUserName,
       marginFromRequisition: req.grossMarginPercent, marginOverridden: false,
     });
     toast.success(`${candidate.name} handed over!`);
