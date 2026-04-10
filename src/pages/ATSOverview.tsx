@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchRequisitions } from "@/lib/requisition-db-store";
-import { getPipelineCandidates } from "@/lib/ats-store";
+import { fetchPipelineCandidates, seedCandidatesIfEmpty } from "@/lib/ats-db-store";
 import type { AdvancedRequisition } from "@/lib/requisition-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,24 +16,35 @@ const PipelineTab = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [dbReqs, setDbReqs] = useState<AdvancedRequisition[]>([]);
+  const [pipelineCounts, setPipelineCounts] = useState<Record<string, { total: number; hired: number; rejected: number; inProcess: number }>>({});
 
   useEffect(() => {
-    fetchRequisitions().then(setDbReqs).catch(console.error);
+    const load = async () => {
+      await seedCandidatesIfEmpty();
+      const reqs = await fetchRequisitions();
+      setDbReqs(reqs);
+
+      // Fetch pipeline counts for each requisition
+      const counts: typeof pipelineCounts = {};
+      await Promise.all(reqs.map(async (req) => {
+        const pcs = await fetchPipelineCandidates(req.id);
+        counts[req.id] = {
+          total: pcs.length,
+          hired: pcs.filter(pc => pc.current_stage === "Hired").length,
+          rejected: pcs.filter(pc => pc.current_stage === "Rejected").length,
+          inProcess: pcs.filter(pc => !["Hired", "Rejected", "Sourced"].includes(pc.current_stage)).length,
+        };
+      }));
+      setPipelineCounts(counts);
+    };
+    load().catch(console.error);
   }, []);
 
   const reqs = dbReqs.map(req => {
-    const pipeline = getPipelineCandidates(req.id);
     const clientName = req.flow === "sales" ? req.salesData?.clientName : req.hiringData?.clientName;
     const flowLabel = req.flow === "sales" ? "Sample Profile" : req.flow === "studio" ? "Content Studio" : "Freelancer";
-    return {
-      ...req,
-      clientName: clientName || "Unknown",
-      flowLabel,
-      pipelineCount: pipeline.length,
-      hired: pipeline.filter(pc => pc.currentStage === "Hired").length,
-      rejected: pipeline.filter(pc => pc.currentStage === "Rejected").length,
-      inProcess: pipeline.filter(pc => !["Hired", "Rejected", "Sourced"].includes(pc.currentStage)).length,
-    };
+    const counts = pipelineCounts[req.id] || { total: 0, hired: 0, rejected: 0, inProcess: 0 };
+    return { ...req, clientName: clientName || "Unknown", flowLabel, ...counts };
   });
 
   const filtered = reqs.filter(r =>
