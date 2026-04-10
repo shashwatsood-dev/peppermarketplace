@@ -414,3 +414,47 @@ export function exportPodsAsCSV(pods: PodV2[]): string {
   }
   return rows.join("\n");
 }
+
+// ── Deal Notes ──────────────────────────────────────────
+export async function dbFetchDealNotes(dealId: string): Promise<DealNote[]> {
+  const { data, error } = await supabase.from("deal_notes").select("*").eq("deal_id", dealId).order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(n => ({ id: n.id, dealId: n.deal_id, note: n.note, author: n.author, createdAt: n.created_at }));
+}
+
+export async function dbAddDealNote(dealId: string, note: string, author: string): Promise<void> {
+  const { error } = await supabase.from("deal_notes").insert({ deal_id: dealId, note, author });
+  if (error) throw error;
+}
+
+// ── Creator Engagement Notes ────────────────────────────
+export async function dbFetchCreatorEngagementNotes(creatorId: string): Promise<CreatorEngagementNote[]> {
+  const { data, error } = await supabase.from("creator_engagement_notes").select("*").eq("creator_id", creatorId).order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(n => ({ id: n.id, creatorId: n.creator_id, note: n.note, author: n.author, noteType: n.note_type, createdAt: n.created_at }));
+}
+
+export async function dbAddCreatorEngagementNote(creatorId: string, note: string, author: string, noteType: string = "general"): Promise<void> {
+  const { error } = await supabase.from("creator_engagement_notes").insert({ creator_id: creatorId, note, author, note_type: noteType });
+  if (error) throw error;
+}
+
+// ── Agreement uploads ───────────────────────────────────
+export async function dbUploadAgreement(creatorId: string, dealId: string, file: File): Promise<string> {
+  const path = `${dealId}/${creatorId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("agreements").upload(path, file);
+  if (error) throw error;
+  return path;
+}
+
+export async function dbListAgreements(dealId: string, creatorId: string): Promise<{ name: string; path: string; createdAt: string }[]> {
+  const prefix = `${dealId}/${creatorId}/`;
+  const { data, error } = await supabase.storage.from("agreements").list(prefix);
+  if (error) return [];
+  return (data || []).map(f => ({ name: f.name, path: prefix + f.name, createdAt: f.created_at || "" }));
+}
+
+export async function dbGetAgreementUrl(path: string): Promise<string> {
+  const { data } = await supabase.storage.from("agreements").createSignedUrl(path, 3600);
+  return data?.signedUrl || "";
+}
