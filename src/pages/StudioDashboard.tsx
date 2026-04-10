@@ -222,7 +222,7 @@ const StudioDashboard = () => {
   const [selectedPod, setSelectedPod] = useState("All");
   const [viewMode, setViewMode] = useState<"deals" | "geography">("deals");
   const { currentRole } = useAuth();
-  const hideFinancials = currentRole === "pod_lead_recruiter";
+  const hideFinancials = false; // Admin view shows all financials
 
   const studioData = useMemo(() => getAllStudioData(pods), [pods]);
 

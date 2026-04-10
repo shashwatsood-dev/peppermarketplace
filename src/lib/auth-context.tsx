@@ -1,104 +1,146 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
-export type UserRole = "admin" | "pod_lead_recruiter" | "capability_lead_am";
+export type UserRole = "admin" | "capability_lead_am";
 
 export interface AppUser {
   id: string;
   email: string;
   name: string;
   role: UserRole;
-  passwordSet: boolean;
-  password: string;
 }
 
 const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
-  pod_lead_recruiter: "Pod Lead / Recruiter",
   capability_lead_am: "Capability Lead / Account Manager",
 };
 
 export function getRoleLabel(role: UserRole): string {
-  return ROLE_LABELS[role];
+  return ROLE_LABELS[role] ?? role;
 }
-
-// Default users
-const defaultUsers: AppUser[] = [
-  { id: "u-1", email: "admin@pepper.com", name: "Admin User", role: "admin", passwordSet: true, password: "admin123" },
-  { id: "u-2", email: "recruiter@pepper.com", name: "Neha Gupta", role: "pod_lead_recruiter", passwordSet: true, password: "recruiter123" },
-  { id: "u-3", email: "amlead@pepper.com", name: "Priya Sharma", role: "capability_lead_am", passwordSet: true, password: "amlead123" },
-];
 
 interface AuthContextType {
   currentUser: AppUser | null;
   currentRole: UserRole;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<string | null>;
+  signup: (email: string, password: string, name: string) => Promise<string | null>;
+  logout: () => Promise<void>;
   switchRole: (role: UserRole) => void;
-  users: AppUser[];
-  addUser: (email: string, name: string, role: UserRole) => void;
-  setPassword: (userId: string, password: string) => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<AppUser[]>(defaultUsers);
-  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
+  const [loading, setLoading] = useState(true);
   const [viewAsRole, setViewAsRole] = useState<UserRole | null>(null);
 
-  const isAuthenticated = !!currentUser;
-  const currentRole = viewAsRole ?? currentUser?.role ?? "admin";
+  const isAuthenticated = !!appUser;
+  const currentRole = viewAsRole ?? appUser?.role ?? "admin";
 
-  const login = (email: string, password: string): boolean => {
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!user) return false;
-    if (!user.passwordSet) {
-      // First login — set password
-      const updated = users.map(u => u.id === user.id ? { ...u, password, passwordSet: true } : u);
-      setUsers(updated);
-      setCurrentUser({ ...user, password, passwordSet: true });
-      setViewAsRole(null);
-      return true;
-    }
-    if (user.password !== password) return false;
-    setCurrentUser(user);
-    setViewAsRole(null);
-    return true;
+  const fetchProfile = async (user: User) => {
+    // Get profile
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    // Get role
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+
+    const role = (roles?.[0]?.role as UserRole) ?? "admin";
+
+    const appU: AppUser = {
+      id: user.id,
+      email: profile?.email || user.email || "",
+      name: profile?.name || user.user_metadata?.name || "",
+      role,
+    };
+    setAppUser(appU);
+    return appU;
   };
 
-  const logout = () => {
-    setCurrentUser(null);
+  useEffect(() => {
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setAuthUser(session.user);
+        // Use setTimeout to avoid Supabase deadlock
+        setTimeout(async () => {
+          await fetchProfile(session.user);
+          setLoading(false);
+        }, 0);
+      } else {
+        setAuthUser(null);
+        setAppUser(null);
+        setLoading(false);
+      }
+    });
+
+    // Then check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setAuthUser(session.user);
+        fetchProfile(session.user).then(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return error.message;
+    return null;
+  };
+
+  const signup = async (email: string, password: string, name: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
+    if (error) return error.message;
+    return null;
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setViewAsRole(null);
   };
 
   const switchRole = (role: UserRole) => {
-    if (currentUser?.role === "admin") {
+    if (appUser?.role === "admin") {
       setViewAsRole(role);
     }
   };
 
-  const addUser = (email: string, name: string, role: UserRole) => {
-    const newUser: AppUser = {
-      id: `u-${Date.now()}`,
-      email,
-      name,
-      role,
-      passwordSet: false,
-      password: "",
-    };
-    setUsers(prev => [...prev, newUser]);
-  };
-
-  const setPasswordFn = (userId: string, password: string) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, password, passwordSet: true } : u));
+  const refreshProfile = async () => {
+    if (authUser) await fetchProfile(authUser);
   };
 
   return (
     <AuthContext.Provider value={{
-      currentUser, currentRole, isAuthenticated,
-      login, logout, switchRole,
-      users, addUser, setPassword: setPasswordFn,
+      currentUser: appUser,
+      currentRole,
+      isAuthenticated,
+      loading,
+      login,
+      logout,
+      signup,
+      switchRole,
+      refreshProfile,
     }}>
       {children}
     </AuthContext.Provider>
