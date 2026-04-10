@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchRequisitions, dbUpdateRequisition, dbDeleteRequisition } from "@/lib/requisition-db-store";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -17,11 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { POD_NAMES } from "@/lib/talent-client-types";
 import { useAuth } from "@/lib/auth-context";
-
-const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
-
-const INITIAL_POD_LEADS = ["Neha Gupta", "Ravi Kumar", "Anita Desai"];
-const INITIAL_RECRUITERS = ["Neha Gupta", "Ravi Kumar", "Pooja Shah", "Sanjay Verma"];
+import { useRecruiters } from "@/lib/use-recruiters";
 
 const HIDDEN_STATUSES = ["Scrapped", "On hold", "Closed – allotted"];
 
