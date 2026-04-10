@@ -31,6 +31,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/requisitions/new-public" element={<NewRequisition />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/requisitions" element={<RequisitionsAdvanced />} />

@@ -14,6 +14,281 @@ export type Database = {
   }
   public: {
     Tables: {
+      ats_candidate_notes: {
+        Row: {
+          author: string
+          created_at: string
+          id: string
+          note_text: string
+          pipeline_candidate_id: string
+        }
+        Insert: {
+          author?: string
+          created_at?: string
+          id?: string
+          note_text: string
+          pipeline_candidate_id: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          id?: string
+          note_text?: string
+          pipeline_candidate_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ats_candidate_notes_pipeline_candidate_id_fkey"
+            columns: ["pipeline_candidate_id"]
+            isOneToOne: false
+            referencedRelation: "ats_pipeline_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ats_candidates: {
+        Row: {
+          alt_phone: string
+          availability: string
+          city: string
+          communication_score: number
+          created_at: string
+          culture_fit_score: number
+          domain_expertise: string
+          email: string
+          expected_rate: string
+          experience: string
+          id: string
+          language_skills: string
+          linkedin: string
+          name: string
+          notice_period: string
+          overall_score: number
+          phone: string
+          portfolio_url: string
+          rate_model: string
+          resume_url: string
+          role_title: string
+          skills: string[]
+          source: string
+          tags: string[]
+          technical_score: number
+          tools_proficiency: string
+          updated_at: string
+        }
+        Insert: {
+          alt_phone?: string
+          availability?: string
+          city?: string
+          communication_score?: number
+          created_at?: string
+          culture_fit_score?: number
+          domain_expertise?: string
+          email?: string
+          expected_rate?: string
+          experience?: string
+          id: string
+          language_skills?: string
+          linkedin?: string
+          name: string
+          notice_period?: string
+          overall_score?: number
+          phone?: string
+          portfolio_url?: string
+          rate_model?: string
+          resume_url?: string
+          role_title?: string
+          skills?: string[]
+          source?: string
+          tags?: string[]
+          technical_score?: number
+          tools_proficiency?: string
+          updated_at?: string
+        }
+        Update: {
+          alt_phone?: string
+          availability?: string
+          city?: string
+          communication_score?: number
+          created_at?: string
+          culture_fit_score?: number
+          domain_expertise?: string
+          email?: string
+          expected_rate?: string
+          experience?: string
+          id?: string
+          language_skills?: string
+          linkedin?: string
+          name?: string
+          notice_period?: string
+          overall_score?: number
+          phone?: string
+          portfolio_url?: string
+          rate_model?: string
+          resume_url?: string
+          role_title?: string
+          skills?: string[]
+          source?: string
+          tags?: string[]
+          technical_score?: number
+          tools_proficiency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ats_interview_rounds: {
+        Row: {
+          created_at: string
+          feedback: string
+          id: string
+          interview_type: string
+          interviewer: string
+          meeting_link: string
+          pipeline_candidate_id: string
+          rating: number | null
+          round_number: number
+          scheduled_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          feedback?: string
+          id?: string
+          interview_type?: string
+          interviewer?: string
+          meeting_link?: string
+          pipeline_candidate_id: string
+          rating?: number | null
+          round_number?: number
+          scheduled_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: string
+          id?: string
+          interview_type?: string
+          interviewer?: string
+          meeting_link?: string
+          pipeline_candidate_id?: string
+          rating?: number | null
+          round_number?: number
+          scheduled_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ats_interview_rounds_pipeline_candidate_id_fkey"
+            columns: ["pipeline_candidate_id"]
+            isOneToOne: false
+            referencedRelation: "ats_pipeline_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ats_pipeline_candidates: {
+        Row: {
+          added_at: string
+          assignment_score: number | null
+          assignment_submitted: boolean
+          availability: string
+          candidate_id: string
+          capability_notes: string
+          capability_rating: string | null
+          current_stage: string
+          id: string
+          offer_amount: string
+          offer_status: string | null
+          portfolio_links: Json
+          rejection_reason: string
+          requisition_id: string
+          screening_notes: string
+          stage_history: Json
+          updated_at: string
+        }
+        Insert: {
+          added_at?: string
+          assignment_score?: number | null
+          assignment_submitted?: boolean
+          availability?: string
+          candidate_id: string
+          capability_notes?: string
+          capability_rating?: string | null
+          current_stage?: string
+          id: string
+          offer_amount?: string
+          offer_status?: string | null
+          portfolio_links?: Json
+          rejection_reason?: string
+          requisition_id: string
+          screening_notes?: string
+          stage_history?: Json
+          updated_at?: string
+        }
+        Update: {
+          added_at?: string
+          assignment_score?: number | null
+          assignment_submitted?: boolean
+          availability?: string
+          candidate_id?: string
+          capability_notes?: string
+          capability_rating?: string | null
+          current_stage?: string
+          id?: string
+          offer_amount?: string
+          offer_status?: string | null
+          portfolio_links?: Json
+          rejection_reason?: string
+          requisition_id?: string
+          screening_notes?: string
+          stage_history?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ats_pipeline_candidates_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "ats_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ats_work_samples: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          id: string
+          sample_type: string
+          title: string
+          url: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          id?: string
+          sample_type?: string
+          title?: string
+          url?: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          sample_type?: string
+          title?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ats_work_samples_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "ats_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           client_name: string
