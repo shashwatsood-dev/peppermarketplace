@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
 import { StatCard } from "@/components/StatCard";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
 import { usePods } from "@/lib/use-pods";
-import { taMetrics } from "@/lib/mock-data";
+import { useRecruiters } from "@/lib/use-recruiters";
 import { getPipelineAnalytics, getAllPipelineCandidates, getCandidates } from "@/lib/ats-store";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,8 +10,8 @@ import { Clock, Users, BarChart2, UserCheck, TrendingUp, Target, CheckCircle, Al
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart as RPieChart, Pie } from "recharts";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { AdvancedRequisition } from "@/lib/requisition-types";
-
-const RECRUITERS = taMetrics.recruiterPerformance.map(r => r.name);
+import { useQuery } from "@tanstack/react-query";
+import { fetchRequisitions } from "@/lib/requisition-db-store";
 
 type TimeRange = "30" | "60" | "90" | "180" | "365" | "all";
 
