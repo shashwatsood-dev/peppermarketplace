@@ -1,16 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   dbUpdateClient, dbUpdateDeal, dbUpdateCreator, dbAddCreatorToDeal, dbAddClientToPod, dbAddDealToClient,
   dbMoveClientToPod, dbCopyCreatorsToDeal, dbRemoveCreator, dbParseClientCSV, dbGetClientCSVTemplate, exportPodsAsCSV,
-  dbDeleteClient, dbRenameDealId,
+  dbDeleteClient, dbRenameDealId, dbFetchDealNotes, dbAddDealNote, dbFetchCreatorEngagementNotes, dbAddCreatorEngagementNote,
 } from "@/lib/db-store";
 import { usePods, useRefreshPods } from "@/lib/use-pods";
-import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName, DealCapability } from "@/lib/talent-client-types";
+import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName, DealCapability, DealNote, CreatorEngagementNote } from "@/lib/talent-client-types";
 import { POD_NAMES, ALL_POD_NAMES, DEAL_CAPABILITIES } from "@/lib/talent-client-types";
 import { type RoleType, type PayModel } from "@/lib/mock-data";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User, Mail, Download, Upload, Trash2, ArrowRightLeft, Copy, X } from "lucide-react";
+import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User, Mail, Download, Upload, Trash2, ArrowRightLeft, Copy, X, MessageSquare, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ import { getHandoversByDeal } from "@/lib/handover-store";
 import type { CurrencyCode } from "@/lib/requisition-types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth-context";
 
 const formatCurrency = (n: number) => "₹" + (n / 100000).toFixed(1) + "L";
 
