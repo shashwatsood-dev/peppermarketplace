@@ -101,6 +101,7 @@ export async function fetchPods(): Promise<PodV2[]> {
       contractEndDate: d.contract_end_date,
       capabilities: (d.capabilities || []) as DealCapability[],
       capabilityLeader: d.capability_leader,
+      healthStatus: (d.health_status || "") as HealthColor | "",
     });
     dealsByClient.set(d.client_id, arr);
   }
