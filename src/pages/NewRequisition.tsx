@@ -211,10 +211,10 @@ const NewRequisition = () => {
           </div>
         </div>
         <Button variant="outline" size="sm" className="gap-2" onClick={() => {
-          navigator.clipboard.writeText(window.location.origin + "/requisitions/new");
-          toast.success("Form link copied to clipboard");
+          navigator.clipboard.writeText(window.location.origin + "/requisitions/new-public");
+          toast.success("Public form link copied to clipboard");
         }}>
-          <Copy className="h-4 w-4" /> Copy Form Link
+          <Copy className="h-4 w-4" /> Copy Public Link
         </Button>
       </div>
 
