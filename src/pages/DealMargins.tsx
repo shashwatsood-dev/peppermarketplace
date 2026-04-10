@@ -732,6 +732,10 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
   const [addCreator, setAddCreator] = useState(false);
   const [transferCreators, setTransferCreators] = useState(false);
   const [editingCreator, setEditingCreator] = useState<DeployedCreatorV2 | null>(null);
+  const [showDealNotes, setShowDealNotes] = useState(false);
+  const [showCreatorNotes, setShowCreatorNotes] = useState<{ id: string; name: string } | null>(null);
+
+  const healthBg = deal.healthStatus === "red" ? "border-l-4 border-l-destructive" : deal.healthStatus === "yellow" ? "border-l-4 border-l-warning" : deal.healthStatus === "green" ? "border-l-4 border-l-success" : "";
 
   const visibleCreators = showInactive ? deal.creators : deal.creators.filter(c => c.dealStatus === "Active");
   const handovers = getHandoversByDeal(deal.id);
