@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchRequisitions, dbUpdateRequisition, dbDeleteRequisition } from "@/lib/requisition-db-store";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -17,11 +17,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { POD_NAMES } from "@/lib/talent-client-types";
 import { useAuth } from "@/lib/auth-context";
+import { useRecruiters } from "@/lib/use-recruiters";
 
 const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
-
-const INITIAL_POD_LEADS = ["Neha Gupta", "Ravi Kumar", "Anita Desai"];
-const INITIAL_RECRUITERS = ["Neha Gupta", "Ravi Kumar", "Pooja Shah", "Sanjay Verma"];
 
 const HIDDEN_STATUSES = ["Scrapped", "On hold", "Closed – allotted"];
 
@@ -58,12 +56,27 @@ const RequisitionsAdvanced = () => {
   const [editByTA, setEditByTA] = useState(false);
 
   // Pod leads / recruiters with ability to add new
-  const [podLeads, setPodLeads] = useState(INITIAL_POD_LEADS);
-  const [recruiters, setRecruiters] = useState(INITIAL_RECRUITERS);
+  const { data: recruiterProfiles = [] } = useRecruiters();
+  const recruiterNames = useMemo(() => recruiterProfiles.map(r => r.name), [recruiterProfiles]);
+  const [podLeads, setPodLeads] = useState<string[]>([]);
+  const [recruiters, setRecruiters] = useState<string[]>([]);
   const [newPodLead, setNewPodLead] = useState("");
   const [newRecruiter, setNewRecruiter] = useState("");
 
-  // Review state
+  // Sync recruiter profiles into pod leads and recruiters lists
+  useEffect(() => {
+    if (recruiterNames.length > 0) {
+      setPodLeads(prev => {
+        const merged = new Set([...prev, ...recruiterNames]);
+        return Array.from(merged);
+      });
+      setRecruiters(prev => {
+        const merged = new Set([...prev, ...recruiterNames]);
+        return Array.from(merged);
+      });
+    }
+  }, [recruiterNames]);
+
   const [reviewNotes, setReviewNotes] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 

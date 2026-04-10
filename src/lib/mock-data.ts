@@ -194,10 +194,7 @@ export const taMetrics = {
   openRequisitions: 4,
   overdueRequisitions: 1,
   avgTimeToClose: 18,
-  recruiterPerformance: [
-    { name: "Neha Gupta", open: 2, closed: 5, avgDays: 16, profiles: { identified: 45, contacted: 38, screened: 22, shared: 14, interviewed: 8, selected: 5 } },
-    { name: "Ravi Kumar", open: 2, closed: 3, avgDays: 21, profiles: { identified: 32, contacted: 25, screened: 15, shared: 10, interviewed: 6, selected: 3 } },
-  ]
+  recruiterPerformance: [] as { name: string; open: number; closed: number; avgDays: number; profiles: { identified: number; contacted: number; screened: number; shared: number; interviewed: number; selected: number } }[],
 };
 
 export const dashboardStats = {

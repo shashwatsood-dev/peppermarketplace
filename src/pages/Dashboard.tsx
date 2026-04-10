@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
 import { StatCard } from "@/components/StatCard";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
 import { usePods } from "@/lib/use-pods";
-import { taMetrics } from "@/lib/mock-data";
+import { useRecruiters } from "@/lib/use-recruiters";
 import { getPipelineAnalytics, getAllPipelineCandidates, getCandidates } from "@/lib/ats-store";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,8 +10,8 @@ import { Clock, Users, BarChart2, UserCheck, TrendingUp, Target, CheckCircle, Al
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart as RPieChart, Pie } from "recharts";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { AdvancedRequisition } from "@/lib/requisition-types";
-
-const RECRUITERS = taMetrics.recruiterPerformance.map(r => r.name);
+import { useQuery } from "@tanstack/react-query";
+import { fetchRequisitions } from "@/lib/requisition-db-store";
 
 type TimeRange = "30" | "60" | "90" | "180" | "365" | "all";
 
@@ -24,7 +23,10 @@ const Dashboard = () => {
   const [drilldownTitle, setDrilldownTitle] = useState("");
   const [drilldownReqs, setDrilldownReqs] = useState<AdvancedRequisition[]>([]);
 
-  const reqs = advancedRequisitions;
+  const { data: dbReqs = [] } = useQuery({ queryKey: ["requisitions"], queryFn: fetchRequisitions });
+  const reqs = dbReqs;
+  const { data: recruiterProfiles = [] } = useRecruiters();
+  const RECRUITERS = useMemo(() => recruiterProfiles.map(r => r.name), [recruiterProfiles]);
   const { data: pods = [] } = usePods();
   const allCreators = pods.flatMap(p => p.clients.flatMap(c => c.deals.flatMap(d => d.creators)));
 
@@ -51,6 +53,28 @@ const Dashboard = () => {
   const avgDaysToClose = closedWithDays.length
     ? Math.round(closedWithDays.reduce((s, r) => s + Math.round((new Date(r.updatedAt).getTime() - new Date(r.createdAt).getTime()) / (1000 * 60 * 60 * 24)), 0) / closedWithDays.length)
     : 0;
+
+  // Compute recruiter performance from requisitions
+  const recruiterPerformance = useMemo(() => {
+    return RECRUITERS.map(name => {
+      const myReqs = filteredReqs.filter(r => r.recruiterAssigned === name);
+      const openR = myReqs.filter(r => !r.status.startsWith("Closed") && r.status !== "Scrapped");
+      const closedR = myReqs.filter(r => r.status.startsWith("Closed"));
+      const avgDays = closedR.length ? Math.round(closedR.reduce((s, r) => s + Math.round((new Date(r.updatedAt).getTime() - new Date(r.createdAt).getTime()) / 86400000), 0) / closedR.length) : 0;
+      const du = myReqs.flatMap(r => r.dailyUpdates || []);
+      return {
+        name, open: openR.length, closed: closedR.length, avgDays,
+        profiles: {
+          identified: du.reduce((s, d) => s + (d.profilesIdentified || 0), 0),
+          contacted: du.reduce((s, d) => s + (d.profilesContacted || 0), 0),
+          screened: du.reduce((s, d) => s + (d.profilesScreened || 0), 0),
+          shared: du.reduce((s, d) => s + (d.profilesShared || 0), 0),
+          interviewed: du.reduce((s, d) => s + (d.interviewsScheduled || 0), 0),
+          selected: closedR.length,
+        },
+      };
+    });
+  }, [RECRUITERS, filteredReqs]);
 
   const openDrilldown = (title: string, reqList: AdvancedRequisition[]) => {
     setDrilldownTitle(title);
@@ -136,7 +160,7 @@ const Dashboard = () => {
                   ))}
                 </tr></thead>
                 <tbody>
-                  {(selectedRecruiter === "all" ? taMetrics.recruiterPerformance : taMetrics.recruiterPerformance.filter(r => r.name === selectedRecruiter)).map(r => (
+                  {(selectedRecruiter === "all" ? recruiterPerformance : recruiterPerformance.filter(r => r.name === selectedRecruiter)).map(r => (
                     <tr key={r.name} className="data-table-row">
                       <td className="py-3 font-medium text-foreground pr-4">{r.name}</td>
                       <td className="py-3 font-mono text-foreground pr-4">{r.open}</td>
@@ -159,7 +183,7 @@ const Dashboard = () => {
           <div className="stat-card">
             <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Pipeline Comparison</h3>
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={(selectedRecruiter === "all" ? taMetrics.recruiterPerformance : taMetrics.recruiterPerformance.filter(r => r.name === selectedRecruiter)).map(r => ({ name: r.name, Identified: r.profiles.identified, Contacted: r.profiles.contacted, Selected: r.profiles.selected }))} layout="vertical">
+              <BarChart data={(selectedRecruiter === "all" ? recruiterPerformance : recruiterPerformance.filter(r => r.name === selectedRecruiter)).map(r => ({ name: r.name, Identified: r.profiles.identified, Contacted: r.profiles.contacted, Selected: r.profiles.selected }))} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 6% 90%)" />
                 <XAxis type="number" tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} />
                 <YAxis type="category" dataKey="name" tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} width={100} />
@@ -217,7 +241,7 @@ const Dashboard = () => {
             const sourceDistribution = allCands.reduce((acc, c) => { acc[c.source] = (acc[c.source] || 0) + 1; return acc; }, {} as Record<string, number>);
             const sourceData = Object.entries(sourceDistribution).map(([name, value]) => ({ name, value }));
 
-            const reqBreakdown = advancedRequisitions.map(r => {
+            const reqBreakdown = reqs.map(r => {
               const pcs = allPipeline.filter(pc => pc.requisitionId === r.id);
               const client = r.flow === "sales" ? r.salesData?.clientName : r.hiringData?.clientName;
               return { reqId: r.id, client: client || "Unknown", total: pcs.length, hired: pcs.filter(pc => pc.currentStage === "Hired").length, rejected: pcs.filter(pc => pc.currentStage === "Rejected").length, inProcess: pcs.filter(pc => !["Sourced", "Hired", "Rejected"].includes(pc.currentStage)).length };
