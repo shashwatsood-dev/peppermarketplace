@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,17 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { addHandover, formatHandoverForSharing, getHandovers } from "@/lib/handover-store";
-import { advancedRequisitions } from "@/lib/requisition-mock-data";
 import { CREATOR_TYPES, getCurrencySymbol, type CurrencyCode } from "@/lib/requisition-types";
 import { CurrencySelect } from "@/components/CurrencyInput";
 import { toast } from "sonner";
 import { Copy, Mail, MessageSquare, Send, UserPlus, ExternalLink, Plus, Trash2 } from "lucide-react";
 import type { PayModel } from "@/lib/mock-data";
+import { usePods } from "@/lib/use-pods";
+import type { ClientV2, DealV2 } from "@/lib/talent-client-types";
+import { ALL_POD_NAMES } from "@/lib/talent-client-types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PAYMENT_MODELS: PayModel[] = ["Per Word", "Per Assignment", "Retainer", "Hourly"];
-
-// Filter requisitions to only show eligible statuses
-const ELIGIBLE_STATUSES = ["Yet to start", "In progress", "Approved but not assigned"];
 
 interface CreatorEntry {
   id: string;
@@ -29,7 +29,8 @@ interface CreatorEntry {
   phone: string;
   paymentModel: PayModel | "";
   finalizedPay: string;
-  marginFromRequisition: number;
+  clientBilling: string;
+  marginPercent: number;
   marginOverridden: boolean;
 }
 
@@ -43,15 +44,19 @@ function createEmptyCreator(): CreatorEntry {
     phone: "",
     paymentModel: "",
     finalizedPay: "",
-    marginFromRequisition: 0,
+    clientBilling: "",
+    marginPercent: 0,
     marginOverridden: false,
   };
 }
 
 const CreatorHandover = () => {
+  const { data: pods = [], isLoading } = usePods();
   const [handoversList, setHandoversList] = useState(getHandovers());
   const [creators, setCreators] = useState<CreatorEntry[]>([createEmptyCreator()]);
-  const [dealId, setDealId] = useState("");
+  const [selectedPod, setSelectedPod] = useState("");
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [selectedDealId, setSelectedDealId] = useState("");
   const [recruiterName, setRecruiterName] = useState("");
   const [sharedTo, setSharedTo] = useState("");
   const [shareViaEmail, setShareViaEmail] = useState(false);
@@ -59,41 +64,60 @@ const CreatorHandover = () => {
   const [notes, setNotes] = useState("");
   const [currency, setCurrency] = useState<CurrencyCode>("INR");
 
-  // Get eligible requisitions
-  const eligibleReqs = advancedRequisitions.filter(r => ELIGIBLE_STATUSES.includes(r.status));
+  // POD → Client → Deal cascade
+  const podClients = useMemo(() => {
+    if (!selectedPod) return [];
+    const clients: ClientV2[] = [];
+    for (const pod of pods) {
+      if (pod.name === selectedPod || selectedPod === "All") {
+        for (const client of pod.clients) {
+          if (!clients.find(c => c.id === client.id)) clients.push(client);
+        }
+      }
+    }
+    return clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
+  }, [pods, selectedPod]);
 
-  const selectedReq = advancedRequisitions.find(r => {
-    const reqDealId = r.flow === "sales" ? r.id : r.hiringData?.dealId;
-    return reqDealId === dealId || r.id === dealId;
-  });
+  const clientDeals = useMemo(() => {
+    if (!selectedClientId) return [];
+    const client = podClients.find(c => c.id === selectedClientId);
+    return client?.deals || [];
+  }, [podClients, selectedClientId]);
 
-  // Get display label: Client - Deal Name
-  const getReqLabel = (r: typeof advancedRequisitions[0]) => {
-    const client = r.flow === "sales" ? r.salesData?.clientName : r.hiringData?.clientName;
-    const deal = r.flow === "sales" ? r.salesData?.opportunityName : r.hiringData?.dealId;
-    return `${client} — ${deal || r.id}`;
-  };
+  const selectedDeal = clientDeals.find(d => d.id === selectedDealId);
 
   const updateCreator = (id: string, updates: Partial<CreatorEntry>) => {
-    setCreators(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+    setCreators(prev => prev.map(c => {
+      if (c.id !== id) return c;
+      const updated = { ...c, ...updates };
+      // Auto-calc margin: (clientBilling - finalizedPay) / clientBilling * 100
+      const billing = Number(updated.clientBilling);
+      const pay = Number(updated.finalizedPay);
+      if (billing > 0 && pay > 0 && !updated.marginOverridden) {
+        updated.marginPercent = Math.round((billing - pay) / billing * 1000) / 10;
+      }
+      return updated;
+    }));
   };
 
   const addCreator = () => setCreators(prev => [...prev, createEmptyCreator()]);
   const removeCreator = (id: string) => setCreators(prev => prev.filter(c => c.id !== id));
 
-  // Auto-fill margin from requisition
-  const handleDealChange = (id: string) => {
-    setDealId(id);
-    const req = advancedRequisitions.find(r => r.id === id || r.hiringData?.dealId === id);
-    if (req) {
-      setCreators(prev => prev.map(c => ({ ...c, marginFromRequisition: req.grossMarginPercent })));
-    }
+  const handlePodChange = (pod: string) => {
+    setSelectedPod(pod);
+    setSelectedClientId("");
+    setSelectedDealId("");
+  };
+
+  const handleClientChange = (clientId: string) => {
+    setSelectedClientId(clientId);
+    setSelectedDealId("");
   };
 
   const handleSubmit = () => {
     const validCreators = creators.filter(c => c.creatorName && c.paymentModel && c.finalizedPay);
     if (validCreators.length === 0) { toast.error("At least one creator with all required fields"); return; }
-    if (!dealId) { toast.error("Select a deal"); return; }
+    if (!selectedDealId) { toast.error("Select a deal"); return; }
     if (!shareViaEmail && !shareViaSlack) { toast.error("Select at least one sharing channel"); return; }
 
     const sharedVia: ("email" | "slack")[] = [];
@@ -103,8 +127,8 @@ const CreatorHandover = () => {
     let lastHandover: any;
     for (const c of validCreators) {
       lastHandover = addHandover({
-        requisitionId: selectedReq?.id || "",
-        dealId,
+        requisitionId: "",
+        dealId: selectedDealId,
         creatorName: c.creatorName,
         creatorEmail: c.creatorEmail,
         creatorType: c.creatorType,
@@ -118,7 +142,7 @@ const CreatorHandover = () => {
         sharedTo,
         notes,
         recruiterName,
-        marginFromRequisition: c.marginFromRequisition,
+        marginFromRequisition: c.marginPercent,
         marginOverridden: c.marginOverridden,
       });
     }
@@ -130,7 +154,9 @@ const CreatorHandover = () => {
     toast.success(`${validCreators.length} creator(s) handed over! Share message copied.`, { duration: 5000 });
     setHandoversList(getHandovers());
     setCreators([createEmptyCreator()]);
-    setDealId("");
+    setSelectedPod("");
+    setSelectedClientId("");
+    setSelectedDealId("");
     setRecruiterName("");
     setSharedTo("");
     setShareViaEmail(false);
@@ -139,6 +165,15 @@ const CreatorHandover = () => {
   };
 
   const sym = getCurrencySymbol(currency);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in max-w-5xl">
+        <div><h1 className="text-2xl font-semibold text-foreground">Creator Handover</h1><div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" /></div>
+        <Skeleton className="h-64 rounded-lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl">
@@ -153,33 +188,51 @@ const CreatorHandover = () => {
           <CardTitle className="flex items-center gap-2 text-lg"><UserPlus className="h-5 w-5" /> New Handover</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Deal Selection */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* POD → Client → Deal Cascade */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Associated Deal *</Label>
-              <Select value={dealId} onValueChange={handleDealChange}>
-                <SelectTrigger><SelectValue placeholder="Select deal" /></SelectTrigger>
+              <Label className="text-sm font-medium">POD *</Label>
+              <Select value={selectedPod} onValueChange={handlePodChange}>
+                <SelectTrigger><SelectValue placeholder="Select POD" /></SelectTrigger>
                 <SelectContent>
-                  {eligibleReqs.map(r => (
-                    <SelectItem key={r.id} value={r.id}>{getReqLabel(r)}</SelectItem>
-                  ))}
+                  {ALL_POD_NAMES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {selectedReq && (
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Client *</Label>
+              <Select value={selectedClientId} onValueChange={handleClientChange} disabled={!selectedPod}>
+                <SelectTrigger><SelectValue placeholder={selectedPod ? "Select client" : "Select POD first"} /></SelectTrigger>
+                <SelectContent>
+                  {podClients.map(c => <SelectItem key={c.id} value={c.id}>{c.clientName}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Deal *</Label>
+              <Select value={selectedDealId} onValueChange={setSelectedDealId} disabled={!selectedClientId}>
+                <SelectTrigger><SelectValue placeholder={selectedClientId ? "Select deal" : "Select client first"} /></SelectTrigger>
+                <SelectContent>
+                  {clientDeals.map(d => <SelectItem key={d.id} value={d.id}>{d.dealName} ({d.id})</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {selectedDeal && (
                 <p className="text-xs text-muted-foreground">
-                  Margin: {selectedReq.grossMarginPercent}% · Status: {selectedReq.status}
+                  Margin: {selectedDeal.grossMarginPercent}% · Status: {selectedDeal.status}
                 </p>
               )}
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Recruiter (Handing Over) *</Label>
               <Input placeholder="Recruiter name" value={recruiterName} onChange={e => setRecruiterName(e.target.value)} />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Currency</Label>
-            <CurrencySelect value={currency} onChange={setCurrency} />
+            <div className="space-y-2">
+              <Label>Currency</Label>
+              <CurrencySelect value={currency} onChange={setCurrency} />
+            </div>
           </div>
 
           <Separator />
@@ -222,9 +275,11 @@ const CreatorHandover = () => {
                     </Select></div>
                   <div className="space-y-1.5"><Label className="text-xs">Finalized Pay ({sym}) *</Label>
                     <Input type="number" placeholder={`${sym} amount`} value={c.finalizedPay} onChange={e => updateCreator(c.id, { finalizedPay: e.target.value })} /></div>
-                  <div className="space-y-1.5"><Label className="text-xs">Margin % (from requisition)</Label>
+                  <div className="space-y-1.5"><Label className="text-xs">Client Billing ({sym})</Label>
+                    <Input type="number" placeholder={`${sym} billing`} value={c.clientBilling} onChange={e => updateCreator(c.id, { clientBilling: e.target.value })} /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Margin %</Label>
                     <div className="flex gap-2">
-                      <Input type="number" value={c.marginFromRequisition} onChange={e => updateCreator(c.id, { marginFromRequisition: Number(e.target.value), marginOverridden: true })} />
+                      <Input type="number" value={c.marginPercent} onChange={e => updateCreator(c.id, { marginPercent: Number(e.target.value), marginOverridden: true })} />
                       {c.marginOverridden && <span className="text-xs text-warning self-center">Overridden</span>}
                     </div>
                   </div>
