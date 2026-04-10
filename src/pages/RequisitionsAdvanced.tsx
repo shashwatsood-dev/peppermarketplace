@@ -63,7 +63,20 @@ const RequisitionsAdvanced = () => {
   const [newPodLead, setNewPodLead] = useState("");
   const [newRecruiter, setNewRecruiter] = useState("");
 
-  // Review state
+  // Sync recruiter profiles into pod leads and recruiters lists
+  useEffect(() => {
+    if (recruiterNames.length > 0) {
+      setPodLeads(prev => {
+        const merged = new Set([...prev, ...recruiterNames]);
+        return Array.from(merged);
+      });
+      setRecruiters(prev => {
+        const merged = new Set([...prev, ...recruiterNames]);
+        return Array.from(merged);
+      });
+    }
+  }, [recruiterNames]);
+
   const [reviewNotes, setReviewNotes] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 
