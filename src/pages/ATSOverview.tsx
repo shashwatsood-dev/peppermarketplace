@@ -82,7 +82,7 @@ const PipelineTab = () => {
                   <TableCell className="text-[13px]">{r.clientName}</TableCell>
                   <TableCell><Badge variant="outline" className="text-[10px]">{r.flowLabel}</Badge></TableCell>
                   <TableCell><Badge variant="secondary" className="text-[10px]">{r.status}</Badge></TableCell>
-                  <TableCell className="font-mono">{r.pipelineCount}</TableCell>
+                  <TableCell className="font-mono">{r.total}</TableCell>
                   <TableCell className="font-mono text-primary">{r.inProcess}</TableCell>
                   <TableCell className="font-mono text-emerald-600">{r.hired}</TableCell>
                   <TableCell className="font-mono text-destructive">{r.rejected}</TableCell>
