@@ -36,8 +36,8 @@ const AVAILABILITY_OPTIONS = ["Immediate", "1 week", "2 weeks", "1 month", "Not 
 const ATSPipeline = () => {
   const { reqId } = useParams<{ reqId: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
-  const currentUser = profile?.name || profile?.email || "User";
+  const { currentUser } = useAuth();
+  const currentUserName = currentUser?.name || currentUser?.email || "User";
 
   const [req, setReq] = useState<import("@/lib/requisition-types").AdvancedRequisition | null>(null);
   const [reqLoading, setReqLoading] = useState(true);
