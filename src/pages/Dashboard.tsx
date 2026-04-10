@@ -69,7 +69,7 @@ const Dashboard = () => {
           contacted: du.reduce((s, d) => s + (d.profilesContacted || 0), 0),
           screened: du.reduce((s, d) => s + (d.profilesScreened || 0), 0),
           shared: du.reduce((s, d) => s + (d.profilesShared || 0), 0),
-          interviewed: du.reduce((s, d) => s + (d.interviews || 0), 0),
+          interviewed: du.reduce((s, d) => s + (d.interviewsScheduled || 0), 0),
           selected: closedR.length,
         },
       };
@@ -160,7 +160,7 @@ const Dashboard = () => {
                   ))}
                 </tr></thead>
                 <tbody>
-                  {(selectedRecruiter === "all" ? taMetrics.recruiterPerformance : taMetrics.recruiterPerformance.filter(r => r.name === selectedRecruiter)).map(r => (
+                  {(selectedRecruiter === "all" ? recruiterPerformance : recruiterPerformance.filter(r => r.name === selectedRecruiter)).map(r => (
                     <tr key={r.name} className="data-table-row">
                       <td className="py-3 font-medium text-foreground pr-4">{r.name}</td>
                       <td className="py-3 font-mono text-foreground pr-4">{r.open}</td>
@@ -183,7 +183,7 @@ const Dashboard = () => {
           <div className="stat-card">
             <h3 className="text-sm font-mono uppercase tracking-wider text-primary/70 mb-4">Pipeline Comparison</h3>
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={(selectedRecruiter === "all" ? taMetrics.recruiterPerformance : taMetrics.recruiterPerformance.filter(r => r.name === selectedRecruiter)).map(r => ({ name: r.name, Identified: r.profiles.identified, Contacted: r.profiles.contacted, Selected: r.profiles.selected }))} layout="vertical">
+              <BarChart data={(selectedRecruiter === "all" ? recruiterPerformance : recruiterPerformance.filter(r => r.name === selectedRecruiter)).map(r => ({ name: r.name, Identified: r.profiles.identified, Contacted: r.profiles.contacted, Selected: r.profiles.selected }))} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(240 6% 90%)" />
                 <XAxis type="number" tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} />
                 <YAxis type="category" dataKey="name" tick={{ fill: "hsl(240 5% 46%)", fontSize: 12 }} axisLine={false} width={100} />
