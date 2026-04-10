@@ -1006,15 +1006,28 @@ function SummaryCards({ clients }: { clients: ClientV2[] }) {
   const allCreators = allDeals.flatMap(d => d.creators);
   const activeDeals = allDeals.filter(d => d.status === "Active");
   const activeCreators = allCreators.filter(c => c.dealStatus === "Active");
+  const greenDeals = allDeals.filter(d => d.healthStatus === "green").length;
+  const yellowDeals = allDeals.filter(d => d.healthStatus === "yellow").length;
+  const redDeals = allDeals.filter(d => d.healthStatus === "red").length;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-      <StatCard label="Total Clients" value={String(clients.length)} icon={User} />
-      <StatCard label="Total Deals" value={String(allDeals.length)} icon={TrendingUp} />
-      <StatCard label="Total Creators" value={String(allCreators.length)} icon={User} />
-      <StatCard label="Active Clients" value={String(clients.filter(c => c.deals.some(d => d.status === "Active")).length)} icon={User} changeType="positive" />
-      <StatCard label="Active Deals" value={String(activeDeals.length)} icon={TrendingUp} changeType="positive" />
-      <StatCard label="Active Creators" value={String(activeCreators.length)} icon={User} changeType="positive" />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <StatCard label="Total Clients" value={String(clients.length)} icon={User} />
+        <StatCard label="Total Deals" value={String(allDeals.length)} icon={TrendingUp} />
+        <StatCard label="Total Creators" value={String(allCreators.length)} icon={User} />
+        <StatCard label="Active Clients" value={String(clients.filter(c => c.deals.some(d => d.status === "Active")).length)} icon={User} changeType="positive" />
+        <StatCard label="Active Deals" value={String(activeDeals.length)} icon={TrendingUp} changeType="positive" />
+        <StatCard label="Active Creators" value={String(activeCreators.length)} icon={User} changeType="positive" />
+      </div>
+      {(greenDeals > 0 || yellowDeals > 0 || redDeals > 0) && (
+        <div className="flex items-center gap-4 text-xs">
+          <span className="text-muted-foreground font-mono uppercase tracking-wider">Deal Health:</span>
+          <span className="flex items-center gap-1"><Circle className="h-3 w-3 fill-current text-success" /> {greenDeals} Green</span>
+          <span className="flex items-center gap-1"><Circle className="h-3 w-3 fill-current text-warning" /> {yellowDeals} Yellow</span>
+          <span className="flex items-center gap-1"><Circle className="h-3 w-3 fill-current text-destructive" /> {redDeals} Red</span>
+        </div>
+      )}
     </div>
   );
 }
