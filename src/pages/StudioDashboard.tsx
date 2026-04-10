@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { DealV2, ClientV2, DeployedCreatorV2 } from "@/lib/talent-client-types";
 import { POD_NAMES } from "@/lib/talent-client-types";
-import { dbAddHRBPConnect, dbUpdateCreator } from "@/lib/db-store";
+import { dbAddHRBPConnect, dbUpdateCreator, dbUploadAgreement, dbListAgreements, dbGetAgreementUrl } from "@/lib/db-store";
 import { usePods, useRefreshPods } from "@/lib/use-pods";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { DollarSign, TrendingUp, Users, Upload, FileText, ChevronDown, ChevronRight, Plus, MessageSquare } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Upload, FileText, ChevronDown, ChevronRight, Plus, MessageSquare, Circle, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,15 +19,11 @@ import { useAuth } from "@/lib/auth-context";
 
 const formatCurrency = (n: number) => "₹" + (n / 100000).toFixed(1) + "L";
 
-// Agreement store
-interface Agreement { id: string; creatorId: string; dealId: string; fileName: string; uploadedAt: string; }
-let agreements: Agreement[] = [];
-function addAgreement(creatorId: string, dealId: string, fileName: string) {
-  agreements = [...agreements, { id: `AGR-${Date.now()}`, creatorId, dealId, fileName, uploadedAt: new Date().toISOString() }];
-}
-function getAgreements(dealId: string, creatorId: string) {
-  return agreements.filter(a => a.dealId === dealId && a.creatorId === creatorId);
-}
+const healthDot = (color: string) => {
+  if (!color) return null;
+  const cls = color === "green" ? "text-success" : color === "yellow" ? "text-warning" : "text-destructive";
+  return <Circle className={`h-3 w-3 fill-current ${cls}`} />;
+};
 
 const VSD_POD_MAP: Record<string, string> = {
   "Aamir Khan": "Integrated",
@@ -53,8 +49,8 @@ function getAllStudioData(pods: import("@/lib/talent-client-types").PodV2[]) {
 }
 
 // ─── HRBP Connect Dialog ────────────────────────────────
-function HRBPConnectDialog({ dealId, creatorId, creatorName, connects, open, onClose }: {
-  dealId: string; creatorId: string; creatorName: string; connects: DeployedCreatorV2["hrbpConnects"]; open: boolean; onClose: () => void;
+function HRBPConnectDialog({ dealId, creatorId, creatorName, connects, open, onClose, onRefresh }: {
+  dealId: string; creatorId: string; creatorName: string; connects: DeployedCreatorV2["hrbpConnects"]; open: boolean; onClose: () => void; onRefresh: () => void;
 }) {
   const [summary, setSummary] = useState("");
   const [outcome, setOutcome] = useState("");
@@ -64,6 +60,7 @@ function HRBPConnectDialog({ dealId, creatorId, creatorName, connects, open, onC
     await dbAddHRBPConnect(creatorId, { date: new Date().toISOString().split("T")[0], summary: summary.trim(), outcome: outcome.trim(), hrbpName: hrbpName.trim() });
     toast.success("Connect logged");
     setSummary(""); setOutcome(""); setHrbpName("");
+    onRefresh();
     onClose();
   };
   return (
@@ -92,39 +89,74 @@ function HRBPConnectDialog({ dealId, creatorId, creatorName, connects, open, onC
   );
 }
 
-// ─── Upload Agreement Dialog ────────────────────────────
-function UploadAgreementDialog({ creatorId, dealId, open, onClose }: { creatorId: string; dealId: string; open: boolean; onClose: () => void }) {
-  const [fileName, setFileName] = useState("");
-  const save = () => {
-    if (!fileName.trim()) { toast.error("File name required"); return; }
-    addAgreement(creatorId, dealId, fileName.trim());
-    toast.success("Agreement uploaded (mock)");
-    setFileName("");
-    onClose();
+// ─── Upload Agreement Dialog (Real Storage) ──────────────
+function UploadAgreementDialog({ creatorId, dealId, open, onClose, onRefresh }: { creatorId: string; dealId: string; open: boolean; onClose: () => void; onRefresh: () => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [agreements, setAgreements] = useState<{ name: string; path: string; createdAt: string }[]>([]);
+
+  useEffect(() => {
+    if (open) dbListAgreements(dealId, creatorId).then(setAgreements);
+  }, [open, dealId, creatorId]);
+
+  const upload = async () => {
+    if (!file) { toast.error("Select a file"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("File must be under 10MB"); return; }
+    setUploading(true);
+    try {
+      await dbUploadAgreement(creatorId, dealId, file);
+      toast.success("Agreement uploaded");
+      setFile(null);
+      const updated = await dbListAgreements(dealId, creatorId);
+      setAgreements(updated);
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    }
+    setUploading(false);
   };
+
+  const downloadAgreement = async (path: string) => {
+    const url = await dbGetAgreementUrl(path);
+    if (url) window.open(url, "_blank");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Upload Agreement</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div><Label className="text-xs">Agreement File Name</Label><Input placeholder="e.g. Agreement.pdf" value={fileName} onChange={e => setFileName(e.target.value)} /></div>
+        <DialogHeader><DialogTitle>Agreements</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          {agreements.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs">Existing Agreements</Label>
+              {agreements.map(a => (
+                <div key={a.path} className="flex items-center justify-between p-2 rounded bg-muted/30 border border-border text-xs">
+                  <span className="text-foreground truncate">{a.name}</span>
+                  <Button variant="ghost" size="sm" onClick={() => downloadAgreement(a.path)} className="h-6 text-xs gap-1"><Download className="h-3 w-3" />View</Button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label className="text-xs">Upload New (PDF, max 10MB)</Label>
+            <Input type="file" accept=".pdf" onChange={e => setFile(e.target.files?.[0] || null)} className="text-xs" />
+          </div>
         </div>
-        <DialogFooter><Button onClick={save}>Save</Button></DialogFooter>
+        <DialogFooter><Button onClick={upload} disabled={!file || uploading}>{uploading ? "Uploading..." : "Upload"}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
 // ─── Deal Card ──────────────────────────────────────────
-function StudioDealCard({ podName, clientName, deal }: { podName: string; clientName: string; deal: DealV2 }) {
+function StudioDealCard({ podName, clientName, deal, onRefresh }: { podName: string; clientName: string; deal: DealV2; onRefresh: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [uploadFor, setUploadFor] = useState<{ creatorId: string; dealId: string } | null>(null);
   const [hrbpFor, setHrbpFor] = useState<{ dealId: string; creatorId: string; creatorName: string; connects: DeployedCreatorV2["hrbpConnects"] } | null>(null);
-  const [_, setTick] = useState(0);
 
   const activeCreators = deal.creators.filter(c => c.dealStatus === "Active");
+  const healthBg = deal.healthStatus === "red" ? "border-l-4 border-l-destructive" : deal.healthStatus === "yellow" ? "border-l-4 border-l-warning" : deal.healthStatus === "green" ? "border-l-4 border-l-success" : "";
 
-  // Monthly payment tracking
   const getMonthsSinceStart = (startDate: string) => {
     const start = new Date(startDate);
     const now = new Date();
@@ -138,12 +170,15 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
   };
 
   return (
-    <div className="stat-card">
+    <div className={`stat-card ${healthBg}`}>
       <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-3">
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
           <div>
-            <p className="font-semibold text-foreground">{deal.dealName}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-foreground">{deal.dealName}</p>
+              {deal.healthStatus && healthDot(deal.healthStatus)}
+            </div>
             <p className="text-xs text-muted-foreground">{clientName} · {podName} · {deal.dealType}</p>
           </div>
         </div>
@@ -167,7 +202,6 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
               </tr></thead>
               <tbody>
                 {deal.creators.map(c => {
-                  const creatorAgreements = getAgreements(deal.id, c.id);
                   const months = getMonthsSinceStart(c.startDate);
                   return (
                     <tr key={c.id} className="data-table-row">
@@ -195,8 +229,9 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
                       </td>
                       <td className="py-2">
                         <div className="flex items-center gap-2">
-                          {creatorAgreements.length > 0 && <span className="text-xs text-muted-foreground flex items-center gap-1"><FileText className="h-3 w-3" /> {creatorAgreements.length}</span>}
-                          <button onClick={() => setUploadFor({ creatorId: c.id, dealId: deal.id })} className="p-1 rounded hover:bg-muted" title="Upload agreement"><Upload className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                          <button onClick={() => setUploadFor({ creatorId: c.id, dealId: deal.id })} className="p-1 rounded hover:bg-muted flex items-center gap-1 text-xs text-muted-foreground" title="Upload agreement">
+                            <Upload className="h-3.5 w-3.5" /> Manage
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -208,8 +243,8 @@ function StudioDealCard({ podName, clientName, deal }: { podName: string; client
         </div>
       )}
 
-      {uploadFor && <UploadAgreementDialog creatorId={uploadFor.creatorId} dealId={uploadFor.dealId} open onClose={() => { setUploadFor(null); setTick(t => t + 1); }} />}
-      {hrbpFor && <HRBPConnectDialog dealId={hrbpFor.dealId} creatorId={hrbpFor.creatorId} creatorName={hrbpFor.creatorName} connects={hrbpFor.connects} open onClose={() => { setHrbpFor(null); setTick(t => t + 1); }} />}
+      {uploadFor && <UploadAgreementDialog creatorId={uploadFor.creatorId} dealId={uploadFor.dealId} open onClose={() => setUploadFor(null)} onRefresh={onRefresh} />}
+      {hrbpFor && <HRBPConnectDialog dealId={hrbpFor.dealId} creatorId={hrbpFor.creatorId} creatorName={hrbpFor.creatorName} connects={hrbpFor.connects} open onClose={() => setHrbpFor(null)} onRefresh={onRefresh} />}
     </div>
   );
 }
@@ -222,7 +257,7 @@ const StudioDashboard = () => {
   const [selectedPod, setSelectedPod] = useState("All");
   const [viewMode, setViewMode] = useState<"deals" | "geography">("deals");
   const { currentRole } = useAuth();
-  const hideFinancials = false; // Admin view shows all financials
+  const hideFinancials = false;
 
   const studioData = useMemo(() => getAllStudioData(pods), [pods]);
 
@@ -236,7 +271,11 @@ const StudioDashboard = () => {
   const activeClients = [...new Set(displayData.filter(d => d.deal.status === "Active").map(d => d.clientName))].length;
   const avgMargin = totalRev ? ((totalRev - totalCost) / totalRev * 100).toFixed(1) : "0";
 
-  // City-level geography view data
+  // Health counts
+  const greenDeals = displayData.filter(d => d.deal.healthStatus === "green").length;
+  const yellowDeals = displayData.filter(d => d.deal.healthStatus === "yellow").length;
+  const redDeals = displayData.filter(d => d.deal.healthStatus === "red").length;
+
   const geoData = useMemo(() => {
     const cityMap: Record<string, { city: string; creators: Record<string, number>; rev: number; cost: number }> = {};
     for (const d of displayData) {
@@ -251,7 +290,6 @@ const StudioDashboard = () => {
     return Object.values(cityMap).sort((a, b) => Object.values(b.creators).reduce((s, n) => s + n, 0) - Object.values(a.creators).reduce((s, n) => s + n, 0));
   }, [displayData]);
 
-  // MoM mock data
   const momData = [
     { month: "Sep", revenue: totalRev * 0.85, cost: totalCost * 0.82, clients: activeClients - 1, creators: activeCreators.length - 3 },
     { month: "Oct", revenue: totalRev * 0.88, cost: totalCost * 0.86, clients: activeClients - 1, creators: activeCreators.length - 2 },
@@ -280,7 +318,7 @@ const StudioDashboard = () => {
         </div>
       </div>
 
-      {/* Summary — hide financials for pod lead */}
+      {/* Summary */}
       <div className={`grid grid-cols-2 ${hideFinancials ? "sm:grid-cols-2" : "sm:grid-cols-5"} gap-4`}>
         <StatCard label="Active Clients" value={String(activeClients)} icon={Users} />
         <StatCard label="Active Creators" value={String(activeCreators.length)} icon={Users} />
@@ -288,6 +326,16 @@ const StudioDashboard = () => {
         {!hideFinancials && <StatCard label="Total Cost" value={formatCurrency(totalCost)} icon={DollarSign} />}
         {!hideFinancials && <StatCard label="Gross Margin" value={`${avgMargin}%`} change={formatCurrency(totalRev - totalCost)} changeType="positive" icon={TrendingUp} />}
       </div>
+
+      {/* Health Status Summary */}
+      {(greenDeals > 0 || yellowDeals > 0 || redDeals > 0) && (
+        <div className="flex items-center gap-4 text-xs">
+          <span className="text-muted-foreground font-mono uppercase tracking-wider">Deal Health:</span>
+          <span className="flex items-center gap-1"><Circle className="h-3 w-3 fill-current text-success" /> {greenDeals} Green</span>
+          <span className="flex items-center gap-1"><Circle className="h-3 w-3 fill-current text-warning" /> {yellowDeals} Yellow</span>
+          <span className="flex items-center gap-1"><Circle className="h-3 w-3 fill-current text-destructive" /> {redDeals} Red</span>
+        </div>
+      )}
 
       {/* MoM Chart */}
       {showMoM && (
@@ -349,7 +397,7 @@ const StudioDashboard = () => {
         <div className="space-y-4">
           <h2 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">All Deals ({displayData.length})</h2>
           {displayData.map(({ podName, clientName, deal }) => (
-            <StudioDealCard key={deal.id} podName={podName} clientName={clientName} deal={deal} />
+            <StudioDealCard key={deal.id} podName={podName} clientName={clientName} deal={deal} onRefresh={refreshPods} />
           ))}
           {displayData.length === 0 && <p className="text-sm text-muted-foreground">No deals found</p>}
         </div>
