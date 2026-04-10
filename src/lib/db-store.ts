@@ -205,6 +205,7 @@ export async function dbUpdateDeal(dealId: string, updates: Partial<{
   if (updates.contractEndDate !== undefined) mapped.contract_end_date = updates.contractEndDate;
   if (updates.capabilities !== undefined) mapped.capabilities = updates.capabilities;
   if (updates.capabilityLeader !== undefined) mapped.capability_leader = updates.capabilityLeader;
+  if (updates.healthStatus !== undefined) mapped.health_status = updates.healthStatus;
   const { error } = await supabase.from("deals").update(mapped).eq("id", dealId);
   if (error) throw error;
 }
