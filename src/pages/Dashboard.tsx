@@ -219,7 +219,7 @@ const Dashboard = () => {
             const sourceDistribution = allCands.reduce((acc, c) => { acc[c.source] = (acc[c.source] || 0) + 1; return acc; }, {} as Record<string, number>);
             const sourceData = Object.entries(sourceDistribution).map(([name, value]) => ({ name, value }));
 
-            const reqBreakdown = advancedRequisitions.map(r => {
+            const reqBreakdown = reqs.map(r => {
               const pcs = allPipeline.filter(pc => pc.requisitionId === r.id);
               const client = r.flow === "sales" ? r.salesData?.clientName : r.hiringData?.clientName;
               return { reqId: r.id, client: client || "Unknown", total: pcs.length, hired: pcs.filter(pc => pc.currentStage === "Hired").length, rejected: pcs.filter(pc => pc.currentStage === "Rejected").length, inProcess: pcs.filter(pc => !["Sourced", "Hired", "Rejected"].includes(pc.currentStage)).length };
