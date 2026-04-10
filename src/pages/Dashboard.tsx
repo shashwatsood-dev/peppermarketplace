@@ -54,6 +54,28 @@ const Dashboard = () => {
     ? Math.round(closedWithDays.reduce((s, r) => s + Math.round((new Date(r.updatedAt).getTime() - new Date(r.createdAt).getTime()) / (1000 * 60 * 60 * 24)), 0) / closedWithDays.length)
     : 0;
 
+  // Compute recruiter performance from requisitions
+  const recruiterPerformance = useMemo(() => {
+    return RECRUITERS.map(name => {
+      const myReqs = filteredReqs.filter(r => r.recruiterAssigned === name);
+      const openR = myReqs.filter(r => !r.status.startsWith("Closed") && r.status !== "Scrapped");
+      const closedR = myReqs.filter(r => r.status.startsWith("Closed"));
+      const avgDays = closedR.length ? Math.round(closedR.reduce((s, r) => s + Math.round((new Date(r.updatedAt).getTime() - new Date(r.createdAt).getTime()) / 86400000), 0) / closedR.length) : 0;
+      const du = myReqs.flatMap(r => r.dailyUpdates || []);
+      return {
+        name, open: openR.length, closed: closedR.length, avgDays,
+        profiles: {
+          identified: du.reduce((s, d) => s + (d.profilesIdentified || 0), 0),
+          contacted: du.reduce((s, d) => s + (d.profilesContacted || 0), 0),
+          screened: du.reduce((s, d) => s + (d.profilesScreened || 0), 0),
+          shared: du.reduce((s, d) => s + (d.profilesShared || 0), 0),
+          interviewed: du.reduce((s, d) => s + (d.interviews || 0), 0),
+          selected: closedR.length,
+        },
+      };
+    });
+  }, [RECRUITERS, filteredReqs]);
+
   const openDrilldown = (title: string, reqList: AdvancedRequisition[]) => {
     setDrilldownTitle(title);
     setDrilldownReqs(reqList);
