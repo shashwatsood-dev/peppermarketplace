@@ -1,38 +1,139 @@
 
 
-## Plan: Talent X Client View Enhancements
+# Implementation Plan — Platform Overhaul
 
-### 1. Edit Creator Dialog
-Add an "Edit" button (pencil icon) next to each creator's status column in the deal table. Clicking opens an `EditCreatorDialog` with all fields pre-populated: name, role, source, pay model, currency, pay rate, cost, billing, ops link, LinkedIn, city, expected volume. Uses `dbUpdateCreator` to persist. Layout: 2-column grid for a clean summary view.
+This is a large set of changes spanning authentication, ATS, handover, Talent x Client, Studio Dashboard, and data cleanup. I'll break it into 7 work phases.
 
-**Files:** `DealMargins.tsx` — new `EditCreatorDialog` component + edit button in creator table row.
+---
 
-### 2. Show All Three BOPM Names in Collapsed Client View
-Update the collapsed `ClientCard` subtitle (line 585) from showing only `principalBOPM` to showing all three: Principal, Senior, and Junior BOPM names inline.
+## Phase 1: Authentication & Role Overhaul
 
-**Files:** `DealMargins.tsx` — `ClientCard` collapsed view.
+**Current state:** Client-side auth with hardcoded users, 3 roles (admin, pod_lead_recruiter, capability_lead_am).
 
-### 3. Enhanced Deal Creation Form
-Add new fields to the `AddDealDialog` and `EditDealDialog`: Deal ID (auto-generated, shown read-only), MRR, contract duration, contract start date, contract end date. Requires a database migration to add columns: `mrr`, `contract_duration`, `contract_start_date`, `contract_end_date` to the `deals` table. Update `db-store.ts` for the new fields, and `DealV2` type in `talent-client-types.ts`.
+**Changes:**
+- Replace client-side auth with Lovable Cloud (Supabase Auth) for real email/password signup & login
+- Add a signup page with email, password, and show/hide password toggle
+- All new signups default to "admin" role (which now merges with pod_lead/recruiter view)
+- Simplify roles to just 2: `admin` (combines current admin + pod_lead_recruiter) and `capability_lead_am`
+- Create a `profiles` table (id, user_id, email, name, role, created_at) and a `user_roles` table
+- On signup, auto-create profile and add the user's name to the recruiter list system-wide
+- Settings page: show all registered users, allow admin to reset accounts, add/delete users, and change roles
+- Auto-confirm email signups (since this is an internal tool)
 
-**Files:** `talent-client-types.ts`, `DealMargins.tsx`, `db-store.ts` + DB migration.
+**Database migrations:**
+- `profiles` table with user_id FK to auth.users, email, name, created_at
+- `user_roles` table with user_id, role enum
+- RLS policies so users can read all profiles but only update their own
 
-### 4. Capability Tagging on Deals
-Add a multi-select for capabilities (SEO, Content, Creative) and a text field for capability leader on each deal. Requires DB migration to add `capabilities` (text array) and `capability_leader` (text) columns to the `deals` table. Show capability tags as badges on the deal row header. Update types, store, and both Add/Edit deal dialogs.
+---
 
-**Files:** `talent-client-types.ts`, `DealMargins.tsx`, `db-store.ts` + DB migration.
+## Phase 2: Recruiter Auto-Registration
 
-### 5. Improved Creator Add Form Layout
-Redesign `BulkAddCreatorDialog` from a single cramped row to a 2-3 row card-based layout per creator. Rename "Unit Rate" → "Creator Unit Rate", "Billing" → "Client Unit Price". Conditionally hide "City" when source is "Freelancer". Larger input fields for readability.
+**Current state:** Recruiters are hardcoded in `taMetrics.recruiterPerformance` (Neha Gupta, Ravi Kumar).
 
-**Files:** `DealMargins.tsx` — `BulkAddCreatorDialog` layout refactor.
+**Changes:**
+- Remove "Neha Gupta" and "Ravi Kumar" from hardcoded mock data
+- Create a `recruiters` table in DB (or derive from profiles where role = admin)
+- When a new admin signs up, auto-add them as a recruiter
+- Dashboard, requisitions, handover pages all pull recruiter list from DB profiles
+- Performance tracking auto-initializes for new recruiters
 
-### Database Migration
-Single migration adding to `deals` table:
-- `mrr numeric NOT NULL DEFAULT 0`
-- `contract_duration text NOT NULL DEFAULT ''`
-- `contract_start_date text NOT NULL DEFAULT ''`
-- `contract_end_date text NOT NULL DEFAULT ''`
-- `capabilities text[] NOT NULL DEFAULT '{}'`
-- `capability_leader text NOT NULL DEFAULT ''`
+---
+
+## Phase 3: Requisition & ATS Fixes
+
+**Requisition form without login:**
+- Create a public route `/requisitions/new-public` that doesn't require authentication
+- The shareable link allows anyone to fill the form without signing in
+
+**ATS fixes:**
+- **Custom stages:** Add UI to create/reorder/delete pipeline stages per requisition, stored in a `custom_pipeline_stages` table or JSONB on the requisition
+- **Candidate database flow:** Ensure all creators from the database flow into ATS candidate selection
+- **Availability field:** Add "availability" to the new candidate form in ATS pipeline
+- **Replicate add creator form:** Mirror the Candidates section's add form inside the ATS pipeline requisition view
+- **Shared notes:** Make candidate notes within a requisition visible to all users (persist to DB)
+- **Meeting link fix:** Ensure "Join Meeting" opens the URL in a new tab with proper `https://` prefix
+- **Creator detail editing in overview:** Add edit button on candidate overview cards
+- **Samples/Portfolio section:** Add an editable section for portfolio links; clicking opens in new tab
+- **Interview scoring:** After interview, allow anyone to fill score and add interview notes
+- **Screening notes section:** Add a dedicated screening notes area on the candidate detail view
+
+---
+
+## Phase 4: Handover Tab Fixes
+
+**Current state:** Pulls from mock requisition data, not from DB.
+
+**Changes:**
+- Add POD selector → filters clients → filters deals (sourced from `pods/clients/deals` DB tables)
+- Fix data flow so deals come from both requisitions and Talent x Client view
+- Margin calculation: instead of pulling margin directly from requisition, use the role's associated pay rate from the requisition and calculate margin from `(client billing - finalized pay) / client billing`
+
+---
+
+## Phase 5: Talent x Client View Enhancements
+
+**Changes:**
+- **Deal notes:** Add a `deal_notes` table (id, deal_id, note, author, created_at) for historical notes per deal
+- **Deal health color:** Add a `health_status` column to deals table (red/green/yellow), highlight the deal row with the selected color
+- **Summary cards:** Add total red/green/yellow deal and client counts in the pod summary and overall summary
+- **Creator engagement history:** Add a `creator_notes` table for historical capability lead/BOPM notes per creator, displayed as a timeline
+
+---
+
+## Phase 6: Studio Dashboard Fixes
+
+**Changes:**
+- **HRBP log visibility:** Fix the HRBP connect log display — ensure it fetches from DB and renders correctly
+- **R/G/Y color coding:** Add health status color coding similar to Talent x Client view
+- **Agreement upload:** Create a Supabase storage bucket (`agreements`, max 10MB PDF) and implement file upload/download for creator agreements
+
+---
+
+## Phase 7: Email Integration
+
+**Changes:**
+- This requires connecting Gmail for sending emails from the platform
+- Gmail OAuth integration is not natively supported in Lovable Cloud
+- I'll implement this using a connector or guide you through setting up Gmail API credentials
+- Email sending will be wired into ATS (interview scheduling), handover (sharing), and Talent x Client (feedback emails)
+
+---
+
+## Data Cleanup
+
+- Remove "Neha Gupta" and "Ravi Kumar" from all hardcoded recruiter references in `mock-data.ts`, `ats-store.ts`, and any seed data
+
+---
+
+## Technical Details
+
+**New DB tables:**
+- `profiles` — user profiles linked to auth.users
+- `user_roles` — RBAC roles
+- `deal_notes` — historical notes per deal
+- `creator_engagement_notes` — BOPM/capability lead notes per creator
+- `custom_pipeline_stages` — custom ATS stages per requisition
+
+**New storage bucket:**
+- `agreements` — PDF uploads up to 10MB
+
+**Modified files (major):**
+- `auth-context.tsx` → replaced with Supabase Auth
+- `Login.tsx` → add signup flow with show/hide password
+- `Settings.tsx` → user management with DB-backed users
+- `AppLayout.tsx` → public route handling
+- `App.tsx` → new routes
+- `ATSPipeline.tsx` → custom stages, notes, scoring, portfolio, screening
+- `ATSOverview.tsx` → creator edit
+- `CreatorHandover.tsx` → POD→Client→Deal cascade, margin calc
+- `DealMargins.tsx` → deal notes, health colors, summary counts, creator notes
+- `StudioDashboard.tsx` → HRBP fix, R/G/Y, agreement upload
+- `Dashboard.tsx` → dynamic recruiter list from DB
+- `mock-data.ts` → remove hardcoded recruiters
+- `NewRequisition.tsx` → public access variant
+
+**Estimated scope:** ~15-20 file changes, 5 DB migrations, 1 storage bucket.
+
+This is a significant overhaul. I recommend implementing it in the phases listed above, starting with authentication since many other features depend on it. Shall I proceed?
 
