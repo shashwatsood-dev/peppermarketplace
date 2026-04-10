@@ -1,16 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   dbUpdateClient, dbUpdateDeal, dbUpdateCreator, dbAddCreatorToDeal, dbAddClientToPod, dbAddDealToClient,
   dbMoveClientToPod, dbCopyCreatorsToDeal, dbRemoveCreator, dbParseClientCSV, dbGetClientCSVTemplate, exportPodsAsCSV,
-  dbDeleteClient, dbRenameDealId,
+  dbDeleteClient, dbRenameDealId, dbFetchDealNotes, dbAddDealNote, dbFetchCreatorEngagementNotes, dbAddCreatorEngagementNote,
 } from "@/lib/db-store";
 import { usePods, useRefreshPods } from "@/lib/use-pods";
-import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName, DealCapability } from "@/lib/talent-client-types";
+import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, CreatorDealStatus, HealthColor, ResourceSource, DealStatus, PodName, DealCapability, DealNote, CreatorEngagementNote } from "@/lib/talent-client-types";
 import { POD_NAMES, ALL_POD_NAMES, DEAL_CAPABILITIES } from "@/lib/talent-client-types";
 import { type RoleType, type PayModel } from "@/lib/mock-data";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User, Mail, Download, Upload, Trash2, ArrowRightLeft, Copy, X } from "lucide-react";
+import { TrendingUp, Users, ChevronDown, ChevronRight, Pencil, Plus, Circle, UserCheck, ExternalLink, User, Mail, Download, Upload, Trash2, ArrowRightLeft, Copy, X, MessageSquare, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ import { getHandoversByDeal } from "@/lib/handover-store";
 import type { CurrencyCode } from "@/lib/requisition-types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth-context";
 
 const formatCurrency = (n: number) => "₹" + (n / 100000).toFixed(1) + "L";
 
@@ -76,6 +77,141 @@ function RatingReasonDialog({ open, onClose, onSave, rating }: { open: boolean; 
         <DialogFooter><Button onClick={save}>Save Rating</Button></DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ─── Deal Notes Dialog ──────────────────────────────────
+function DealNotesDialog({ dealId, dealName, open, onClose }: { dealId: string; dealName: string; open: boolean; onClose: () => void }) {
+  const [notes, setNotes] = useState<DealNote[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
+
+  useEffect(() => {
+    if (open) {
+      setLoading(true);
+      dbFetchDealNotes(dealId).then(n => { setNotes(n); setLoading(false); });
+    }
+  }, [open, dealId]);
+
+  const add = async () => {
+    if (!newNote.trim()) return;
+    await dbAddDealNote(dealId, newNote.trim(), currentUser?.email || "Unknown");
+    setNewNote("");
+    const updated = await dbFetchDealNotes(dealId);
+    setNotes(updated);
+    toast.success("Note added");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Notes — {dealName}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Textarea value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Add a note..." rows={2} className="flex-1" />
+            <Button onClick={add} size="sm" className="self-end">Add</Button>
+          </div>
+          {loading ? <p className="text-xs text-muted-foreground">Loading...</p> : notes.length === 0 ? <p className="text-xs text-muted-foreground">No notes yet</p> : (
+            <div className="space-y-2">
+              {notes.map(n => (
+                <div key={n.id} className="p-2 rounded bg-muted/30 border border-border text-xs space-y-1">
+                  <div className="flex justify-between"><span className="font-mono text-muted-foreground">{new Date(n.createdAt).toLocaleDateString()}</span><span className="text-muted-foreground">{n.author}</span></div>
+                  <p className="text-foreground">{n.note}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Creator Engagement Notes Dialog ────────────────────
+function CreatorEngagementNotesDialog({ creatorId, creatorName, open, onClose }: { creatorId: string; creatorName: string; open: boolean; onClose: () => void }) {
+  const [notes, setNotes] = useState<CreatorEngagementNote[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [noteType, setNoteType] = useState("general");
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
+
+  useEffect(() => {
+    if (open) {
+      setLoading(true);
+      dbFetchCreatorEngagementNotes(creatorId).then(n => { setNotes(n); setLoading(false); });
+    }
+  }, [open, creatorId]);
+
+  const add = async () => {
+    if (!newNote.trim()) return;
+    await dbAddCreatorEngagementNote(creatorId, newNote.trim(), currentUser?.email || "Unknown", noteType);
+    setNewNote("");
+    const updated = await dbFetchCreatorEngagementNotes(creatorId);
+    setNotes(updated);
+    toast.success("Note added");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Engagement History — {creatorName}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Select value={noteType} onValueChange={setNoteType}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="capability_lead">Capability Lead</SelectItem>
+                <SelectItem value="bopm">BOPM</SelectItem>
+                <SelectItem value="feedback">Feedback</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-2">
+              <Textarea value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Add engagement note..." rows={2} className="flex-1" />
+              <Button onClick={add} size="sm" className="self-end">Add</Button>
+            </div>
+          </div>
+          {loading ? <p className="text-xs text-muted-foreground">Loading...</p> : notes.length === 0 ? <p className="text-xs text-muted-foreground">No notes yet</p> : (
+            <div className="space-y-2">
+              {notes.map(n => (
+                <div key={n.id} className="p-2 rounded bg-muted/30 border border-border text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="font-mono text-muted-foreground">{new Date(n.createdAt).toLocaleDateString()}</span>
+                    <div className="flex gap-2">
+                      <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">{n.noteType}</span>
+                      <span className="text-muted-foreground">{n.author}</span>
+                    </div>
+                  </div>
+                  <p className="text-foreground">{n.note}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Deal Health Status Selector ────────────────────────
+function DealHealthSelect({ dealId, value, onDone }: { dealId: string; value: HealthColor | ""; onDone: () => void }) {
+  return (
+    <Select value={value || "none"} onValueChange={async v => {
+      await dbUpdateDeal(dealId, { healthStatus: v === "none" ? "" : v as HealthColor });
+      toast.success("Deal health updated");
+      onDone();
+    }}>
+      <SelectTrigger className="h-7 w-24 text-xs">
+        <SelectValue>{value ? <span className="flex items-center gap-1">{healthDot(value)} {value}</span> : "—"}</SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="green"><span className="flex items-center gap-1">{healthDot("green")} Green</span></SelectItem>
+        <SelectItem value="yellow"><span className="flex items-center gap-1">{healthDot("yellow")} Yellow</span></SelectItem>
+        <SelectItem value="red"><span className="flex items-center gap-1">{healthDot("red")} Red</span></SelectItem>
+        <SelectItem value="none">None</SelectItem>
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -596,6 +732,10 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
   const [addCreator, setAddCreator] = useState(false);
   const [transferCreators, setTransferCreators] = useState(false);
   const [editingCreator, setEditingCreator] = useState<DeployedCreatorV2 | null>(null);
+  const [showDealNotes, setShowDealNotes] = useState(false);
+  const [showCreatorNotes, setShowCreatorNotes] = useState<{ id: string; name: string } | null>(null);
+
+  const healthBg = deal.healthStatus === "red" ? "border-l-4 border-l-destructive" : deal.healthStatus === "yellow" ? "border-l-4 border-l-warning" : deal.healthStatus === "green" ? "border-l-4 border-l-success" : "";
 
   const visibleCreators = showInactive ? deal.creators : deal.creators.filter(c => c.dealStatus === "Active");
   const handovers = getHandoversByDeal(deal.id);
@@ -608,7 +748,7 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
   };
 
   return (
-    <div className="border border-border rounded-md bg-card/50">
+    <div className={`border border-border rounded-md bg-card/50 ${healthBg}`}>
       <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-3">
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
@@ -624,10 +764,12 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <div onClick={e => e.stopPropagation()}><DealHealthSelect dealId={deal.id} value={deal.healthStatus} onDone={onDone} /></div>
           <span className="text-xs font-mono text-muted-foreground">Rev {formatCurrency(deal.totalContractValue)}</span>
           <span className="text-xs font-mono text-muted-foreground">Cost {formatCurrency(deal.totalCreatorCost)}</span>
           <span className="text-xs font-mono text-success">{deal.grossMarginPercent}%</span>
           <StatusBadge status={deal.status} />
+          <button onClick={e => { e.stopPropagation(); setShowDealNotes(true); }} className="p-1 rounded hover:bg-muted" title="Deal notes"><MessageSquare className="h-3.5 w-3.5 text-muted-foreground" /></button>
           <button onClick={toggleContentStudio} className={`p-1 rounded text-xs border ${deal.isContentStudio ? "bg-primary/10 border-primary text-primary" : "border-border text-muted-foreground hover:bg-muted"}`} title={deal.isContentStudio ? "Remove from Studio" : "Mark as Content Studio"}>
             CS
           </button>
@@ -673,6 +815,7 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
                     <td className="py-2 pr-1"><CreatorStatusSelect creatorId={c.id} creator={c} onDone={onDone} /></td>
                     <td className="py-2">
                       <div className="flex items-center gap-1">
+                        <button onClick={() => setShowCreatorNotes({ id: c.id, name: c.creatorName })} className="p-1 rounded hover:bg-muted" title="Engagement history"><MessageSquare className="h-3.5 w-3.5 text-muted-foreground" /></button>
                         <button onClick={() => setEditingCreator(c)} className="p-1 rounded hover:bg-muted" title="Edit creator"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
                         <button onClick={async () => { await dbRemoveCreator(c.id); toast.success(`Removed ${c.creatorName}`); onDone(); }} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove creator"><Trash2 className="h-3.5 w-3.5" /></button>
                       </div>
@@ -712,6 +855,8 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
       <BulkAddCreatorDialog dealId={deal.id} open={addCreator} onClose={() => setAddCreator(false)} onDone={onDone} />
       {deal.creators.length > 0 && <TransferCreatorsDialog dealId={deal.id} creators={deal.creators} otherDeals={otherDeals} open={transferCreators} onClose={() => setTransferCreators(false)} onDone={onDone} />}
       {editingCreator && <EditCreatorDialog creator={editingCreator} open={!!editingCreator} onClose={() => setEditingCreator(null)} onDone={onDone} />}
+      <DealNotesDialog dealId={deal.id} dealName={deal.dealName} open={showDealNotes} onClose={() => setShowDealNotes(false)} />
+      {showCreatorNotes && <CreatorEngagementNotesDialog creatorId={showCreatorNotes.id} creatorName={showCreatorNotes.name} open={!!showCreatorNotes} onClose={() => setShowCreatorNotes(null)} />}
     </div>
   );
 }
@@ -861,15 +1006,28 @@ function SummaryCards({ clients }: { clients: ClientV2[] }) {
   const allCreators = allDeals.flatMap(d => d.creators);
   const activeDeals = allDeals.filter(d => d.status === "Active");
   const activeCreators = allCreators.filter(c => c.dealStatus === "Active");
+  const greenDeals = allDeals.filter(d => d.healthStatus === "green").length;
+  const yellowDeals = allDeals.filter(d => d.healthStatus === "yellow").length;
+  const redDeals = allDeals.filter(d => d.healthStatus === "red").length;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-      <StatCard label="Total Clients" value={String(clients.length)} icon={User} />
-      <StatCard label="Total Deals" value={String(allDeals.length)} icon={TrendingUp} />
-      <StatCard label="Total Creators" value={String(allCreators.length)} icon={User} />
-      <StatCard label="Active Clients" value={String(clients.filter(c => c.deals.some(d => d.status === "Active")).length)} icon={User} changeType="positive" />
-      <StatCard label="Active Deals" value={String(activeDeals.length)} icon={TrendingUp} changeType="positive" />
-      <StatCard label="Active Creators" value={String(activeCreators.length)} icon={User} changeType="positive" />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <StatCard label="Total Clients" value={String(clients.length)} icon={User} />
+        <StatCard label="Total Deals" value={String(allDeals.length)} icon={TrendingUp} />
+        <StatCard label="Total Creators" value={String(allCreators.length)} icon={User} />
+        <StatCard label="Active Clients" value={String(clients.filter(c => c.deals.some(d => d.status === "Active")).length)} icon={User} changeType="positive" />
+        <StatCard label="Active Deals" value={String(activeDeals.length)} icon={TrendingUp} changeType="positive" />
+        <StatCard label="Active Creators" value={String(activeCreators.length)} icon={User} changeType="positive" />
+      </div>
+      {(greenDeals > 0 || yellowDeals > 0 || redDeals > 0) && (
+        <div className="flex items-center gap-4 text-xs">
+          <span className="text-muted-foreground font-mono uppercase tracking-wider">Deal Health:</span>
+          <span className="flex items-center gap-1"><Circle className="h-3 w-3 fill-current text-success" /> {greenDeals} Green</span>
+          <span className="flex items-center gap-1"><Circle className="h-3 w-3 fill-current text-warning" /> {yellowDeals} Yellow</span>
+          <span className="flex items-center gap-1"><Circle className="h-3 w-3 fill-current text-destructive" /> {redDeals} Red</span>
+        </div>
+      )}
     </div>
   );
 }

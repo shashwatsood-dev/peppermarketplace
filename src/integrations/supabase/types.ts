@@ -322,6 +322,57 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_engagement_notes: {
+        Row: {
+          author: string
+          created_at: string
+          creator_id: string
+          id: string
+          note: string
+          note_type: string
+        }
+        Insert: {
+          author?: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          note: string
+          note_type?: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          note?: string
+          note_type?: string
+        }
+        Relationships: []
+      }
+      deal_notes: {
+        Row: {
+          author: string
+          created_at: string
+          deal_id: string
+          id: string
+          note: string
+        }
+        Insert: {
+          author?: string
+          created_at?: string
+          deal_id: string
+          id?: string
+          note: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          deal_id?: string
+          id?: string
+          note?: string
+        }
+        Relationships: []
+      }
       deals: {
         Row: {
           capabilities: string[]
@@ -335,6 +386,7 @@ export type Database = {
           deal_name: string
           deal_type: string
           geography: string
+          health_status: string
           id: string
           is_content_studio: boolean
           mrr: number
@@ -356,6 +408,7 @@ export type Database = {
           deal_name: string
           deal_type?: string
           geography?: string
+          health_status?: string
           id: string
           is_content_studio?: boolean
           mrr?: number
@@ -377,6 +430,7 @@ export type Database = {
           deal_name?: string
           deal_type?: string
           geography?: string
+          health_status?: string
           id?: string
           is_content_studio?: boolean
           mrr?: number

@@ -22,48 +22,7 @@ export interface CreatorHandover {
   marginOverridden: boolean;
 }
 
-let handovers: CreatorHandover[] = [
-  {
-    id: "HO-001",
-    requisitionId: "REQ-004",
-    dealId: "DEAL-003",
-    creatorName: "Ananya Desai",
-    creatorEmail: "ananya@email.com",
-    creatorType: "Writer",
-    pepperPortalLink: "https://ops.peppercontent.io/creators/PEP-1001",
-    phone: "+91 98765 43210",
-    paymentModel: "Per Word",
-    finalizedPay: 7,
-    currency: "INR",
-    handoverDate: "2026-02-10",
-    sharedVia: ["email"],
-    sharedTo: "vikram.singh@pepper.com",
-    notes: "Senior fintech writer, 4.8 rating",
-    recruiterName: "Neha Gupta",
-    marginFromRequisition: 40,
-    marginOverridden: false,
-  },
-  {
-    id: "HO-002",
-    requisitionId: "REQ-004",
-    dealId: "DEAL-003",
-    creatorName: "Varun Reddy",
-    creatorEmail: "varun@email.com",
-    creatorType: "Designer",
-    pepperPortalLink: "https://ops.peppercontent.io/creators/PEP-1008",
-    phone: "+91 98765 43217",
-    paymentModel: "Per Assignment",
-    finalizedPay: 5500,
-    currency: "INR",
-    handoverDate: "2026-02-10",
-    sharedVia: ["slack"],
-    sharedTo: "#account-management",
-    notes: "Designer for healthcare & fintech",
-    recruiterName: "Ravi Kumar",
-    marginFromRequisition: 41.1,
-    marginOverridden: false,
-  },
-];
+let handovers: CreatorHandover[] = [];
 
 export function getHandovers(): CreatorHandover[] {
   return [...handovers];

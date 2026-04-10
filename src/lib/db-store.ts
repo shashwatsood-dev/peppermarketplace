@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, HRBPConnect, DealStatus, PodName, CreatorDealStatus, HealthColor, DealCapability } from "./talent-client-types";
+import type { PodV2, ClientV2, DealV2, DeployedCreatorV2, HRBPConnect, DealStatus, PodName, CreatorDealStatus, HealthColor, DealCapability, DealNote, CreatorEngagementNote } from "./talent-client-types";
 import type { CurrencyCode } from "./requisition-types";
 import type { PayModel, RoleType } from "./mock-data";
 import type { ResourceSource } from "./talent-client-types";
@@ -101,6 +101,7 @@ export async function fetchPods(): Promise<PodV2[]> {
       contractEndDate: d.contract_end_date,
       capabilities: (d.capabilities || []) as DealCapability[],
       capabilityLeader: d.capability_leader,
+      healthStatus: (d.health_status || "") as HealthColor | "",
     });
     dealsByClient.set(d.client_id, arr);
   }
@@ -185,7 +186,7 @@ export async function dbUpdateDeal(dealId: string, updates: Partial<{
   dealName: string; dealType: string; status: DealStatus; isContentStudio: boolean; vsdName: string;
   totalContractValue: number; totalCreatorCost: number; currency: CurrencyCode; signingEntity: string; geography: string;
   mrr: number; contractDuration: string; contractStartDate: string; contractEndDate: string;
-  capabilities: string[]; capabilityLeader: string;
+  capabilities: string[]; capabilityLeader: string; healthStatus: HealthColor | "";
 }>) {
   const mapped: TablesUpdate<"deals"> = {};
   if (updates.dealName !== undefined) mapped.deal_name = updates.dealName;
@@ -204,6 +205,7 @@ export async function dbUpdateDeal(dealId: string, updates: Partial<{
   if (updates.contractEndDate !== undefined) mapped.contract_end_date = updates.contractEndDate;
   if (updates.capabilities !== undefined) mapped.capabilities = updates.capabilities;
   if (updates.capabilityLeader !== undefined) mapped.capability_leader = updates.capabilityLeader;
+  if (updates.healthStatus !== undefined) mapped.health_status = updates.healthStatus;
   const { error } = await supabase.from("deals").update(mapped).eq("id", dealId);
   if (error) throw error;
 }
@@ -411,4 +413,48 @@ export function exportPodsAsCSV(pods: PodV2[]): string {
     }
   }
   return rows.join("\n");
+}
+
+// ── Deal Notes ──────────────────────────────────────────
+export async function dbFetchDealNotes(dealId: string): Promise<DealNote[]> {
+  const { data, error } = await supabase.from("deal_notes").select("*").eq("deal_id", dealId).order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(n => ({ id: n.id, dealId: n.deal_id, note: n.note, author: n.author, createdAt: n.created_at }));
+}
+
+export async function dbAddDealNote(dealId: string, note: string, author: string): Promise<void> {
+  const { error } = await supabase.from("deal_notes").insert({ deal_id: dealId, note, author });
+  if (error) throw error;
+}
+
+// ── Creator Engagement Notes ────────────────────────────
+export async function dbFetchCreatorEngagementNotes(creatorId: string): Promise<CreatorEngagementNote[]> {
+  const { data, error } = await supabase.from("creator_engagement_notes").select("*").eq("creator_id", creatorId).order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(n => ({ id: n.id, creatorId: n.creator_id, note: n.note, author: n.author, noteType: n.note_type, createdAt: n.created_at }));
+}
+
+export async function dbAddCreatorEngagementNote(creatorId: string, note: string, author: string, noteType: string = "general"): Promise<void> {
+  const { error } = await supabase.from("creator_engagement_notes").insert({ creator_id: creatorId, note, author, note_type: noteType });
+  if (error) throw error;
+}
+
+// ── Agreement uploads ───────────────────────────────────
+export async function dbUploadAgreement(creatorId: string, dealId: string, file: File): Promise<string> {
+  const path = `${dealId}/${creatorId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("agreements").upload(path, file);
+  if (error) throw error;
+  return path;
+}
+
+export async function dbListAgreements(dealId: string, creatorId: string): Promise<{ name: string; path: string; createdAt: string }[]> {
+  const prefix = `${dealId}/${creatorId}/`;
+  const { data, error } = await supabase.storage.from("agreements").list(prefix);
+  if (error) return [];
+  return (data || []).map(f => ({ name: f.name, path: prefix + f.name, createdAt: f.created_at || "" }));
+}
+
+export async function dbGetAgreementUrl(path: string): Promise<string> {
+  const { data } = await supabase.storage.from("agreements").createSignedUrl(path, 3600);
+  return data?.signedUrl || "";
 }
