@@ -748,7 +748,7 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
   };
 
   return (
-    <div className="border border-border rounded-md bg-card/50">
+    <div className={`border border-border rounded-md bg-card/50 ${healthBg}`}>
       <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-3">
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
