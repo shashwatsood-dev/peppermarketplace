@@ -23,7 +23,10 @@ const Dashboard = () => {
   const [drilldownTitle, setDrilldownTitle] = useState("");
   const [drilldownReqs, setDrilldownReqs] = useState<AdvancedRequisition[]>([]);
 
-  const reqs = advancedRequisitions;
+  const { data: dbReqs = [] } = useQuery({ queryKey: ["requisitions"], queryFn: fetchRequisitions });
+  const reqs = dbReqs;
+  const { data: recruiterProfiles = [] } = useRecruiters();
+  const RECRUITERS = useMemo(() => recruiterProfiles.map(r => r.name), [recruiterProfiles]);
   const { data: pods = [] } = usePods();
   const allCreators = pods.flatMap(p => p.clients.flatMap(c => c.deals.flatMap(d => d.creators)));
 
