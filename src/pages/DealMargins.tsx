@@ -815,6 +815,7 @@ function DealRow({ deal, showInactive, otherDeals, onDone }: { deal: DealV2; sho
                     <td className="py-2 pr-1"><CreatorStatusSelect creatorId={c.id} creator={c} onDone={onDone} /></td>
                     <td className="py-2">
                       <div className="flex items-center gap-1">
+                        <button onClick={() => setShowCreatorNotes({ id: c.id, name: c.creatorName })} className="p-1 rounded hover:bg-muted" title="Engagement history"><MessageSquare className="h-3.5 w-3.5 text-muted-foreground" /></button>
                         <button onClick={() => setEditingCreator(c)} className="p-1 rounded hover:bg-muted" title="Edit creator"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
                         <button onClick={async () => { await dbRemoveCreator(c.id); toast.success(`Removed ${c.creatorName}`); onDone(); }} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove creator"><Trash2 className="h-3.5 w-3.5" /></button>
                       </div>
