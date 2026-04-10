@@ -85,7 +85,7 @@ function DealNotesDialog({ dealId, dealName, open, onClose }: { dealId: string; 
   const [notes, setNotes] = useState<DealNote[]>([]);
   const [newNote, setNewNote] = useState("");
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     if (open) {
@@ -96,7 +96,7 @@ function DealNotesDialog({ dealId, dealName, open, onClose }: { dealId: string; 
 
   const add = async () => {
     if (!newNote.trim()) return;
-    await dbAddDealNote(dealId, newNote.trim(), user?.email || "Unknown");
+    await dbAddDealNote(dealId, newNote.trim(), currentUser?.email || "Unknown");
     setNewNote("");
     const updated = await dbFetchDealNotes(dealId);
     setNotes(updated);
@@ -134,7 +134,7 @@ function CreatorEngagementNotesDialog({ creatorId, creatorName, open, onClose }:
   const [newNote, setNewNote] = useState("");
   const [noteType, setNoteType] = useState("general");
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     if (open) {
@@ -145,7 +145,7 @@ function CreatorEngagementNotesDialog({ creatorId, creatorName, open, onClose }:
 
   const add = async () => {
     if (!newNote.trim()) return;
-    await dbAddCreatorEngagementNote(creatorId, newNote.trim(), user?.email || "Unknown", noteType);
+    await dbAddCreatorEngagementNote(creatorId, newNote.trim(), currentUser?.email || "Unknown", noteType);
     setNewNote("");
     const updated = await dbFetchCreatorEngagementNotes(creatorId);
     setNotes(updated);
