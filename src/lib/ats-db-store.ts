@@ -238,18 +238,18 @@ export async function addWorkSampleDb(candidateId: string, title: string, url: s
 // ── Custom Pipeline Stages CRUD ────────────────────────────────────
 
 export async function fetchPipelineStages(requisitionId: string): Promise<DbPipelineStage[]> {
-  const { data, error } = await supabase.from("ats_pipeline_stages").select("*").eq("requisition_id", requisitionId).order("order_index");
+  const { data, error } = await (supabase as any).from("ats_pipeline_stages").select("*").eq("requisition_id", requisitionId).order("order_index");
   if (error) throw error;
-  return (data || []) as unknown as DbPipelineStage[];
+  return (data || []) as DbPipelineStage[];
 }
 
 export async function savePipelineStages(requisitionId: string, stages: { stage_name: string; order_index: number }[]): Promise<void> {
   // Delete existing
-  await supabase.from("ats_pipeline_stages").delete().eq("requisition_id", requisitionId);
+  await (supabase as any).from("ats_pipeline_stages").delete().eq("requisition_id", requisitionId);
   // Insert new
   if (stages.length > 0) {
-    const { error } = await supabase.from("ats_pipeline_stages").insert(
-      stages.map(s => ({ requisition_id: requisitionId, ...s })) as any
+    const { error } = await (supabase as any).from("ats_pipeline_stages").insert(
+      stages.map(s => ({ requisition_id: requisitionId, ...s }))
     );
     if (error) throw error;
   }
