@@ -19,6 +19,8 @@ import { POD_NAMES } from "@/lib/talent-client-types";
 import { useAuth } from "@/lib/auth-context";
 import { useRecruiters } from "@/lib/use-recruiters";
 
+const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
+
 const HIDDEN_STATUSES = ["Scrapped", "On hold", "Closed – allotted"];
 
 const RequisitionsAdvanced = () => {
@@ -54,8 +56,10 @@ const RequisitionsAdvanced = () => {
   const [editByTA, setEditByTA] = useState(false);
 
   // Pod leads / recruiters with ability to add new
-  const [podLeads, setPodLeads] = useState(INITIAL_POD_LEADS);
-  const [recruiters, setRecruiters] = useState(INITIAL_RECRUITERS);
+  const { data: recruiterProfiles = [] } = useRecruiters();
+  const recruiterNames = useMemo(() => recruiterProfiles.map(r => r.name), [recruiterProfiles]);
+  const [podLeads, setPodLeads] = useState<string[]>([]);
+  const [recruiters, setRecruiters] = useState<string[]>([]);
   const [newPodLead, setNewPodLead] = useState("");
   const [newRecruiter, setNewRecruiter] = useState("");
 
