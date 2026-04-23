@@ -295,6 +295,24 @@ const NewRequisition = () => {
 
     try {
       await dbCreateRequisition(req);
+      // Fire Slack notification (non-blocking)
+      notifySlack({
+        type: "requisition_created",
+        requisitionId: req.id,
+        raisedByName,
+        raisedByEmail: raisedByPhone.includes("@") ? raisedByPhone : undefined,
+        data: {
+          flow,
+          clientName: flow === "sales" ? salesData?.clientName : hiringData?.clientName,
+          dealId: hiringData?.dealId || "",
+          creatorType: flow === "sales" ? salesData?.resourceType : (hiringData?.lineItems?.[0]?.creatorType || ""),
+          paymentModel: flow === "sales" ? "" : (hiringData?.lineItems?.[0]?.paymentModel || ""),
+          numCreators: flow === "sales" ? "" : (hiringData?.lineItems?.reduce((s, l) => s + (l.numCreators || 0), 0) || ""),
+          stage: flow === "sales" ? salesData?.stage : hiringData?.stage,
+          expectedPay: totalCreatorCost ? `${getCurrencySymbol(flow === "sales" ? salesCurrency : hiringCurrency)}${totalCreatorCost.toLocaleString()}` : "",
+          notes: flow === "sales" ? "" : (hiringData?.clientDetails || ""),
+        },
+      });
       toast.success("Requisition submitted for RMG review");
       navigate("/requisitions");
     } catch (err: any) {
