@@ -68,6 +68,64 @@ const NewRequisition = () => {
   const [hiringSigningEntity, setHiringSigningEntity] = useState("");
   const [hiringPod, setHiringPod] = useState("");
 
+  // ── Load existing requisition for edit mode ──────────────────────
+  useEffect(() => {
+    if (!isEditMode || !editReqId) return;
+    let cancelled = false;
+    fetchRequisitions().then(reqs => {
+      if (cancelled) return;
+      const r = reqs.find(x => x.id === editReqId);
+      if (!r) {
+        toast.error("Requisition not found");
+        navigate("/requisitions");
+        return;
+      }
+      setExistingReq(r);
+      setLoadingExisting(false);
+      setFlow(r.flow);
+      setRaisedByName(r.raisedByName);
+      setRaisedByPhone(r.raisedByPhone);
+      if (r.salesData) {
+        setSalesClientName(r.salesData.clientName);
+        setSalesOpportunityName(r.salesData.opportunityName);
+        setSalesDealType(r.salesData.dealType);
+        setSalesResourceType(r.salesData.resourceType);
+        setSalesSpecificTypes(r.salesData.specificResourceTypes || []);
+        setSalesOtherSpec(r.salesData.otherResourceTypeSpec);
+        setSalesCreatorPay(r.salesData.expectedCreatorPay);
+        setSalesClientBilling(r.salesData.expectedClientBilling);
+        setSalesMargin(r.salesData.expectedMarginPercent);
+        setSalesStage(r.salesData.opportunityStage);
+        setSalesUrgency(r.salesData.urgency);
+        setSalesCurrency(r.salesData.currency);
+      }
+      if (r.hiringData) {
+        setHiringClientName(r.hiringData.clientName);
+        setHiringDealId(r.hiringData.dealId);
+        setHiringDealType(r.hiringData.dealType);
+        setHiringStudioType(r.hiringData.studioType);
+        setHiringGeography(r.hiringData.geography);
+        setHiringSigningEntity(r.hiringData.signingEntity);
+        setHiringTalentType(r.hiringData.talentType);
+        setHiringStage(r.hiringData.opportunityStage);
+        setHiringClientDetails(r.hiringData.clientDetails);
+        setHiringCurrency(r.hiringData.currency);
+        setHiringMrr(r.hiringData.mrr);
+        setHiringContractDuration(r.hiringData.contractDuration);
+        setHiringTargetMargin(r.hiringData.targetMarginPercent);
+        setHiringLineItems(r.hiringData.lineItems.length > 0 ? r.hiringData.lineItems : [createEmptyLineItem()]);
+        setHiringUrgencyScale(r.hiringData.urgencyScale);
+        setHiringIsReplacement(r.hiringData.isReplacementHiring);
+        setHiringReplacementOf(r.hiringData.replacementOf);
+        setHiringPod(r.hiringData.pod);
+      }
+    }).catch(err => {
+      toast.error("Failed to load requisition: " + err.message);
+      navigate("/requisitions");
+    });
+    return () => { cancelled = true; };
+  }, [isEditMode, editReqId, navigate]);
+
   const updateLineItem = (id: string, updates: Partial<VSDLineItem>) => {
     setHiringLineItems(prev => prev.map(li => li.id === id ? { ...li, ...updates } : li));
   };
