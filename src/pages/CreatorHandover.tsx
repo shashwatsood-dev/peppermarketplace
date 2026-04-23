@@ -64,65 +64,6 @@ const CreatorHandover = () => {
   const [shareViaSlack, setShareViaSlack] = useState(false);
   const [notes, setNotes] = useState("");
   const [currency, setCurrency] = useState<CurrencyCode>("INR");
-  const [showHandoverForm, setShowHandoverForm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterPod, setFilterPod] = useState("All");
-  const [filterStatus, setFilterStatus] = useState("All");
-
-  // Flatten all creators from pods
-  const allCreators = useMemo(() => {
-    const result: {
-      id: string; creatorName: string; role: string; dealName: string; clientName: string;
-      podName: string; payModel: string; payRate: number; clientBilling: number;
-      currency: CurrencyCode; status: string; city: string; opsLink: string; linkedinId: string;
-      startDate: string; source: string; marginPercent: number;
-    }[] = [];
-    for (const pod of pods) {
-      for (const client of pod.clients) {
-        for (const deal of client.deals) {
-          for (const cr of deal.creators) {
-            result.push({
-              id: cr.id,
-              creatorName: cr.creatorName,
-              role: cr.role,
-              dealName: deal.dealName,
-              clientName: client.clientName,
-              podName: pod.name,
-              payModel: cr.payModel,
-              payRate: cr.payRate,
-              clientBilling: cr.clientBilling,
-              currency: cr.currency,
-              status: cr.dealStatus,
-              city: cr.city || "",
-              opsLink: cr.opsLink || "",
-              linkedinId: cr.linkedinId || "",
-              startDate: cr.startDate || "",
-              source: cr.source,
-              marginPercent: cr.grossMarginPercent,
-            });
-          }
-        }
-      }
-    }
-    return result;
-  }, [pods]);
-
-  const filteredCreators = useMemo(() => {
-    let list = allCreators;
-    if (filterPod !== "All") list = list.filter(c => c.podName === filterPod);
-    if (filterStatus !== "All") list = list.filter(c => c.status === filterStatus);
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(c =>
-        c.creatorName.toLowerCase().includes(q) ||
-        c.clientName.toLowerCase().includes(q) ||
-        c.dealName.toLowerCase().includes(q) ||
-        c.role.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [allCreators, filterPod, filterStatus, searchQuery]);
-
   // POD → Client → Deal cascade for handover form
   const podClients = useMemo(() => {
     if (!selectedPod) return [];
