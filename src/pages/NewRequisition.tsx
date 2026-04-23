@@ -21,7 +21,8 @@ import {
   type RequisitionFlow, type VSDLineItem, type CurrencyCode, type AdvancedRequisition, type AuditEntry,
 } from "@/lib/requisition-types";
 import { POD_NAMES as TALENT_POD_NAMES } from "@/lib/talent-client-types";
-import { fetchRequisitions, dbUpdateRequisition } from "@/lib/requisition-db-store";
+import { fetchRequisitions, dbUpdateRequisition, dbCreateRequisition } from "@/lib/requisition-db-store";
+import { notifySlack } from "@/lib/slack-notify";
 
 const NewRequisition = () => {
   const navigate = useNavigate();
