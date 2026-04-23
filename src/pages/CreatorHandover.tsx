@@ -11,7 +11,7 @@ import { addHandover, formatHandoverForSharing, getHandovers } from "@/lib/hando
 import { CREATOR_TYPES, getCurrencySymbol, type CurrencyCode } from "@/lib/requisition-types";
 import { CurrencySelect } from "@/components/CurrencyInput";
 import { toast } from "sonner";
-import { Copy, Mail, MessageSquare, Send, UserPlus, ExternalLink, Plus, Trash2, Users, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, Mail, MessageSquare, Send, UserPlus, Plus, Trash2 } from "lucide-react";
 import type { PayModel } from "@/lib/mock-data";
 import { usePods } from "@/lib/use-pods";
 import type { ClientV2, DealV2 } from "@/lib/talent-client-types";
