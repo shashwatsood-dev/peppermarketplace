@@ -30,6 +30,7 @@ const RequisitionsAdvanced = () => {
   const isAdmin = currentRole === "admin";
   const queryClient = useQueryClient();
   const { data: dbReqs = [], isLoading } = useQuery({ queryKey: ["requisitions"], queryFn: fetchRequisitions });
+  const { data: allPipelineCands = [] } = useQuery({ queryKey: ["all-pipeline-cands"], queryFn: fetchAllPipelineCandidates });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [flowFilter, setFlowFilter] = useState("all");
