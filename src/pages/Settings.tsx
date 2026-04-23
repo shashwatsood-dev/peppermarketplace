@@ -8,7 +8,8 @@ import { getAllStatuses, addCustomStatus, getCustomStatuses } from "@/lib/requis
 import { useAuth, getRoleLabel, type UserRole } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, UserPlus, Trash2, RotateCcw } from "lucide-react";
+import { Plus, UserPlus, Trash2, RotateCcw, Slack, Send } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface ProfileRow {
   id: string;
