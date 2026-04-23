@@ -159,9 +159,7 @@ const CreatorHandover = () => {
         <p className="text-sm text-muted-foreground mt-1">Hand over creators to the AM team</p>
       </div>
 
-      {/* Handover Form */}
-      {true && (
-        <Card>
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg"><UserPlus className="h-5 w-5" /> New Handover</CardTitle>
           </CardHeader>
