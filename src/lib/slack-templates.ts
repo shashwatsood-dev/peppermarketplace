@@ -51,7 +51,15 @@ export const DEFAULT_SLACK_TEMPLATES: Record<SlackTemplateKey, string> = {
     "",
     "_Replies, daily updates and handovers for this req will land in this thread._ :thread:",
   ].join("\n"),
-...
+  daily_update_posted: [
+    ":bar_chart: *Daily Funnel Update*",
+    "• Identified: *{{identified}}*  • Contacted: *{{contacted}}*  • Screened: *{{screened}}*",
+    "• Shared: *{{shared}}*  • Interviews: *{{interviews}}*  • Offers: *{{offers}}*",
+    "• Selected: *{{selected}}*  • Drop-offs: *{{dropOffs}}*",
+    "*Notes:* {{notes}}",
+    "*Blockers:* {{blockers}}",
+    "_— {{recruiterName}}_",
+  ].join("\n"),
   creator_handover: [
     ":handshake: *Creator Handover — welcome aboard!*",
     "A new creator is being handed over to the delivery team. Please take it from here :rocket:",
