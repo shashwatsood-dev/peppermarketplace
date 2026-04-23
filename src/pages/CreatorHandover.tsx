@@ -160,7 +160,7 @@ const CreatorHandover = () => {
       </div>
 
       <Card>
-          <CardHeader>
+        <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg"><UserPlus className="h-5 w-5" /> New Handover</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
