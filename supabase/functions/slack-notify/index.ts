@@ -29,6 +29,68 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+// ---------- Default templates (used if app_settings has none) ----------
+const DEFAULT_TEMPLATES: Record<EventType, string> = {
+  requisition_created: [
+    ":rocket: *New Requisition Raised* — `{{requisitionId}}`",
+    "*Raised By:* {{raisedBy}}",
+    "*Client:* {{clientName}}",
+    "*Deal:* {{dealId}}",
+    "*Flow:* {{flow}}",
+    "*Creator Type:* {{creatorType}}",
+    "*Payment Model:* {{paymentModel}}",
+    "*# Creators:* {{numCreators}}",
+    "*Stage:* {{stage}}",
+    "*Expected Pay:* {{expectedPay}}",
+    "*SoW:* {{sow}}",
+    "*Notes:* {{notes}}",
+  ].join("\n"),
+  daily_update_posted: [
+    ":bar_chart: *Daily Funnel Update*",
+    "• Identified: *{{identified}}*  • Contacted: *{{contacted}}*  • Screened: *{{screened}}*",
+    "• Shared: *{{shared}}*  • Interviews: *{{interviews}}*  • Offers: *{{offers}}*",
+    "• Selected: *{{selected}}*  • Drop-offs: *{{dropOffs}}*",
+    "*Notes:* {{notes}}",
+    "*Blockers:* {{blockers}}",
+    "_— {{recruiterName}}_",
+  ].join("\n"),
+  creator_handover: [
+    ":handshake: *Creator Handover*",
+    "*Name:* {{creatorName}}",
+    "*Type:* {{creatorType}}",
+    "*Payment:* {{paymentModel}} @ {{currencySymbol}}{{finalizedPay}}",
+    "*Deal:* {{dealId}}",
+    "*Recruiter:* {{recruiterName}}",
+    "*Notes:* {{notes}}",
+  ].join("\n"),
+  status_change:
+    ":arrows_counterclockwise: *Status Changed:* `{{oldStatus}}` → `{{newStatus}}` by {{changedBy}}{{ccRaiser}}",
+  handover_reminder:
+    ":bell: {{raiserMention}} — *{{creatorName}}* was handed over {{daysAgo}} days ago and is still in *Yet to start*. Please allot the first assignment.",
+};
+
+function render(template: string, vars: Record<string, unknown>): string {
+  // Replace {{key}} with value; remove lines that consist of a label + empty value (e.g. "*Notes:* ").
+  let out = template.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, k) => {
+    const v = vars[k];
+    return v === undefined || v === null ? "" : String(v);
+  });
+  // Drop lines whose value portion (after a colon) is empty/whitespace, e.g. "*Notes:* " or "_— _"
+  out = out
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return false;
+      // "*Label:* " with nothing after
+      if (/^\*[^*]+:\*\s*$/.test(trimmed)) return false;
+      // "_— _" (dangling recruiter)
+      if (/^_[—-]\s*_$/.test(trimmed)) return false;
+      return true;
+    })
+    .join("\n");
+  return out;
+}
+
 async function slackCall(method: string, body: Record<string, unknown>) {
   const res = await fetch(`${GATEWAY_URL}/${method}`, {
     method: "POST",
@@ -42,6 +104,45 @@ async function slackCall(method: string, body: Record<string, unknown>) {
   const json = await res.json();
   if (!json.ok) console.warn(`[slack ${method}] error:`, json.error, json);
   return json;
+}
+
+async function findChannelId(name: string): Promise<string | null> {
+  const clean = name.replace(/^#/, "").toLowerCase();
+  let cursor = "";
+  do {
+    const url = `${GATEWAY_URL}/conversations.list?limit=999&types=public_channel${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": SLACK_API_KEY,
+      },
+    });
+    const data = await res.json();
+    if (!data.ok) return null;
+    const m = data.channels?.find((c: any) => c.name?.toLowerCase() === clean);
+    if (m) return m.id;
+    cursor = data.response_metadata?.next_cursor || "";
+  } while (cursor);
+  return null;
+}
+
+async function postWithJoinFallback(channel: string, body: Record<string, unknown>) {
+  let result = await slackCall("chat.postMessage", { ...body, channel });
+  if (!result.ok && result.error === "not_in_channel") {
+    // Try resolving channel ID and joining
+    const id = channel.startsWith("C") || channel.startsWith("G") ? channel : await findChannelId(channel);
+    if (id) {
+      const joined = await slackCall("conversations.join", { channel: id });
+      if (joined.ok) {
+        result = await slackCall("chat.postMessage", { ...body, channel: id });
+      } else {
+        // Surface clear hint
+        result.hint = `Bot is not in ${channel} and could not auto-join (${joined.error}). Either approve the channels:join / chat:write.public scope in the Slack connector, or run "/invite @<bot>" in the channel.`;
+      }
+    }
+  }
+  return result;
 }
 
 async function lookupUserByEmail(email?: string): Promise<string | null> {
@@ -60,12 +161,51 @@ async function lookupUserByEmail(email?: string): Promise<string | null> {
 }
 
 async function getSettings() {
-  const { data } = await admin.from("app_settings").select("*").in("key", ["slack_channel", "slack_enabled"]);
+  const { data } = await admin
+    .from("app_settings")
+    .select("*")
+    .in("key", [
+      "slack_channel",
+      "slack_enabled",
+      "slack_template_requisition_created",
+      "slack_template_daily_update_posted",
+      "slack_template_creator_handover",
+      "slack_template_status_change",
+      "slack_template_handover_reminder",
+    ]);
   const map: Record<string, unknown> = {};
   (data || []).forEach((r: any) => { map[r.key] = r.value; });
+  const tmpl = (key: string, fallback: string) => {
+    const v = map[`slack_template_${key}`];
+    return typeof v === "string" && v.trim() ? v : fallback;
+  };
   return {
     channel: (map.slack_channel as string) || "#test-for-vsd-ops",
     enabled: map.slack_enabled !== false,
+    templates: {
+      requisition_created: tmpl("requisition_created", DEFAULT_TEMPLATES.requisition_created),
+      daily_update_posted: tmpl("daily_update_posted", DEFAULT_TEMPLATES.daily_update_posted),
+      creator_handover: tmpl("creator_handover", DEFAULT_TEMPLATES.creator_handover),
+      status_change: tmpl("status_change", DEFAULT_TEMPLATES.status_change),
+      handover_reminder: tmpl("handover_reminder", DEFAULT_TEMPLATES.handover_reminder),
+    },
+  };
+}
+
+function buildVars(p: Payload, raiserMention: string): Record<string, unknown> {
+  const d = (p.data || {}) as any;
+  const currencySymbol =
+    d.currency === "USD" ? "$" : d.currency === "EUR" ? "€" : d.currency === "GBP" ? "£" : "₹";
+  return {
+    ...d,
+    requisitionId: p.requisitionId || "",
+    raisedBy: raiserMention || p.raisedByName || "Unknown",
+    raisedByName: p.raisedByName || "",
+    raiserMention: raiserMention || (p.raisedByName ? `*${p.raisedByName}*` : "Hey"),
+    ccRaiser: raiserMention ? ` (cc ${raiserMention})` : "",
+    currencySymbol,
+    finalizedPay: typeof d.finalizedPay === "number" ? d.finalizedPay.toLocaleString() : (d.finalizedPay || ""),
+    changedBy: d.changedBy || "User",
   };
 }
 
@@ -77,7 +217,7 @@ async function getOrCreateThread(requisitionId: string, channel: string, parentT
     .maybeSingle();
   if (existing?.thread_ts) return existing;
 
-  const post = await slackCall("chat.postMessage", { channel, text: parentText, mrkdwn: true });
+  const post = await postWithJoinFallback(channel, { text: parentText, mrkdwn: true });
   if (!post.ok) return null;
 
   const row = {
@@ -88,57 +228,6 @@ async function getOrCreateThread(requisitionId: string, channel: string, parentT
   };
   await admin.from("requisition_slack_threads").upsert(row);
   return row;
-}
-
-function fmtRequisitionParent(p: Payload, raiserMention: string): string {
-  const d = p.data as any;
-  return [
-    `:rocket: *New Requisition Raised* — \`${p.requisitionId}\``,
-    `*Raised By:* ${raiserMention || p.raisedByName || "Unknown"}`,
-    d.clientName ? `*Client:* ${d.clientName}` : null,
-    d.dealId ? `*Deal:* ${d.dealId}` : null,
-    d.flow ? `*Flow:* ${d.flow}` : null,
-    d.creatorType ? `*Creator Type:* ${d.creatorType}` : null,
-    d.paymentModel ? `*Payment Model:* ${d.paymentModel}` : null,
-    d.numCreators ? `*# Creators:* ${d.numCreators}` : null,
-    d.stage ? `*Stage:* ${d.stage}` : null,
-    d.expectedPay ? `*Expected Pay:* ${d.expectedPay}` : null,
-    d.sow ? `*SoW:* ${d.sow}` : null,
-    d.notes ? `*Notes:* ${d.notes}` : null,
-  ].filter(Boolean).join("\n");
-}
-
-function fmtDailyUpdate(d: any): string {
-  return [
-    ":bar_chart: *Daily Funnel Update*",
-    `• Identified: *${d.identified ?? 0}*  • Contacted: *${d.contacted ?? 0}*  • Screened: *${d.screened ?? 0}*`,
-    `• Shared: *${d.shared ?? 0}*  • Interviews: *${d.interviews ?? 0}*  • Offers: *${d.offers ?? 0}*`,
-    `• Selected: *${d.selected ?? 0}*  • Drop-offs: *${d.dropOffs ?? 0}*`,
-    d.notes ? `*Notes:* ${d.notes}` : null,
-    d.blockers ? `*Blockers:* ${d.blockers}` : null,
-    d.recruiterName ? `_— ${d.recruiterName}_` : null,
-  ].filter(Boolean).join("\n");
-}
-
-function fmtHandover(d: any): string {
-  const cur = d.currency === "USD" ? "$" : d.currency === "EUR" ? "€" : d.currency === "GBP" ? "£" : "₹";
-  return [
-    ":handshake: *Creator Handover*",
-    `*Name:* ${d.creatorName}`,
-    d.creatorType ? `*Type:* ${d.creatorType}` : null,
-    d.paymentModel ? `*Payment:* ${d.paymentModel} @ ${cur}${(d.finalizedPay || 0).toLocaleString()}` : null,
-    d.dealId ? `*Deal:* ${d.dealId}` : null,
-    d.recruiterName ? `*Recruiter:* ${d.recruiterName}` : null,
-    d.notes ? `*Notes:* ${d.notes}` : null,
-  ].filter(Boolean).join("\n");
-}
-
-function fmtStatusChange(d: any, raiserMention: string): string {
-  return `:arrows_counterclockwise: *Status Changed:* \`${d.oldStatus}\` → \`${d.newStatus}\` by ${d.changedBy || "User"}${raiserMention ? ` (cc ${raiserMention})` : ""}`;
-}
-
-function fmtReminder(d: any, raiserMention: string): string {
-  return `:bell: ${raiserMention || "Hey"} — *${d.creatorName}* was handed over ${d.daysAgo} days ago and is still in *Yet to start*. Please allot the first assignment.`;
 }
 
 Deno.serve(async (req) => {
@@ -155,18 +244,23 @@ Deno.serve(async (req) => {
 
     const channel = settings.channel;
     const raiserSlackId = await lookupUserByEmail(payload.raisedByEmail);
-    const raiserMention = raiserSlackId ? `<@${raiserSlackId}>` : (payload.raisedByName ? `*${payload.raisedByName}*` : "");
+    const raiserMention = raiserSlackId
+      ? `<@${raiserSlackId}>`
+      : (payload.raisedByName ? `*${payload.raisedByName}*` : "");
 
-    // For requisition_created, post parent message + store thread
+    const vars = buildVars(payload, raiserMention);
+    const template = settings.templates[payload.type] || "Unknown event";
+    const text = render(template, vars);
+
+    // Parent message for new requisitions — store thread
     if (payload.type === "requisition_created" && payload.requisitionId) {
-      const text = fmtRequisitionParent(payload, raiserMention);
       const thread = await getOrCreateThread(payload.requisitionId, channel, text, raiserSlackId);
-      return new Response(JSON.stringify({ ok: true, thread }), {
+      return new Response(JSON.stringify({ ok: !!thread, thread }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // For all other events, find the existing thread
+    // Find existing thread for this requisition (if any)
     let threadTs: string | null = null;
     let threadChannel = channel;
     if (payload.requisitionId) {
@@ -178,16 +272,9 @@ Deno.serve(async (req) => {
       if (t) { threadTs = t.thread_ts; threadChannel = t.channel_id; }
     }
 
-    let text = "";
-    if (payload.type === "daily_update_posted") text = fmtDailyUpdate(payload.data);
-    else if (payload.type === "creator_handover") text = fmtHandover(payload.data);
-    else if (payload.type === "status_change") text = fmtStatusChange(payload.data, raiserMention);
-    else if (payload.type === "handover_reminder") text = fmtReminder(payload.data, raiserMention);
-    else text = "Unknown event";
-
-    const body: Record<string, unknown> = { channel: threadChannel, text, mrkdwn: true };
+    const body: Record<string, unknown> = { text, mrkdwn: true };
     if (threadTs) body.thread_ts = threadTs;
-    const result = await slackCall("chat.postMessage", body);
+    const result = await postWithJoinFallback(threadChannel, body);
 
     return new Response(JSON.stringify({ ok: result.ok, slack: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
