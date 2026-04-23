@@ -146,7 +146,7 @@ const NewRequisition = () => {
     const { generateReqId } = await import("@/lib/requisition-types");
     const { dbCreateRequisition } = await import("@/lib/requisition-db-store");
 
-    const reqId = generateReqId(flow);
+    const reqId = isEditMode && existingReq ? existingReq.id : generateReqId(flow);
     const now = new Date().toISOString();
 
     let totalClientRevenue = 0;
@@ -164,45 +164,113 @@ const NewRequisition = () => {
     const grossMarginPercent = totalClientRevenue ? Math.round(grossMargin / totalClientRevenue * 1000) / 10 : 0;
     const targetMarginPercent = flow === "sales" ? salesMargin : hiringTargetMargin;
 
-    const req: import("@/lib/requisition-types").AdvancedRequisition = {
+    const salesData = flow === "sales" ? {
+      clientName: salesClientName,
+      opportunityName: salesOpportunityName,
+      dealType: salesDealType,
+      resourceType: salesResourceType,
+      specificResourceTypes: salesSpecificTypes,
+      otherResourceTypeSpec: salesOtherSpec,
+      expectedCreatorPay: salesCreatorPay,
+      expectedClientBilling: salesClientBilling,
+      expectedMarginPercent: salesMargin,
+      opportunityStage: salesStage as any,
+      urgency: salesUrgency as any,
+      currency: salesCurrency,
+    } : undefined;
+
+    const hiringData = (flow === "studio" || flow === "freelancer") ? {
+      clientName: hiringClientName,
+      dealId: hiringDealId,
+      dealType: hiringDealType,
+      studioType: hiringStudioType,
+      geography: hiringGeography,
+      signingEntity: hiringSigningEntity,
+      talentType: hiringTalentType,
+      opportunityStage: hiringStage as any,
+      clientDetails: hiringClientDetails,
+      currency: hiringCurrency,
+      mrr: hiringMrr,
+      contractDuration: hiringContractDuration,
+      targetMarginPercent: hiringTargetMargin,
+      lineItems: hiringLineItems,
+      urgencyScale: hiringUrgencyScale,
+      isReplacementHiring: hiringIsReplacement,
+      replacementOf: hiringReplacementOf,
+      pod: hiringPod,
+    } : undefined;
+
+    if (isEditMode && existingReq) {
+      // ── Build audit log entries by diffing top-level + nested fields ──
+      const newAudit: AuditEntry[] = [];
+      const ts = now;
+      const editor = "Admin (edit form)";
+      const pushChange = (field: string, oldV: any, newV: any) => {
+        const o = oldV === undefined || oldV === null ? "" : String(oldV);
+        const n = newV === undefined || newV === null ? "" : String(newV);
+        if (o !== n) newAudit.push({ id: crypto.randomUUID(), fieldChanged: field, oldValue: o, newValue: n, editedBy: editor, timestamp: ts });
+      };
+      pushChange("raisedByName", existingReq.raisedByName, raisedByName);
+      pushChange("raisedByPhone", existingReq.raisedByPhone, raisedByPhone);
+      pushChange("totalClientRevenue", existingReq.totalClientRevenue, totalClientRevenue);
+      pushChange("totalCreatorCost", existingReq.totalCreatorCost, totalCreatorCost);
+      pushChange("grossMarginPercent", existingReq.grossMarginPercent, grossMarginPercent);
+      pushChange("targetMarginPercent", existingReq.targetMarginPercent, targetMarginPercent);
+      if (existingReq.salesData && salesData) {
+        Object.keys(salesData).forEach(k => pushChange(`salesData.${k}`, (existingReq.salesData as any)[k], (salesData as any)[k]));
+      }
+      if (existingReq.hiringData && hiringData) {
+        Object.keys(hiringData).forEach(k => {
+          const oldVal = (existingReq.hiringData as any)[k];
+          const newVal = (hiringData as any)[k];
+          if (k === "lineItems") {
+            const oldLen = Array.isArray(oldVal) ? oldVal.length : 0;
+            const newLen = Array.isArray(newVal) ? newVal.length : 0;
+            if (oldLen !== newLen) pushChange("hiringData.lineItems.count", oldLen, newLen);
+            // Also diff per-line aggregates so financial edits are tracked
+            const oldRev = (oldVal as VSDLineItem[] || []).reduce((s, li) => s + li.clientUnitPrice * li.numberOfCreators, 0);
+            const newRev = (newVal as VSDLineItem[] || []).reduce((s, li) => s + li.clientUnitPrice * li.numberOfCreators, 0);
+            if (oldRev !== newRev) pushChange("hiringData.lineItems.totalClientRevenue", oldRev, newRev);
+          } else {
+            pushChange(`hiringData.${k}`, oldVal, newVal);
+          }
+        });
+      }
+
+      const updated: AdvancedRequisition = {
+        ...existingReq,
+        raisedByName,
+        raisedByPhone,
+        flow,
+        salesData,
+        hiringData,
+        totalClientRevenue,
+        totalCreatorCost,
+        grossMargin,
+        grossMarginPercent,
+        targetMarginPercent,
+        currency: flow === "sales" ? salesCurrency : hiringCurrency,
+        updatedAt: now,
+        auditLog: [...existingReq.auditLog, ...newAudit],
+      };
+
+      try {
+        await dbUpdateRequisition(reqId, {}, updated);
+        toast.success(`Requisition updated · ${newAudit.length} change${newAudit.length === 1 ? "" : "s"} logged`);
+        navigate("/requisitions");
+      } catch (err: any) {
+        toast.error("Failed to update requisition: " + err.message);
+      }
+      return;
+    }
+
+    const req: AdvancedRequisition = {
       id: reqId,
       raisedByName,
       raisedByPhone,
       flow,
-      salesData: flow === "sales" ? {
-        clientName: salesClientName,
-        opportunityName: salesOpportunityName,
-        dealType: salesDealType,
-        resourceType: salesResourceType,
-        specificResourceTypes: salesSpecificTypes,
-        otherResourceTypeSpec: salesOtherSpec,
-        expectedCreatorPay: salesCreatorPay,
-        expectedClientBilling: salesClientBilling,
-        expectedMarginPercent: salesMargin,
-        opportunityStage: salesStage as any,
-        urgency: salesUrgency as any,
-        currency: salesCurrency,
-      } : undefined,
-      hiringData: (flow === "studio" || flow === "freelancer") ? {
-        clientName: hiringClientName,
-        dealId: hiringDealId,
-        dealType: hiringDealType,
-        studioType: hiringStudioType,
-        geography: hiringGeography,
-        signingEntity: hiringSigningEntity,
-        talentType: hiringTalentType,
-        opportunityStage: hiringStage as any,
-        clientDetails: hiringClientDetails,
-        currency: hiringCurrency,
-        mrr: hiringMrr,
-        contractDuration: hiringContractDuration,
-        targetMarginPercent: hiringTargetMargin,
-        lineItems: hiringLineItems,
-        urgencyScale: hiringUrgencyScale,
-        isReplacementHiring: hiringIsReplacement,
-        replacementOf: hiringReplacementOf,
-        pod: hiringPod,
-      } : undefined,
+      salesData,
+      hiringData,
       status: "RMG approval Pending",
       rmgNotes: "",
       rejectionReason: "",
