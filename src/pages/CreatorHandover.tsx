@@ -11,7 +11,7 @@ import { addHandover, formatHandoverForSharing, getHandovers } from "@/lib/hando
 import { CREATOR_TYPES, getCurrencySymbol, type CurrencyCode } from "@/lib/requisition-types";
 import { CurrencySelect } from "@/components/CurrencyInput";
 import { toast } from "sonner";
-import { Copy, Mail, MessageSquare, Send, UserPlus, ExternalLink, Plus, Trash2, Users, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, Mail, MessageSquare, Send, UserPlus, Plus, Trash2 } from "lucide-react";
 import type { PayModel } from "@/lib/mock-data";
 import { usePods } from "@/lib/use-pods";
 import type { ClientV2, DealV2 } from "@/lib/talent-client-types";
@@ -64,65 +64,6 @@ const CreatorHandover = () => {
   const [shareViaSlack, setShareViaSlack] = useState(false);
   const [notes, setNotes] = useState("");
   const [currency, setCurrency] = useState<CurrencyCode>("INR");
-  const [showHandoverForm, setShowHandoverForm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterPod, setFilterPod] = useState("All");
-  const [filterStatus, setFilterStatus] = useState("All");
-
-  // Flatten all creators from pods
-  const allCreators = useMemo(() => {
-    const result: {
-      id: string; creatorName: string; role: string; dealName: string; clientName: string;
-      podName: string; payModel: string; payRate: number; clientBilling: number;
-      currency: CurrencyCode; status: string; city: string; opsLink: string; linkedinId: string;
-      startDate: string; source: string; marginPercent: number;
-    }[] = [];
-    for (const pod of pods) {
-      for (const client of pod.clients) {
-        for (const deal of client.deals) {
-          for (const cr of deal.creators) {
-            result.push({
-              id: cr.id,
-              creatorName: cr.creatorName,
-              role: cr.role,
-              dealName: deal.dealName,
-              clientName: client.clientName,
-              podName: pod.name,
-              payModel: cr.payModel,
-              payRate: cr.payRate,
-              clientBilling: cr.clientBilling,
-              currency: cr.currency,
-              status: cr.dealStatus,
-              city: cr.city || "",
-              opsLink: cr.opsLink || "",
-              linkedinId: cr.linkedinId || "",
-              startDate: cr.startDate || "",
-              source: cr.source,
-              marginPercent: cr.grossMarginPercent,
-            });
-          }
-        }
-      }
-    }
-    return result;
-  }, [pods]);
-
-  const filteredCreators = useMemo(() => {
-    let list = allCreators;
-    if (filterPod !== "All") list = list.filter(c => c.podName === filterPod);
-    if (filterStatus !== "All") list = list.filter(c => c.status === filterStatus);
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(c =>
-        c.creatorName.toLowerCase().includes(q) ||
-        c.clientName.toLowerCase().includes(q) ||
-        c.dealName.toLowerCase().includes(q) ||
-        c.role.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [allCreators, filterPod, filterStatus, searchQuery]);
-
   // POD → Client → Deal cascade for handover form
   const podClients = useMemo(() => {
     if (!selectedPod) return [];
@@ -191,7 +132,6 @@ const CreatorHandover = () => {
     setCreators([createEmptyCreator()]);
     setSelectedPod(""); setSelectedClientId(""); setSelectedDealId("");
     setRecruiterName(""); setSharedTo(""); setShareViaEmail(false); setShareViaSlack(false); setNotes("");
-    setShowHandoverForm(false);
   };
 
   const sym = getCurrencySymbol(currency);
@@ -213,21 +153,13 @@ const CreatorHandover = () => {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Creator Handover</h1>
-          <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
-          <p className="text-sm text-muted-foreground mt-1">All deployed creators across deals and pods</p>
-        </div>
-        <Button className="gap-2" onClick={() => setShowHandoverForm(!showHandoverForm)}>
-          {showHandoverForm ? <ChevronUp className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {showHandoverForm ? "Hide Form" : "New Handover"}
-        </Button>
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Creator Handover</h1>
+        <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
+        <p className="text-sm text-muted-foreground mt-1">Hand over creators to the AM team</p>
       </div>
 
-      {/* Handover Form (collapsible) */}
-      {showHandoverForm && (
-        <Card>
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg"><UserPlus className="h-5 w-5" /> New Handover</CardTitle>
           </CardHeader>
@@ -349,97 +281,6 @@ const CreatorHandover = () => {
             </Button>
           </CardContent>
         </Card>
-      )}
-
-      {/* Creator Directory */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg"><Users className="h-5 w-5" /> All Creators ({allCreators.length})</CardTitle>
-          </div>
-          <div className="flex flex-wrap gap-3 mt-3">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by name, client, deal, role..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
-            </div>
-            <Select value={filterPod} onValueChange={setFilterPod}>
-              <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All PODs</SelectItem>
-                {ALL_POD_NAMES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Status</SelectItem>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="On Hold">On Hold</SelectItem>
-                <SelectItem value="Exited">Exited</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredCreators.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">No creators found.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    {["Creator", "Role", "Client", "Deal", "POD", "Pay Model", "Pay Rate", "Client Billing", "Margin", "Status", "City", "Start Date", ""].map(h => (
-                      <th key={h} className="pb-3 text-xs font-mono uppercase tracking-wider text-muted-foreground pr-3 whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCreators.map(cr => (
-                    <tr key={cr.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="py-2.5 font-medium text-foreground pr-3">
-                        <div className="flex items-center gap-1.5">
-                          {cr.creatorName}
-                          {cr.linkedinId && (
-                            <a href={cr.linkedinId.startsWith("http") ? cr.linkedinId : `https://${cr.linkedinId}`} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-primary" />
-                            </a>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-2.5 text-muted-foreground pr-3">{cr.role}</td>
-                      <td className="py-2.5 text-muted-foreground pr-3">{cr.clientName}</td>
-                      <td className="py-2.5 text-muted-foreground pr-3 max-w-[120px] truncate" title={cr.dealName}>{cr.dealName}</td>
-                      <td className="py-2.5 pr-3"><Badge variant="outline" className="text-xs">{cr.podName}</Badge></td>
-                      <td className="py-2.5 text-muted-foreground pr-3">{cr.payModel}</td>
-                      <td className="py-2.5 font-mono text-foreground pr-3">{getCurrencySymbol(cr.currency)}{cr.payRate.toLocaleString()}</td>
-                      <td className="py-2.5 font-mono text-foreground pr-3">{getCurrencySymbol(cr.currency)}{cr.clientBilling.toLocaleString()}</td>
-                      <td className="py-2.5 font-mono pr-3">
-                        <span className={cr.marginPercent >= 30 ? "text-green-600" : cr.marginPercent >= 15 ? "text-yellow-600" : "text-red-600"}>
-                          {cr.marginPercent}%
-                        </span>
-                      </td>
-                      <td className="py-2.5 pr-3">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[cr.status] || "bg-muted text-muted-foreground"}`}>
-                          {cr.status}
-                        </span>
-                      </td>
-                      <td className="py-2.5 text-muted-foreground pr-3">{cr.city || "—"}</td>
-                      <td className="py-2.5 text-muted-foreground pr-3">{cr.startDate || "—"}</td>
-                      <td className="py-2.5">
-                        {cr.opsLink && (
-                          <a href={cr.opsLink.startsWith("http") ? cr.opsLink : `https://${cr.opsLink}`} target="_blank" rel="noopener noreferrer">
-                            <Button variant="ghost" size="icon" className="h-7 w-7"><ExternalLink className="h-3.5 w-3.5" /></Button>
-                          </a>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };
