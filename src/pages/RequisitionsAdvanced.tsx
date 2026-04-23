@@ -383,6 +383,32 @@ const RequisitionsAdvanced = () => {
     }), { identified: 0, contacted: 0, screened: 0, shared: 0, interviews: 0, offers: 0, selected: 0, dropOffs: 0 });
   };
 
+  // Auto-compute funnel from ATS pipeline candidates for a requisition.
+  // Each stage is treated as cumulative — a candidate at Hired counts toward all earlier stages too.
+  const getAtsFunnelForReq = (reqId: string) => {
+    const cands = allPipelineCands.filter(pc => pc.requisition_id === reqId);
+    let identified = 0, contacted = 0, screened = 0, shared = 0, interviews = 0, offers = 0, selected = 0, dropOffs = 0;
+    for (const pc of cands) {
+      const stage = pc.current_stage;
+      const reachedStages = new Set<string>([stage]);
+      // Replay stage history to capture every stage the candidate has ever been in
+      for (const t of (pc.stage_history || []) as Array<{ from?: string; to?: string }>) {
+        if (t.to) reachedStages.add(t.to);
+        if (t.from) reachedStages.add(t.from);
+      }
+      identified += 1; // every candidate added counts as identified
+      const has = (...names: string[]) => names.some(n => reachedStages.has(n));
+      if (has("Screened", "Assignment", "Portfolio Evaluation", "In-house Interview", "Client Interview", "Capability Review", "Capability Portfolio View", "Shared with Client", "Offer", "Hired")) contacted += 1;
+      if (has("Screened", "Assignment", "Portfolio Evaluation", "In-house Interview", "Client Interview", "Capability Review", "Capability Portfolio View", "Shared with Client", "Offer", "Hired")) screened += 1;
+      if (has("Shared with Client", "Capability Portfolio View", "Client Interview", "Offer", "Hired")) shared += 1;
+      if (has("In-house Interview", "Client Interview", "Capability Review", "Offer", "Hired")) interviews += 1;
+      if (has("Offer", "Hired")) offers += 1;
+      if (stage === "Hired") selected += 1;
+      if (stage === "Rejected") dropOffs += 1;
+    }
+    return { identified, contacted, screened, shared, interviews, offers, selected, dropOffs };
+  };
+
   const getTodayUpdates = (r: AdvancedRequisition) => {
     const today = new Date().toISOString().split("T")[0];
     return r.dailyUpdates.filter(du => du.date === today);
