@@ -298,10 +298,74 @@ const Settings = () => {
             <Button onClick={handleSaveSlack} disabled={savingSlack} size="sm">
               {savingSlack ? "Saving…" : "Save Settings"}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleTestSlack} disabled={testingSlack} className="gap-1">
-              <Send className="h-3.5 w-3.5" /> {testingSlack ? "Sending…" : "Send test message"}
+            <Button variant="outline" size="sm" onClick={() => handleTestSlack("config")} disabled={testingSlack === "config"} className="gap-1">
+              <Send className="h-3.5 w-3.5" /> {testingSlack === "config" ? "Sending…" : "Send test message"}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Slack Message Templates */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" /> Slack Message Templates
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <p className="text-xs text-muted-foreground">
+            Customize the Slack messages for each event. Use <code className="text-[11px] bg-muted px-1 rounded">{"{{variable}}"}</code> placeholders — empty values are auto-removed from the rendered message. Slack mrkdwn supported (<code className="text-[11px] bg-muted px-1 rounded">*bold*</code>, <code className="text-[11px] bg-muted px-1 rounded">`code`</code>, emojis like <code className="text-[11px] bg-muted px-1 rounded">:rocket:</code>).
+          </p>
+          {(Object.keys(SLACK_TEMPLATE_LABELS) as SlackTemplateKey[]).map((key) => (
+            <div key={key} className="space-y-2 pb-4 border-b border-border last:border-0 last:pb-0">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">{SLACK_TEMPLATE_LABELS[key]}</Label>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost" size="sm" className="h-7 text-xs gap-1"
+                    onClick={() => handleResetTemplate(key)}
+                    title="Restore default"
+                  >
+                    <RefreshCw className="h-3 w-3" /> Reset
+                  </Button>
+                  <Button
+                    variant="outline" size="sm" className="h-7 text-xs gap-1"
+                    onClick={() => handleTestSlack(key)}
+                    disabled={testingSlack === key}
+                  >
+                    <Send className="h-3 w-3" /> {testingSlack === key ? "Sending…" : "Test"}
+                  </Button>
+                  <Button
+                    size="sm" className="h-7 text-xs"
+                    onClick={() => handleSaveTemplate(key)}
+                    disabled={savingTemplate === key}
+                  >
+                    {savingTemplate === key ? "Saving…" : "Save"}
+                  </Button>
+                </div>
+              </div>
+              <Textarea
+                value={templates[key]}
+                onChange={(e) => setTemplates(t => ({ ...t, [key]: e.target.value }))}
+                rows={Math.min(12, templates[key].split("\n").length + 1)}
+                className="bg-background border-border font-mono text-[12px] leading-relaxed"
+              />
+              <div className="flex flex-wrap gap-1">
+                <span className="text-[11px] text-muted-foreground mr-1">Variables:</span>
+                {SLACK_TEMPLATE_VARS[key].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setTemplates(t => ({ ...t, [key]: t[key] + `{{${v}}}` }))}
+                    className="text-[11px] font-mono bg-muted hover:bg-muted/70 text-muted-foreground px-1.5 py-0.5 rounded border border-border transition-colors"
+                    title="Click to insert"
+                  >
+                    {`{{${v}}}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
 
