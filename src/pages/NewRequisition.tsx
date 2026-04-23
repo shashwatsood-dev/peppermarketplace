@@ -710,9 +710,9 @@ const NewRequisition = () => {
       {flow && (
         <div className="flex items-center justify-end gap-3 pb-8">
           <Button variant="outline" onClick={() => navigate("/requisitions")}>Cancel</Button>
-          <Button variant="outline" onClick={() => toast.info("Draft saved")}>Save as Draft</Button>
+          {!isEditMode && <Button variant="outline" onClick={() => toast.info("Draft saved")}>Save as Draft</Button>}
           <Button onClick={handleSubmit} className="gap-2">
-            <CheckCircle className="h-4 w-4" /> Submit for Review
+            <CheckCircle className="h-4 w-4" /> {isEditMode ? "Save Changes" : "Submit for Review"}
           </Button>
         </div>
       )}
