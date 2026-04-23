@@ -36,7 +36,9 @@ const Settings = () => {
   const [slackChannel, setSlackChannel] = useState("#test-for-vsd-ops");
   const [slackEnabled, setSlackEnabled] = useState(true);
   const [savingSlack, setSavingSlack] = useState(false);
-  const [testingSlack, setTestingSlack] = useState(false);
+  const [testingSlack, setTestingSlack] = useState<SlackTemplateKey | "config" | null>(null);
+  const [templates, setTemplates] = useState<Record<SlackTemplateKey, string>>({ ...DEFAULT_SLACK_TEMPLATES });
+  const [savingTemplate, setSavingTemplate] = useState<SlackTemplateKey | null>(null);
 
   const allStatuses = getAllStatuses();
   const customStatuses = getCustomStatuses();
