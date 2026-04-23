@@ -18,6 +18,8 @@ import type { ClientV2, DealV2 } from "@/lib/talent-client-types";
 import { ALL_POD_NAMES } from "@/lib/talent-client-types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { notifySlack } from "@/lib/slack-notify";
+import { supabase } from "@/integrations/supabase/client";
 
 const PAYMENT_MODELS: PayModel[] = ["Per Word", "Per Assignment", "Retainer", "Hourly"];
 
@@ -124,10 +126,50 @@ const CreatorHandover = () => {
         currency, handoverDate: new Date().toISOString().split("T")[0], sharedVia, sharedTo, notes,
         recruiterName, marginFromRequisition: c.marginPercent, marginOverridden: c.marginOverridden,
       });
+
+      // Create deployed_creator with "Yet to start" status
+      const creatorId = `DC-${crypto.randomUUID().slice(0, 8)}`;
+      const { error: dcErr } = await supabase.from("deployed_creators").insert({
+        id: creatorId,
+        deal_id: selectedDealId,
+        creator_name: c.creatorName,
+        role: c.creatorType || "Writer",
+        pay_model: c.paymentModel || "Per Word",
+        pay_rate: Number(c.finalizedPay) || 0,
+        client_billing: Number(c.clientBilling) || 0,
+        currency,
+        deal_status: "Yet to start",
+        start_date: new Date().toISOString().split("T")[0],
+      });
+      if (dcErr) console.warn("deployed_creators insert failed", dcErr);
+
+      // Track for 2-day reminder
+      await supabase.from("handover_reminders").insert({
+        creator_id: creatorId,
+        creator_name: c.creatorName,
+        deal_id: selectedDealId,
+        requisition_id: "",
+        handover_date: new Date().toISOString(),
+      });
+
+      // Slack thread reply
+      notifySlack({
+        type: "creator_handover",
+        data: {
+          creatorName: c.creatorName,
+          creatorType: c.creatorType,
+          paymentModel: c.paymentModel,
+          finalizedPay: Number(c.finalizedPay),
+          currency,
+          dealId: selectedDealId,
+          recruiterName,
+          notes,
+        },
+      });
     }
 
     if (lastHandover) navigator.clipboard.writeText(formatHandoverForSharing(lastHandover));
-    toast.success(`${validCreators.length} creator(s) handed over! Share message copied.`, { duration: 5000 });
+    toast.success(`${validCreators.length} creator(s) handed over! Marked as 'Yet to start'.`, { duration: 5000 });
     setHandoversList(getHandovers());
     setCreators([createEmptyCreator()]);
     setSelectedPod(""); setSelectedClientId(""); setSelectedDealId("");
