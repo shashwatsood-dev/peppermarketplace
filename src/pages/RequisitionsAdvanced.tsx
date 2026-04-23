@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { POD_NAMES } from "@/lib/talent-client-types";
 import { useAuth } from "@/lib/auth-context";
 import { useRecruiters } from "@/lib/use-recruiters";
+import { notifySlack } from "@/lib/slack-notify";
 
 const formatCurrency = (n: number) => "₹" + n.toLocaleString("en-IN");
 
@@ -277,6 +278,19 @@ const RequisitionsAdvanced = () => {
     const updated = { ...selectedReq, dailyUpdates: [...selectedReq.dailyUpdates, update] };
     setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
     await persistReq(selectedReq.id, updated);
+    notifySlack({
+      type: "daily_update_posted",
+      requisitionId: selectedReq.id,
+      raisedByName: selectedReq.raisedByName,
+      data: {
+        identified: duProfilesIdentified, contacted: duProfilesContacted,
+        screened: duProfilesScreened, shared: duProfilesShared,
+        interviews: duInterviews, offers: duOffers,
+        selected: duSelected, dropOffs: duDropOffs,
+        notes: duNotes, blockers: duBlockers,
+        recruiterName: selectedReq.recruiterAssigned || "",
+      },
+    });
     toast.success("Funnel updated — daily log auto-generated");
     setDuBlockers(""); setDuNotes("");
   };
