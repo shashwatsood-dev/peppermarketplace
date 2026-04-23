@@ -36,6 +36,7 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/requisitions" element={<RequisitionsAdvanced />} />
               <Route path="/requisitions/new" element={<NewRequisition />} />
+              <Route path="/requisitions/edit/:reqId" element={<NewRequisition />} />
               <Route path="/deals" element={<DealMargins />} />
               <Route path="/studio" element={<StudioDashboard />} />
               <Route path="/handover" element={<CreatorHandover />} />
