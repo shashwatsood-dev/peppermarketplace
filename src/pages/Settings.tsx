@@ -8,8 +8,15 @@ import { getAllStatuses, addCustomStatus, getCustomStatuses } from "@/lib/requis
 import { useAuth, getRoleLabel, type UserRole } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, UserPlus, Trash2, RotateCcw, Slack, Send } from "lucide-react";
+import { Plus, UserPlus, Trash2, RotateCcw, Slack, Send, MessageSquare, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  DEFAULT_SLACK_TEMPLATES,
+  SLACK_TEMPLATE_LABELS,
+  SLACK_TEMPLATE_VARS,
+  type SlackTemplateKey,
+} from "@/lib/slack-templates";
 
 interface ProfileRow {
   id: string;
@@ -29,7 +36,9 @@ const Settings = () => {
   const [slackChannel, setSlackChannel] = useState("#test-for-vsd-ops");
   const [slackEnabled, setSlackEnabled] = useState(true);
   const [savingSlack, setSavingSlack] = useState(false);
-  const [testingSlack, setTestingSlack] = useState(false);
+  const [testingSlack, setTestingSlack] = useState<SlackTemplateKey | "config" | null>(null);
+  const [templates, setTemplates] = useState<Record<SlackTemplateKey, string>>({ ...DEFAULT_SLACK_TEMPLATES });
+  const [savingTemplate, setSavingTemplate] = useState<SlackTemplateKey | null>(null);
 
   const allStatuses = getAllStatuses();
   const customStatuses = getCustomStatuses();
@@ -52,12 +61,21 @@ const Settings = () => {
 
   useEffect(() => {
     fetchUsers();
-    // Load slack settings
-    supabase.from("app_settings").select("*").in("key", ["slack_channel", "slack_enabled"]).then(({ data }) => {
+    const tmplKeys: SlackTemplateKey[] = [
+      "requisition_created", "daily_update_posted", "creator_handover", "status_change", "handover_reminder",
+    ];
+    const allKeys = ["slack_channel", "slack_enabled", ...tmplKeys.map(k => `slack_template_${k}`)];
+    supabase.from("app_settings").select("*").in("key", allKeys).then(({ data }) => {
+      const next = { ...DEFAULT_SLACK_TEMPLATES };
       (data || []).forEach((r: any) => {
         if (r.key === "slack_channel") setSlackChannel(typeof r.value === "string" ? r.value : "#test-for-vsd-ops");
-        if (r.key === "slack_enabled") setSlackEnabled(r.value !== false);
+        else if (r.key === "slack_enabled") setSlackEnabled(r.value !== false);
+        else if (r.key.startsWith("slack_template_")) {
+          const k = r.key.replace("slack_template_", "") as SlackTemplateKey;
+          if (typeof r.value === "string" && r.value.trim()) next[k] = r.value;
+        }
       });
+      setTemplates(next);
     });
   }, []);
 
@@ -72,17 +90,63 @@ const Settings = () => {
     else toast.success("Slack settings saved");
   };
 
-  const handleTestSlack = async () => {
-    setTestingSlack(true);
-    const { error } = await supabase.functions.invoke("slack-notify", {
+  const handleSaveTemplate = async (key: SlackTemplateKey) => {
+    setSavingTemplate(key);
+    const { error } = await supabase.from("app_settings").upsert({
+      key: `slack_template_${key}`,
+      value: templates[key] as any,
+      updated_at: new Date().toISOString(),
+    });
+    setSavingTemplate(null);
+    if (error) toast.error("Failed to save template: " + error.message);
+    else toast.success(`${SLACK_TEMPLATE_LABELS[key]} template saved`);
+  };
+
+  const handleResetTemplate = (key: SlackTemplateKey) => {
+    setTemplates(t => ({ ...t, [key]: DEFAULT_SLACK_TEMPLATES[key] }));
+  };
+
+  const sampleData: Record<SlackTemplateKey, Record<string, unknown>> = {
+    requisition_created: {
+      clientName: "Acme Inc", dealId: "DEAL-001", flow: "Inhouse", creatorType: "Writer",
+      paymentModel: "Per Word", numCreators: 3, stage: "Sourcing", expectedPay: "₹2/word",
+      sow: "https://example.com/sow", notes: "Test notes",
+    },
+    daily_update_posted: {
+      identified: 12, contacted: 8, screened: 5, shared: 3, interviews: 2, offers: 1, selected: 1, dropOffs: 2,
+      notes: "Solid pipeline today", blockers: "None", recruiterName: "Test Recruiter",
+    },
+    creator_handover: {
+      creatorName: "Jane Doe", creatorType: "Writer", paymentModel: "Per Word",
+      currency: "INR", finalizedPay: 50000, dealId: "DEAL-001", recruiterName: "Test Recruiter", notes: "All set",
+    },
+    status_change: { oldStatus: "Sourcing", newStatus: "Interview" },
+    handover_reminder: { creatorName: "Jane Doe", daysAgo: 3 },
+  };
+
+  const handleTestSlack = async (key: SlackTemplateKey | "config") => {
+    setTestingSlack(key);
+    const type: SlackTemplateKey = key === "config" ? "status_change" : key;
+    const data: Record<string, unknown> = key === "config"
+      ? { oldStatus: "Test", newStatus: "Connected ✓", changedBy: currentUser?.email || "Admin" }
+      : sampleData[type];
+    const { data: resp, error } = await supabase.functions.invoke("slack-notify", {
       body: {
-        type: "status_change",
-        data: { oldStatus: "Test", newStatus: "Connected ✓", changedBy: currentUser?.email || "Admin" },
+        type,
+        raisedByName: currentUser?.email || "Admin",
+        raisedByEmail: currentUser?.email,
+        data,
       },
     });
-    setTestingSlack(false);
-    if (error) toast.error("Test failed: " + error.message);
-    else toast.success(`Test message sent to ${slackChannel}`);
+    setTestingSlack(null);
+    if (error) {
+      toast.error("Test failed: " + error.message);
+    } else if (resp && resp.ok === false) {
+      const hint = (resp as any)?.slack?.hint || (resp as any)?.slack?.error || "Unknown Slack error";
+      toast.error(`Slack rejected: ${hint}`);
+    } else {
+      toast.success(`Test message sent to ${slackChannel}`);
+    }
   };
 
   const handleAddStatus = () => {
@@ -234,10 +298,74 @@ const Settings = () => {
             <Button onClick={handleSaveSlack} disabled={savingSlack} size="sm">
               {savingSlack ? "Saving…" : "Save Settings"}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleTestSlack} disabled={testingSlack} className="gap-1">
-              <Send className="h-3.5 w-3.5" /> {testingSlack ? "Sending…" : "Send test message"}
+            <Button variant="outline" size="sm" onClick={() => handleTestSlack("config")} disabled={testingSlack === "config"} className="gap-1">
+              <Send className="h-3.5 w-3.5" /> {testingSlack === "config" ? "Sending…" : "Send test message"}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Slack Message Templates */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" /> Slack Message Templates
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <p className="text-xs text-muted-foreground">
+            Customize the Slack messages for each event. Use <code className="text-[11px] bg-muted px-1 rounded">{"{{variable}}"}</code> placeholders — empty values are auto-removed from the rendered message. Slack mrkdwn supported (<code className="text-[11px] bg-muted px-1 rounded">*bold*</code>, <code className="text-[11px] bg-muted px-1 rounded">`code`</code>, emojis like <code className="text-[11px] bg-muted px-1 rounded">:rocket:</code>).
+          </p>
+          {(Object.keys(SLACK_TEMPLATE_LABELS) as SlackTemplateKey[]).map((key) => (
+            <div key={key} className="space-y-2 pb-4 border-b border-border last:border-0 last:pb-0">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">{SLACK_TEMPLATE_LABELS[key]}</Label>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost" size="sm" className="h-7 text-xs gap-1"
+                    onClick={() => handleResetTemplate(key)}
+                    title="Restore default"
+                  >
+                    <RefreshCw className="h-3 w-3" /> Reset
+                  </Button>
+                  <Button
+                    variant="outline" size="sm" className="h-7 text-xs gap-1"
+                    onClick={() => handleTestSlack(key)}
+                    disabled={testingSlack === key}
+                  >
+                    <Send className="h-3 w-3" /> {testingSlack === key ? "Sending…" : "Test"}
+                  </Button>
+                  <Button
+                    size="sm" className="h-7 text-xs"
+                    onClick={() => handleSaveTemplate(key)}
+                    disabled={savingTemplate === key}
+                  >
+                    {savingTemplate === key ? "Saving…" : "Save"}
+                  </Button>
+                </div>
+              </div>
+              <Textarea
+                value={templates[key]}
+                onChange={(e) => setTemplates(t => ({ ...t, [key]: e.target.value }))}
+                rows={Math.min(12, templates[key].split("\n").length + 1)}
+                className="bg-background border-border font-mono text-[12px] leading-relaxed"
+              />
+              <div className="flex flex-wrap gap-1">
+                <span className="text-[11px] text-muted-foreground mr-1">Variables:</span>
+                {SLACK_TEMPLATE_VARS[key].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setTemplates(t => ({ ...t, [key]: t[key] + `{{${v}}}` }))}
+                    className="text-[11px] font-mono bg-muted hover:bg-muted/70 text-muted-foreground px-1.5 py-0.5 rounded border border-border transition-colors"
+                    title="Click to insert"
+                  >
+                    {`{{${v}}}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
 
