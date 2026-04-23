@@ -26,6 +26,10 @@ const Settings = () => {
   const [, setTick] = useState(0);
   const [users, setUsers] = useState<ProfileRow[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [slackChannel, setSlackChannel] = useState("#test-for-vsd-ops");
+  const [slackEnabled, setSlackEnabled] = useState(true);
+  const [savingSlack, setSavingSlack] = useState(false);
+  const [testingSlack, setTestingSlack] = useState(false);
 
   const allStatuses = getAllStatuses();
   const customStatuses = getCustomStatuses();
@@ -46,7 +50,40 @@ const Settings = () => {
     setLoadingUsers(false);
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => {
+    fetchUsers();
+    // Load slack settings
+    supabase.from("app_settings").select("*").in("key", ["slack_channel", "slack_enabled"]).then(({ data }) => {
+      (data || []).forEach((r: any) => {
+        if (r.key === "slack_channel") setSlackChannel(typeof r.value === "string" ? r.value : "#test-for-vsd-ops");
+        if (r.key === "slack_enabled") setSlackEnabled(r.value !== false);
+      });
+    });
+  }, []);
+
+  const handleSaveSlack = async () => {
+    setSavingSlack(true);
+    const { error } = await supabase.from("app_settings").upsert([
+      { key: "slack_channel", value: slackChannel as any, updated_at: new Date().toISOString() },
+      { key: "slack_enabled", value: slackEnabled as any, updated_at: new Date().toISOString() },
+    ]);
+    setSavingSlack(false);
+    if (error) toast.error("Failed to save: " + error.message);
+    else toast.success("Slack settings saved");
+  };
+
+  const handleTestSlack = async () => {
+    setTestingSlack(true);
+    const { error } = await supabase.functions.invoke("slack-notify", {
+      body: {
+        type: "status_change",
+        data: { oldStatus: "Test", newStatus: "Connected ✓", changedBy: currentUser?.email || "Admin" },
+      },
+    });
+    setTestingSlack(false);
+    if (error) toast.error("Test failed: " + error.message);
+    else toast.success(`Test message sent to ${slackChannel}`);
+  };
 
   const handleAddStatus = () => {
     if (!newStatus.trim()) return;
