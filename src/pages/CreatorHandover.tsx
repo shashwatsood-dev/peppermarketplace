@@ -153,20 +153,14 @@ const CreatorHandover = () => {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Creator Handover</h1>
-          <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
-          <p className="text-sm text-muted-foreground mt-1">All deployed creators across deals and pods</p>
-        </div>
-        <Button className="gap-2" onClick={() => setShowHandoverForm(!showHandoverForm)}>
-          {showHandoverForm ? <ChevronUp className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {showHandoverForm ? "Hide Form" : "New Handover"}
-        </Button>
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Creator Handover</h1>
+        <div className="h-0.5 w-8 bg-primary rounded-full mt-1.5" />
+        <p className="text-sm text-muted-foreground mt-1">Hand over creators to the AM team</p>
       </div>
 
-      {/* Handover Form (collapsible) */}
-      {showHandoverForm && (
+      {/* Handover Form */}
+      {true && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg"><UserPlus className="h-5 w-5" /> New Handover</CardTitle>
