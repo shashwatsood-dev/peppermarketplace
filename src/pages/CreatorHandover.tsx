@@ -107,7 +107,7 @@ const CreatorHandover = () => {
   const handlePodChange = (pod: string) => { setSelectedPod(pod); setSelectedClientId(""); setSelectedDealId(""); };
   const handleClientChange = (clientId: string) => { setSelectedClientId(clientId); setSelectedDealId(""); };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const validCreators = creators.filter(c => c.creatorName && c.paymentModel && c.finalizedPay);
     if (validCreators.length === 0) { toast.error("At least one creator with all required fields"); return; }
     if (!selectedDealId) { toast.error("Select a deal"); return; }
