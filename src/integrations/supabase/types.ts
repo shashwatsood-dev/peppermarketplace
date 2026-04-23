@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       ats_candidate_notes: {
         Row: {
           author: string
@@ -533,6 +551,42 @@ export type Database = {
           },
         ]
       }
+      handover_reminders: {
+        Row: {
+          created_at: string
+          creator_id: string
+          creator_name: string
+          deal_id: string | null
+          handover_date: string
+          id: string
+          last_reminded_at: string | null
+          requisition_id: string | null
+          resolved: boolean
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          creator_name?: string
+          deal_id?: string | null
+          handover_date?: string
+          id?: string
+          last_reminded_at?: string | null
+          requisition_id?: string | null
+          resolved?: boolean
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          creator_name?: string
+          deal_id?: string | null
+          handover_date?: string
+          id?: string
+          last_reminded_at?: string | null
+          requisition_id?: string | null
+          resolved?: boolean
+        }
+        Relationships: []
+      }
       hrbp_connects: {
         Row: {
           created_at: string
@@ -630,6 +684,30 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      requisition_slack_threads: {
+        Row: {
+          channel_id: string
+          created_at: string
+          raised_by_slack_user: string | null
+          requisition_id: string
+          thread_ts: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          raised_by_slack_user?: string | null
+          requisition_id: string
+          thread_ts: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          raised_by_slack_user?: string | null
+          requisition_id?: string
+          thread_ts?: string
         }
         Relationships: []
       }
