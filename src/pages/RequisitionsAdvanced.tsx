@@ -354,7 +354,10 @@ const RequisitionsAdvanced = () => {
     setSelectedReq(r);
     setUpdateLinkedIn(r.linkedInRecruiterLink);
     setUpdateAtsLink(r.atsSheetLink);
-    const cum = getCumulativeMetrics(r);
+    // Auto-fetch funnel from ATS pipeline; fall back to manual cumulative if no ATS data exists
+    const ats = getAtsFunnelForReq(r.id);
+    const hasAtsData = ats.identified > 0;
+    const cum = hasAtsData ? ats : getCumulativeMetrics(r);
     setDuProfilesIdentified(cum.identified);
     setDuProfilesContacted(cum.contacted);
     setDuProfilesScreened(cum.screened);
@@ -363,8 +366,10 @@ const RequisitionsAdvanced = () => {
     setDuOffers(cum.offers);
     setDuSelected(cum.selected);
     setDuDropOffs(cum.dropOffs);
-    setDuBlockers("");
-    setDuNotes("");
+    // Pre-fill notes/blockers from the most recent daily update so the user can edit it inline
+    const last = r.dailyUpdates.length > 0 ? r.dailyUpdates[r.dailyUpdates.length - 1] : null;
+    setDuBlockers(last?.blockers || "");
+    setDuNotes(last?.notes || "");
     setUpdateDialogOpen(true);
   };
 
