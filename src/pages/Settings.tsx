@@ -204,6 +204,43 @@ const Settings = () => {
         </CardContent>
       </Card>
 
+      {/* Slack Integration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Slack className="h-4 w-4" /> Slack Integration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Connected via Lovable Slack connector. The bot posts requisition events into the channel below as threaded messages.
+          </p>
+          <div className="space-y-2">
+            <Label className="text-xs">Channel</Label>
+            <Input
+              value={slackChannel}
+              onChange={e => setSlackChannel(e.target.value)}
+              placeholder="#test-for-vsd-ops"
+              className="bg-background border-border"
+            />
+            <p className="text-[11px] text-muted-foreground">Public channels only (or invite the bot to private channels).</p>
+          </div>
+          <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+            <div>
+              <Label className="text-sm">Notifications enabled</Label>
+              <p className="text-[11px] text-muted-foreground">When off, no Slack messages are sent.</p>
+            </div>
+            <Switch checked={slackEnabled} onCheckedChange={setSlackEnabled} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleSaveSlack} disabled={savingSlack} size="sm">
+              {savingSlack ? "Saving…" : "Save Settings"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleTestSlack} disabled={testingSlack} className="gap-1">
+              <Send className="h-3.5 w-3.5" /> {testingSlack ? "Sending…" : "Send test message"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Status Management */}
       <Card>
         <CardHeader>
