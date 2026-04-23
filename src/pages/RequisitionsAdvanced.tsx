@@ -1001,7 +1001,8 @@ function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorType
                 </td>
                 <td className="py-3">
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openEdit(req)}><Pencil className="h-3 w-3 mr-1" />Edit</Button>
+                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => navigate(`/requisitions/edit/${req.id}`)} title="Edit full requisition"><Pencil className="h-3 w-3 mr-1" />Edit</Button>
+                    <Button variant="ghost" size="sm" className="text-xs h-7 px-1.5" onClick={() => openEdit(req)} title="Quick status edit">⚡</Button>
                     {req.status === "RMG approval Pending" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openReview(req)}>Review</Button>}
                     {req.status === "Approved but not assigned" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openAssign(req)}>Assign</Button>}
                     {req.status === "In progress" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openUpdate(req)}>Update</Button>}
