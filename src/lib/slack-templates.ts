@@ -53,7 +53,7 @@ export const DEFAULT_SLACK_TEMPLATES: Record<SlackTemplateKey, string> = {
   ].join("\n"),
 ...
   creator_handover: [
-    ":handshake: *Creator Handover*  —  welcome aboard!*",
+    ":handshake: *Creator Handover — welcome aboard!*",
     "A new creator is being handed over to the delivery team. Please take it from here :rocket:",
     "",
     ":star2: *Creator:*  *{{creatorName}}*",
