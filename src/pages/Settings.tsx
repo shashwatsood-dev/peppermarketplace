@@ -8,8 +8,15 @@ import { getAllStatuses, addCustomStatus, getCustomStatuses } from "@/lib/requis
 import { useAuth, getRoleLabel, type UserRole } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, UserPlus, Trash2, RotateCcw, Slack, Send } from "lucide-react";
+import { Plus, UserPlus, Trash2, RotateCcw, Slack, Send, MessageSquare, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  DEFAULT_SLACK_TEMPLATES,
+  SLACK_TEMPLATE_LABELS,
+  SLACK_TEMPLATE_VARS,
+  type SlackTemplateKey,
+} from "@/lib/slack-templates";
 
 interface ProfileRow {
   id: string;
