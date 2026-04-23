@@ -337,8 +337,8 @@ const NewRequisition = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">New Requisition</h1>
-            <p className="text-sm text-muted-foreground mt-1">Raise a new resource requisition</p>
+            <h1 className="text-2xl font-semibold text-foreground">{isEditMode ? `Edit Requisition · ${editReqId}` : "New Requisition"}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{isEditMode ? "Every change is recorded in the audit log" : "Raise a new resource requisition"}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" className="gap-2" onClick={() => {
