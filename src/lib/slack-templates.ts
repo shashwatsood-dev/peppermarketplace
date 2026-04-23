@@ -76,7 +76,7 @@ export const DEFAULT_SLACK_TEMPLATES: Record<SlackTemplateKey, string> = {
     "_Status auto-set to *Yet to start*. Please allot the first assignment within 2 days._ :alarm_clock:",
   ].join("\n"),
   status_change:
-    ":arrows_counterclockwise: *Status Changed:* `{{oldStatus}}` → `{{newStatus}}` by {{changedBy}}{{ccRaiser}}",
+    ":arrows_counterclockwise: *Requisition Status Changed:* `{{oldStatus}}` → `{{newStatus}}` by {{changedBy}}{{ccRaiser}}",
   handover_reminder:
     ":bell: {{raiserMention}} — *{{creatorName}}* was handed over {{daysAgo}} days ago and is still in *Yet to start*. Please allot the first assignment.",
 };
