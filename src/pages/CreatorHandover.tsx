@@ -281,7 +281,6 @@ const CreatorHandover = () => {
             </Button>
           </CardContent>
         </Card>
-      )}
     </div>
   );
 };
