@@ -857,7 +857,17 @@ const RequisitionsAdvanced = () => {
             </div>
             <div className="border-t border-border" />
             <div className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Set Current Funnel</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Set Current Funnel</p>
+                {selectedReq && getAtsFunnelForReq(selectedReq.id).identified > 0 && (
+                  <span className="text-[10px] font-mono text-success bg-success/10 border border-success/20 rounded px-2 py-0.5">
+                    Auto-filled from ATS · editable
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-muted-foreground -mt-1">
+                Numbers below are calculated from your ATS pipeline movements. You can override them if needed.
+              </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: "Identified", value: duProfilesIdentified, setter: setDuProfilesIdentified },
