@@ -358,6 +358,15 @@ const RequisitionsAdvanced = () => {
 
     setReqs(prev => prev.map(r => r.id === selectedReq.id ? updated : r));
     await persistReq(selectedReq.id, updated);
+    const statusChanged = changes.find(c => c.field === "status");
+    if (statusChanged) {
+      notifySlack({
+        type: "status_change",
+        requisitionId: selectedReq.id,
+        raisedByName: selectedReq.raisedByName,
+        data: { oldStatus: statusChanged.old, newStatus: statusChanged.new, changedBy: editedBy },
+      });
+    }
     toast.success(taFlag ? "Changes sent for RMG approval" : "Requisition updated");
     setEditDialogOpen(false);
   };
