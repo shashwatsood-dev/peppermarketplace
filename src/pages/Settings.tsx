@@ -61,12 +61,21 @@ const Settings = () => {
 
   useEffect(() => {
     fetchUsers();
-    // Load slack settings
-    supabase.from("app_settings").select("*").in("key", ["slack_channel", "slack_enabled"]).then(({ data }) => {
+    const tmplKeys: SlackTemplateKey[] = [
+      "requisition_created", "daily_update_posted", "creator_handover", "status_change", "handover_reminder",
+    ];
+    const allKeys = ["slack_channel", "slack_enabled", ...tmplKeys.map(k => `slack_template_${k}`)];
+    supabase.from("app_settings").select("*").in("key", allKeys).then(({ data }) => {
+      const next = { ...DEFAULT_SLACK_TEMPLATES };
       (data || []).forEach((r: any) => {
         if (r.key === "slack_channel") setSlackChannel(typeof r.value === "string" ? r.value : "#test-for-vsd-ops");
-        if (r.key === "slack_enabled") setSlackEnabled(r.value !== false);
+        else if (r.key === "slack_enabled") setSlackEnabled(r.value !== false);
+        else if (r.key.startsWith("slack_template_")) {
+          const k = r.key.replace("slack_template_", "") as SlackTemplateKey;
+          if (typeof r.value === "string" && r.value.trim()) next[k] = r.value;
+        }
       });
+      setTemplates(next);
     });
   }, []);
 
@@ -81,17 +90,63 @@ const Settings = () => {
     else toast.success("Slack settings saved");
   };
 
-  const handleTestSlack = async () => {
-    setTestingSlack(true);
-    const { error } = await supabase.functions.invoke("slack-notify", {
+  const handleSaveTemplate = async (key: SlackTemplateKey) => {
+    setSavingTemplate(key);
+    const { error } = await supabase.from("app_settings").upsert({
+      key: `slack_template_${key}`,
+      value: templates[key] as any,
+      updated_at: new Date().toISOString(),
+    });
+    setSavingTemplate(null);
+    if (error) toast.error("Failed to save template: " + error.message);
+    else toast.success(`${SLACK_TEMPLATE_LABELS[key]} template saved`);
+  };
+
+  const handleResetTemplate = (key: SlackTemplateKey) => {
+    setTemplates(t => ({ ...t, [key]: DEFAULT_SLACK_TEMPLATES[key] }));
+  };
+
+  const sampleData: Record<SlackTemplateKey, Record<string, unknown>> = {
+    requisition_created: {
+      clientName: "Acme Inc", dealId: "DEAL-001", flow: "Inhouse", creatorType: "Writer",
+      paymentModel: "Per Word", numCreators: 3, stage: "Sourcing", expectedPay: "₹2/word",
+      sow: "https://example.com/sow", notes: "Test notes",
+    },
+    daily_update_posted: {
+      identified: 12, contacted: 8, screened: 5, shared: 3, interviews: 2, offers: 1, selected: 1, dropOffs: 2,
+      notes: "Solid pipeline today", blockers: "None", recruiterName: "Test Recruiter",
+    },
+    creator_handover: {
+      creatorName: "Jane Doe", creatorType: "Writer", paymentModel: "Per Word",
+      currency: "INR", finalizedPay: 50000, dealId: "DEAL-001", recruiterName: "Test Recruiter", notes: "All set",
+    },
+    status_change: { oldStatus: "Sourcing", newStatus: "Interview" },
+    handover_reminder: { creatorName: "Jane Doe", daysAgo: 3 },
+  };
+
+  const handleTestSlack = async (key: SlackTemplateKey | "config") => {
+    setTestingSlack(key);
+    const type: SlackTemplateKey = key === "config" ? "status_change" : key;
+    const data: Record<string, unknown> = key === "config"
+      ? { oldStatus: "Test", newStatus: "Connected ✓", changedBy: currentUser?.email || "Admin" }
+      : sampleData[type];
+    const { data: resp, error } = await supabase.functions.invoke("slack-notify", {
       body: {
-        type: "status_change",
-        data: { oldStatus: "Test", newStatus: "Connected ✓", changedBy: currentUser?.email || "Admin" },
+        type,
+        raisedByName: currentUser?.email || "Admin",
+        raisedByEmail: currentUser?.email,
+        data,
       },
     });
-    setTestingSlack(false);
-    if (error) toast.error("Test failed: " + error.message);
-    else toast.success(`Test message sent to ${slackChannel}`);
+    setTestingSlack(null);
+    if (error) {
+      toast.error("Test failed: " + error.message);
+    } else if (resp && resp.ok === false) {
+      const hint = (resp as any)?.slack?.hint || (resp as any)?.slack?.error || "Unknown Slack error";
+      toast.error(`Slack rejected: ${hint}`);
+    } else {
+      toast.success(`Test message sent to ${slackChannel}`);
+    }
   };
 
   const handleAddStatus = () => {
