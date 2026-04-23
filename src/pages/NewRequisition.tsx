@@ -21,7 +21,8 @@ import {
   type RequisitionFlow, type VSDLineItem, type CurrencyCode, type AdvancedRequisition, type AuditEntry,
 } from "@/lib/requisition-types";
 import { POD_NAMES as TALENT_POD_NAMES } from "@/lib/talent-client-types";
-import { fetchRequisitions, dbUpdateRequisition } from "@/lib/requisition-db-store";
+import { fetchRequisitions, dbUpdateRequisition, dbCreateRequisition } from "@/lib/requisition-db-store";
+import { notifySlack } from "@/lib/slack-notify";
 
 const NewRequisition = () => {
   const navigate = useNavigate();
@@ -294,6 +295,24 @@ const NewRequisition = () => {
 
     try {
       await dbCreateRequisition(req);
+      // Fire Slack notification (non-blocking)
+      notifySlack({
+        type: "requisition_created",
+        requisitionId: req.id,
+        raisedByName,
+        raisedByEmail: raisedByPhone.includes("@") ? raisedByPhone : undefined,
+        data: {
+          flow,
+          clientName: flow === "sales" ? salesData?.clientName : hiringData?.clientName,
+          dealId: hiringData?.dealId || "",
+          creatorType: flow === "sales" ? salesData?.resourceType : (hiringData?.lineItems?.[0]?.creatorType || ""),
+          paymentModel: flow === "sales" ? "" : (hiringData?.lineItems?.[0]?.paymentModel || ""),
+          numCreators: flow === "sales" ? "" : (hiringData?.lineItems?.reduce((s: number, l: any) => s + (l.numberOfResources || l.count || 0), 0) || ""),
+          stage: flow === "sales" ? salesData?.opportunityStage : hiringData?.opportunityStage,
+          expectedPay: totalCreatorCost ? `${getCurrencySymbol(flow === "sales" ? salesCurrency : hiringCurrency)}${totalCreatorCost.toLocaleString()}` : "",
+          notes: flow === "sales" ? "" : (hiringData?.clientDetails || ""),
+        },
+      });
       toast.success("Requisition submitted for RMG review");
       navigate("/requisitions");
     } catch (err: any) {
