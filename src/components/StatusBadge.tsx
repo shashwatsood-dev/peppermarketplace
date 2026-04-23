@@ -1,7 +1,7 @@
 import type { RequisitionStatus, CreatorStatus } from "@/lib/mock-data";
 
 const statusStyles: Record<string, string> = {
-  "Yet to start": "bg-muted text-muted-foreground",
+  "Yet to start": "bg-info/15 text-info",
   "In progress": "bg-info/15 text-info",
   "RMG approval Pending": "bg-warning/15 text-warning",
   "Approved but not assigned": "bg-primary/15 text-primary",

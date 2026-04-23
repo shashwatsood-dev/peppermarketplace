@@ -34,6 +34,7 @@ const healthDot = (color: HealthColor | "") => {
 };
 
 const creatorStatusStyles: Record<CreatorDealStatus, string> = {
+  "Yet to start": "bg-info/15 text-info",
   Active: "bg-success/15 text-success",
   Inactive: "bg-muted text-muted-foreground",
   Removed: "bg-destructive/15 text-destructive",
@@ -677,7 +678,7 @@ function CreatorStatusSelect({ creatorId, creator, onDone }: { creatorId: string
     <Select value={creator.dealStatus} onValueChange={async v => { await dbUpdateCreator(creatorId, { dealStatus: v as CreatorDealStatus }); toast.success("Status updated"); onDone(); }}>
       <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
       <SelectContent>
-        {(["Active", "Inactive", "Removed", "Flagged"] as CreatorDealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+        {(["Yet to start", "Active", "Inactive", "Removed", "Flagged"] as CreatorDealStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
       </SelectContent>
     </Select>
   );
