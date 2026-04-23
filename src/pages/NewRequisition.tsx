@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Plus, Trash2, ArrowLeft, CheckCircle, Copy } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { CurrencyInput, CurrencySelect } from "@/components/CurrencyInput";
 import {
@@ -18,12 +18,17 @@ import {
   RESOURCE_SPECIFIC_TYPES, STUDIO_TYPES, VSD_DEAL_TYPES,
   FREELANCER_TALENT_TYPES, SIGNING_ENTITIES,
   createEmptyLineItem, getCurrencySymbol,
-  type RequisitionFlow, type VSDLineItem, type CurrencyCode,
+  type RequisitionFlow, type VSDLineItem, type CurrencyCode, type AdvancedRequisition, type AuditEntry,
 } from "@/lib/requisition-types";
 import { POD_NAMES as TALENT_POD_NAMES } from "@/lib/talent-client-types";
+import { fetchRequisitions, dbUpdateRequisition } from "@/lib/requisition-db-store";
 
 const NewRequisition = () => {
   const navigate = useNavigate();
+  const { reqId: editReqId } = useParams<{ reqId: string }>();
+  const isEditMode = !!editReqId;
+  const [existingReq, setExistingReq] = useState<AdvancedRequisition | null>(null);
+  const [loadingExisting, setLoadingExisting] = useState(isEditMode);
   const [flow, setFlow] = useState<RequisitionFlow | "">("");
 
   const [raisedByName, setRaisedByName] = useState("");
