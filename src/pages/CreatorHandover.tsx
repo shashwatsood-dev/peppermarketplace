@@ -132,7 +132,6 @@ const CreatorHandover = () => {
     setCreators([createEmptyCreator()]);
     setSelectedPod(""); setSelectedClientId(""); setSelectedDealId("");
     setRecruiterName(""); setSharedTo(""); setShareViaEmail(false); setShareViaSlack(false); setNotes("");
-    setShowHandoverForm(false);
   };
 
   const sym = getCurrencySymbol(currency);
