@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Plus, Trash2, ArrowLeft, CheckCircle, Copy } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { CurrencyInput, CurrencySelect } from "@/components/CurrencyInput";
 import {
@@ -18,12 +18,17 @@ import {
   RESOURCE_SPECIFIC_TYPES, STUDIO_TYPES, VSD_DEAL_TYPES,
   FREELANCER_TALENT_TYPES, SIGNING_ENTITIES,
   createEmptyLineItem, getCurrencySymbol,
-  type RequisitionFlow, type VSDLineItem, type CurrencyCode,
+  type RequisitionFlow, type VSDLineItem, type CurrencyCode, type AdvancedRequisition, type AuditEntry,
 } from "@/lib/requisition-types";
 import { POD_NAMES as TALENT_POD_NAMES } from "@/lib/talent-client-types";
+import { fetchRequisitions, dbUpdateRequisition } from "@/lib/requisition-db-store";
 
 const NewRequisition = () => {
   const navigate = useNavigate();
+  const { reqId: editReqId } = useParams<{ reqId: string }>();
+  const isEditMode = !!editReqId;
+  const [existingReq, setExistingReq] = useState<AdvancedRequisition | null>(null);
+  const [loadingExisting, setLoadingExisting] = useState(isEditMode);
   const [flow, setFlow] = useState<RequisitionFlow | "">("");
 
   const [raisedByName, setRaisedByName] = useState("");
@@ -63,6 +68,64 @@ const NewRequisition = () => {
   const [hiringSigningEntity, setHiringSigningEntity] = useState("");
   const [hiringPod, setHiringPod] = useState("");
 
+  // ── Load existing requisition for edit mode ──────────────────────
+  useEffect(() => {
+    if (!isEditMode || !editReqId) return;
+    let cancelled = false;
+    fetchRequisitions().then(reqs => {
+      if (cancelled) return;
+      const r = reqs.find(x => x.id === editReqId);
+      if (!r) {
+        toast.error("Requisition not found");
+        navigate("/requisitions");
+        return;
+      }
+      setExistingReq(r);
+      setLoadingExisting(false);
+      setFlow(r.flow);
+      setRaisedByName(r.raisedByName);
+      setRaisedByPhone(r.raisedByPhone);
+      if (r.salesData) {
+        setSalesClientName(r.salesData.clientName);
+        setSalesOpportunityName(r.salesData.opportunityName);
+        setSalesDealType(r.salesData.dealType);
+        setSalesResourceType(r.salesData.resourceType);
+        setSalesSpecificTypes(r.salesData.specificResourceTypes || []);
+        setSalesOtherSpec(r.salesData.otherResourceTypeSpec);
+        setSalesCreatorPay(r.salesData.expectedCreatorPay);
+        setSalesClientBilling(r.salesData.expectedClientBilling);
+        setSalesMargin(r.salesData.expectedMarginPercent);
+        setSalesStage(r.salesData.opportunityStage);
+        setSalesUrgency(r.salesData.urgency);
+        setSalesCurrency(r.salesData.currency);
+      }
+      if (r.hiringData) {
+        setHiringClientName(r.hiringData.clientName);
+        setHiringDealId(r.hiringData.dealId);
+        setHiringDealType(r.hiringData.dealType);
+        setHiringStudioType(r.hiringData.studioType);
+        setHiringGeography(r.hiringData.geography);
+        setHiringSigningEntity(r.hiringData.signingEntity);
+        setHiringTalentType(r.hiringData.talentType);
+        setHiringStage(r.hiringData.opportunityStage);
+        setHiringClientDetails(r.hiringData.clientDetails);
+        setHiringCurrency(r.hiringData.currency);
+        setHiringMrr(r.hiringData.mrr);
+        setHiringContractDuration(r.hiringData.contractDuration);
+        setHiringTargetMargin(r.hiringData.targetMarginPercent);
+        setHiringLineItems(r.hiringData.lineItems.length > 0 ? r.hiringData.lineItems : [createEmptyLineItem()]);
+        setHiringUrgencyScale(r.hiringData.urgencyScale);
+        setHiringIsReplacement(r.hiringData.isReplacementHiring);
+        setHiringReplacementOf(r.hiringData.replacementOf);
+        setHiringPod(r.hiringData.pod);
+      }
+    }).catch(err => {
+      toast.error("Failed to load requisition: " + err.message);
+      navigate("/requisitions");
+    });
+    return () => { cancelled = true; };
+  }, [isEditMode, editReqId, navigate]);
+
   const updateLineItem = (id: string, updates: Partial<VSDLineItem>) => {
     setHiringLineItems(prev => prev.map(li => li.id === id ? { ...li, ...updates } : li));
   };
@@ -83,7 +146,7 @@ const NewRequisition = () => {
     const { generateReqId } = await import("@/lib/requisition-types");
     const { dbCreateRequisition } = await import("@/lib/requisition-db-store");
 
-    const reqId = generateReqId(flow);
+    const reqId = isEditMode && existingReq ? existingReq.id : generateReqId(flow);
     const now = new Date().toISOString();
 
     let totalClientRevenue = 0;
@@ -101,45 +164,113 @@ const NewRequisition = () => {
     const grossMarginPercent = totalClientRevenue ? Math.round(grossMargin / totalClientRevenue * 1000) / 10 : 0;
     const targetMarginPercent = flow === "sales" ? salesMargin : hiringTargetMargin;
 
-    const req: import("@/lib/requisition-types").AdvancedRequisition = {
+    const salesData = flow === "sales" ? {
+      clientName: salesClientName,
+      opportunityName: salesOpportunityName,
+      dealType: salesDealType,
+      resourceType: salesResourceType,
+      specificResourceTypes: salesSpecificTypes,
+      otherResourceTypeSpec: salesOtherSpec,
+      expectedCreatorPay: salesCreatorPay,
+      expectedClientBilling: salesClientBilling,
+      expectedMarginPercent: salesMargin,
+      opportunityStage: salesStage as any,
+      urgency: salesUrgency as any,
+      currency: salesCurrency,
+    } : undefined;
+
+    const hiringData = (flow === "studio" || flow === "freelancer") ? {
+      clientName: hiringClientName,
+      dealId: hiringDealId,
+      dealType: hiringDealType,
+      studioType: hiringStudioType,
+      geography: hiringGeography,
+      signingEntity: hiringSigningEntity,
+      talentType: hiringTalentType,
+      opportunityStage: hiringStage as any,
+      clientDetails: hiringClientDetails,
+      currency: hiringCurrency,
+      mrr: hiringMrr,
+      contractDuration: hiringContractDuration,
+      targetMarginPercent: hiringTargetMargin,
+      lineItems: hiringLineItems,
+      urgencyScale: hiringUrgencyScale,
+      isReplacementHiring: hiringIsReplacement,
+      replacementOf: hiringReplacementOf,
+      pod: hiringPod,
+    } : undefined;
+
+    if (isEditMode && existingReq) {
+      // ── Build audit log entries by diffing top-level + nested fields ──
+      const newAudit: AuditEntry[] = [];
+      const ts = now;
+      const editor = "Admin (edit form)";
+      const pushChange = (field: string, oldV: any, newV: any) => {
+        const o = oldV === undefined || oldV === null ? "" : String(oldV);
+        const n = newV === undefined || newV === null ? "" : String(newV);
+        if (o !== n) newAudit.push({ id: crypto.randomUUID(), fieldChanged: field, oldValue: o, newValue: n, editedBy: editor, timestamp: ts });
+      };
+      pushChange("raisedByName", existingReq.raisedByName, raisedByName);
+      pushChange("raisedByPhone", existingReq.raisedByPhone, raisedByPhone);
+      pushChange("totalClientRevenue", existingReq.totalClientRevenue, totalClientRevenue);
+      pushChange("totalCreatorCost", existingReq.totalCreatorCost, totalCreatorCost);
+      pushChange("grossMarginPercent", existingReq.grossMarginPercent, grossMarginPercent);
+      pushChange("targetMarginPercent", existingReq.targetMarginPercent, targetMarginPercent);
+      if (existingReq.salesData && salesData) {
+        Object.keys(salesData).forEach(k => pushChange(`salesData.${k}`, (existingReq.salesData as any)[k], (salesData as any)[k]));
+      }
+      if (existingReq.hiringData && hiringData) {
+        Object.keys(hiringData).forEach(k => {
+          const oldVal = (existingReq.hiringData as any)[k];
+          const newVal = (hiringData as any)[k];
+          if (k === "lineItems") {
+            const oldLen = Array.isArray(oldVal) ? oldVal.length : 0;
+            const newLen = Array.isArray(newVal) ? newVal.length : 0;
+            if (oldLen !== newLen) pushChange("hiringData.lineItems.count", oldLen, newLen);
+            // Also diff per-line aggregates so financial edits are tracked
+            const oldRev = (oldVal as VSDLineItem[] || []).reduce((s, li) => s + li.clientUnitPrice * li.numberOfCreators, 0);
+            const newRev = (newVal as VSDLineItem[] || []).reduce((s, li) => s + li.clientUnitPrice * li.numberOfCreators, 0);
+            if (oldRev !== newRev) pushChange("hiringData.lineItems.totalClientRevenue", oldRev, newRev);
+          } else {
+            pushChange(`hiringData.${k}`, oldVal, newVal);
+          }
+        });
+      }
+
+      const updated: AdvancedRequisition = {
+        ...existingReq,
+        raisedByName,
+        raisedByPhone,
+        flow,
+        salesData,
+        hiringData,
+        totalClientRevenue,
+        totalCreatorCost,
+        grossMargin,
+        grossMarginPercent,
+        targetMarginPercent,
+        currency: flow === "sales" ? salesCurrency : hiringCurrency,
+        updatedAt: now,
+        auditLog: [...existingReq.auditLog, ...newAudit],
+      };
+
+      try {
+        await dbUpdateRequisition(reqId, {}, updated);
+        toast.success(`Requisition updated · ${newAudit.length} change${newAudit.length === 1 ? "" : "s"} logged`);
+        navigate("/requisitions");
+      } catch (err: any) {
+        toast.error("Failed to update requisition: " + err.message);
+      }
+      return;
+    }
+
+    const req: AdvancedRequisition = {
       id: reqId,
       raisedByName,
       raisedByPhone,
       flow,
-      salesData: flow === "sales" ? {
-        clientName: salesClientName,
-        opportunityName: salesOpportunityName,
-        dealType: salesDealType,
-        resourceType: salesResourceType,
-        specificResourceTypes: salesSpecificTypes,
-        otherResourceTypeSpec: salesOtherSpec,
-        expectedCreatorPay: salesCreatorPay,
-        expectedClientBilling: salesClientBilling,
-        expectedMarginPercent: salesMargin,
-        opportunityStage: salesStage as any,
-        urgency: salesUrgency as any,
-        currency: salesCurrency,
-      } : undefined,
-      hiringData: (flow === "studio" || flow === "freelancer") ? {
-        clientName: hiringClientName,
-        dealId: hiringDealId,
-        dealType: hiringDealType,
-        studioType: hiringStudioType,
-        geography: hiringGeography,
-        signingEntity: hiringSigningEntity,
-        talentType: hiringTalentType,
-        opportunityStage: hiringStage as any,
-        clientDetails: hiringClientDetails,
-        currency: hiringCurrency,
-        mrr: hiringMrr,
-        contractDuration: hiringContractDuration,
-        targetMarginPercent: hiringTargetMargin,
-        lineItems: hiringLineItems,
-        urgencyScale: hiringUrgencyScale,
-        isReplacementHiring: hiringIsReplacement,
-        replacementOf: hiringReplacementOf,
-        pod: hiringPod,
-      } : undefined,
+      salesData,
+      hiringData,
       status: "RMG approval Pending",
       rmgNotes: "",
       rejectionReason: "",
@@ -206,8 +337,8 @@ const NewRequisition = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">New Requisition</h1>
-            <p className="text-sm text-muted-foreground mt-1">Raise a new resource requisition</p>
+            <h1 className="text-2xl font-semibold text-foreground">{isEditMode ? `Edit Requisition · ${editReqId}` : "New Requisition"}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{isEditMode ? "Every change is recorded in the audit log" : "Raise a new resource requisition"}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" className="gap-2" onClick={() => {
@@ -579,9 +710,9 @@ const NewRequisition = () => {
       {flow && (
         <div className="flex items-center justify-end gap-3 pb-8">
           <Button variant="outline" onClick={() => navigate("/requisitions")}>Cancel</Button>
-          <Button variant="outline" onClick={() => toast.info("Draft saved")}>Save as Draft</Button>
+          {!isEditMode && <Button variant="outline" onClick={() => toast.info("Draft saved")}>Save as Draft</Button>}
           <Button onClick={handleSubmit} className="gap-2">
-            <CheckCircle className="h-4 w-4" /> Submit for Review
+            <CheckCircle className="h-4 w-4" /> {isEditMode ? "Save Changes" : "Submit for Review"}
           </Button>
         </div>
       )}

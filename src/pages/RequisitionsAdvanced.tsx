@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchRequisitions, dbUpdateRequisition, dbDeleteRequisition } from "@/lib/requisition-db-store";
+import { fetchAllPipelineCandidates } from "@/lib/ats-db-store";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +30,7 @@ const RequisitionsAdvanced = () => {
   const isAdmin = currentRole === "admin";
   const queryClient = useQueryClient();
   const { data: dbReqs = [], isLoading } = useQuery({ queryKey: ["requisitions"], queryFn: fetchRequisitions });
+  const { data: allPipelineCands = [] } = useQuery({ queryKey: ["all-pipeline-cands"], queryFn: fetchAllPipelineCandidates });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [flowFilter, setFlowFilter] = useState("all");
@@ -352,7 +354,10 @@ const RequisitionsAdvanced = () => {
     setSelectedReq(r);
     setUpdateLinkedIn(r.linkedInRecruiterLink);
     setUpdateAtsLink(r.atsSheetLink);
-    const cum = getCumulativeMetrics(r);
+    // Auto-fetch funnel from ATS pipeline; fall back to manual cumulative if no ATS data exists
+    const ats = getAtsFunnelForReq(r.id);
+    const hasAtsData = ats.identified > 0;
+    const cum = hasAtsData ? ats : getCumulativeMetrics(r);
     setDuProfilesIdentified(cum.identified);
     setDuProfilesContacted(cum.contacted);
     setDuProfilesScreened(cum.screened);
@@ -361,8 +366,10 @@ const RequisitionsAdvanced = () => {
     setDuOffers(cum.offers);
     setDuSelected(cum.selected);
     setDuDropOffs(cum.dropOffs);
-    setDuBlockers("");
-    setDuNotes("");
+    // Pre-fill notes/blockers from the most recent daily update so the user can edit it inline
+    const last = r.dailyUpdates.length > 0 ? r.dailyUpdates[r.dailyUpdates.length - 1] : null;
+    setDuBlockers(last?.blockers || "");
+    setDuNotes(last?.notes || "");
     setUpdateDialogOpen(true);
   };
 
@@ -379,6 +386,32 @@ const RequisitionsAdvanced = () => {
       selected: acc.selected + du.selected,
       dropOffs: acc.dropOffs + du.dropOffs,
     }), { identified: 0, contacted: 0, screened: 0, shared: 0, interviews: 0, offers: 0, selected: 0, dropOffs: 0 });
+  };
+
+  // Auto-compute funnel from ATS pipeline candidates for a requisition.
+  // Each stage is treated as cumulative — a candidate at Hired counts toward all earlier stages too.
+  const getAtsFunnelForReq = (reqId: string) => {
+    const cands = allPipelineCands.filter(pc => pc.requisition_id === reqId);
+    let identified = 0, contacted = 0, screened = 0, shared = 0, interviews = 0, offers = 0, selected = 0, dropOffs = 0;
+    for (const pc of cands) {
+      const stage = pc.current_stage;
+      const reachedStages = new Set<string>([stage]);
+      // Replay stage history to capture every stage the candidate has ever been in
+      for (const t of (pc.stage_history || []) as Array<{ from?: string; to?: string }>) {
+        if (t.to) reachedStages.add(t.to);
+        if (t.from) reachedStages.add(t.from);
+      }
+      identified += 1; // every candidate added counts as identified
+      const has = (...names: string[]) => names.some(n => reachedStages.has(n));
+      if (has("Screened", "Assignment", "Portfolio Evaluation", "In-house Interview", "Client Interview", "Capability Review", "Capability Portfolio View", "Shared with Client", "Offer", "Hired")) contacted += 1;
+      if (has("Screened", "Assignment", "Portfolio Evaluation", "In-house Interview", "Client Interview", "Capability Review", "Capability Portfolio View", "Shared with Client", "Offer", "Hired")) screened += 1;
+      if (has("Shared with Client", "Capability Portfolio View", "Client Interview", "Offer", "Hired")) shared += 1;
+      if (has("In-house Interview", "Client Interview", "Capability Review", "Offer", "Hired")) interviews += 1;
+      if (has("Offer", "Hired")) offers += 1;
+      if (stage === "Hired") selected += 1;
+      if (stage === "Rejected") dropOffs += 1;
+    }
+    return { identified, contacted, screened, shared, interviews, offers, selected, dropOffs };
   };
 
   const getTodayUpdates = (r: AdvancedRequisition) => {
@@ -824,7 +857,17 @@ const RequisitionsAdvanced = () => {
             </div>
             <div className="border-t border-border" />
             <div className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Set Current Funnel</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Set Current Funnel</p>
+                {selectedReq && getAtsFunnelForReq(selectedReq.id).identified > 0 && (
+                  <span className="text-[10px] font-mono text-success bg-success/10 border border-success/20 rounded px-2 py-0.5">
+                    Auto-filled from ATS · editable
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-muted-foreground -mt-1">
+                Numbers below are calculated from your ATS pipeline movements. You can override them if needed.
+              </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: "Identified", value: duProfilesIdentified, setter: setDuProfilesIdentified },
@@ -958,7 +1001,8 @@ function ReqTable({ reqs, getClientName, getDealId, getFlowLabel, getCreatorType
                 </td>
                 <td className="py-3">
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openEdit(req)}><Pencil className="h-3 w-3 mr-1" />Edit</Button>
+                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => navigate(`/requisitions/edit/${req.id}`)} title="Edit full requisition"><Pencil className="h-3 w-3 mr-1" />Edit</Button>
+                    <Button variant="ghost" size="sm" className="text-xs h-7 px-1.5" onClick={() => openEdit(req)} title="Quick status edit">⚡</Button>
                     {req.status === "RMG approval Pending" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openReview(req)}>Review</Button>}
                     {req.status === "Approved but not assigned" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openAssign(req)}>Assign</Button>}
                     {req.status === "In progress" && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openUpdate(req)}>Update</Button>}
