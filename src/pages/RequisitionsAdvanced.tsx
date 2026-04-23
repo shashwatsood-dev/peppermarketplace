@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchRequisitions, dbUpdateRequisition, dbDeleteRequisition } from "@/lib/requisition-db-store";
+import { fetchAllPipelineCandidates } from "@/lib/ats-db-store";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
