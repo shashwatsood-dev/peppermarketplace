@@ -123,7 +123,7 @@ export async function fetchPods(): Promise<PodV2[]> {
     podMap.set(podName, arr);
   }
 
-  const podOrder: PodName[] = ["Integrated", "India B2B", "US B2B", "FMCG", "BFSI", "Unassigned"];
+  const podOrder: PodName[] = ["Aamir", "Sumit", "Neema", "Sneha", "Aditya", "Unassigned"];
   const result: PodV2[] = [];
   for (const name of podOrder) {
     result.push({ name, clients: podMap.get(name) || [] });

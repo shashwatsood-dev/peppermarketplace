@@ -266,11 +266,11 @@ function AddClientDialog({ podName, open, onClose, onDone }: { podName: PodName;
 }
 
 const VSD_POD_MAP: Record<string, PodName> = {
-  "Aamir Khan": "Integrated",
-  "Aditya Shaw": "BFSI",
-  "Neema Jayadas": "US B2B",
-  "Sneha Iyer": "FMCG",
-  "Sumit Shekhawat": "India B2B",
+  "Aamir Khan": "Aamir",
+  "Aditya Shaw": "Aditya",
+  "Neema Jayadas": "Neema",
+  "Sneha Iyer": "Sneha",
+  "Sumit Shekhawat": "Sumit",
 };
 
 // ─── Capability Multi-Select ────────────────────────────
@@ -945,7 +945,7 @@ function ClientCard({ client, filterDeals, onDone }: { client: ClientV2; filterD
 // ─── CSV Import Dialog ──────────────────────────────────
 function CSVImportDialog({ selectedPod, open, onClose, onDone }: { selectedPod: string; open: boolean; onClose: () => void; onDone: () => void }) {
   const [csvText, setCsvText] = useState("");
-  const [targetPod, setTargetPod] = useState<PodName>(selectedPod !== "All" ? selectedPod as PodName : "Integrated");
+  const [targetPod, setTargetPod] = useState<PodName>(selectedPod !== "All" ? selectedPod as PodName : "Aamir");
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
