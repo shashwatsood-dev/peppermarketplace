@@ -26,11 +26,11 @@ const healthDot = (color: string) => {
 };
 
 const VSD_POD_MAP: Record<string, string> = {
-  "Aamir Khan": "Integrated",
-  "Aditya Shaw": "BFSI",
-  "Neema Jayadas": "US B2B",
-  "Sneha Iyer": "FMCG",
-  "Sumit Shekhawat": "India B2B",
+  "Aamir Khan": "Aamir",
+  "Aditya Shaw": "Aditya",
+  "Neema Jayadas": "Neema",
+  "Sneha Iyer": "Sneha",
+  "Sumit Shekhawat": "Sumit",
 };
 
 function getAllStudioData(pods: import("@/lib/talent-client-types").PodV2[]) {
