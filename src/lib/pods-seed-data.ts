@@ -2,7 +2,7 @@ import type { PodV2 } from "./talent-client-types";
 
 export const initialPods: PodV2[] = [
   {
-    name: "Integrated",
+    name: "Aamir",
     clients: [
       {
         id: "CL-0001",
@@ -901,7 +901,7 @@ export const initialPods: PodV2[] = [
     ],
   },
   {
-    name: "India B2B",
+    name: "Sumit",
     clients: [
       {
         id: "CL-0073",
@@ -1774,7 +1774,7 @@ export const initialPods: PodV2[] = [
     ],
   },
   {
-    name: "US B2B",
+    name: "Neema",
     clients: [
       {
         id: "CL-0116",
@@ -2647,7 +2647,7 @@ export const initialPods: PodV2[] = [
     ],
   },
   {
-    name: "FMCG",
+    name: "Sneha",
     clients: [
       {
         id: "CL-0159",
@@ -3100,7 +3100,7 @@ export const initialPods: PodV2[] = [
     ],
   },
   {
-    name: "BFSI",
+    name: "Aditya",
     clients: [
       {
         id: "CL-0191",
